@@ -1,0 +1,33 @@
+binary: edbus
+Section: libs
+Priority: optional
+Maintainer:  Debian Pkg-e Team <pkg-e-devel@lists.alioth.debian.org>
+Build-Depends: debhelper (>= 5), cdbs (>= 0.4.26.1-1), libecore1-dev, libdbus-1-dev, libevas1-dev
+Standards-Version: 3.7.2
+
+Package: libedbus0-dev
+Section: libdevel
+Architecture: any
+Depends: libedbus0 (= ${binary-Version}), libdbus-1-dev
+Description: Development files for libedbus0
+ Wrappers around dbus to ease integrating dbus with EFL based applications.
+ .
+ This packages contains headers and static libraries for Edbus
+
+Package: libedbus0
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: libedbus
+ Wrappers around dbus to ease integrating dbus with EFL based applications.
+
+Package: libehal0
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: libehal
+ Wrappers around dbus to ease integrating dbus with EFL based applications.
+
+Package: libenm0
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: libenm
+ Wrappers around dbus to ease integrating dbus with EFL based applications.
