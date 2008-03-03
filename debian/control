@@ -10,7 +10,7 @@ Section: libdevel
 Architecture: any
 Depends: libedbus0 (= ${binary-Version}), libdbus-1-dev
 Description: Development files for libedbus0
- Wrappers around dbus to ease integrating dbus with EFL based applications.
+ Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
  .
  This packages contains headers and static libraries for Edbus
 
@@ -18,16 +18,16 @@ Package: libedbus0
 Architecture: any
 Depends: ${shlibs:Depends}
 Description: libedbus
- Wrappers around dbus to ease integrating dbus with EFL based applications.
+ Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
 
 Package: libehal0
 Architecture: any
 Depends: ${shlibs:Depends}
 Description: libehal
- Wrappers around dbus to ease integrating dbus with EFL based applications.
+ Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
 
 Package: libenm0
 Architecture: any
 Depends: ${shlibs:Depends}
 Description: libenm
- Wrappers around dbus to ease integrating dbus with EFL based applications.
+ Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
