@@ -1,6 +1,5 @@
-edbus (0.1.0.042-1) unstable; urgency=low
+edbus (0.1.0.042-1) experimental; urgency=low
 
-  * Initial Release
+  * Initial Release (Closes: #468268)
 
- -- Albin Tonnerre <lut1n.tne@gmail.com>  Fri, 03 Aug 2007 12:22:56 +0200
-
+ -- Jan Luebbe <jluebbe@debian.org>  Mon, 03 Mar 2008 16:07:01 +0100
