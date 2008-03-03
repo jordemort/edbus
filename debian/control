@@ -1,14 +1,19 @@
-binary: edbus
+Source: edbus
 Section: libs
 Priority: optional
-Maintainer:  Debian Pkg-e Team <pkg-e-devel@lists.alioth.debian.org>
-Build-Depends: debhelper (>= 5), cdbs (>= 0.4.26.1-1), libecore1-dev, libdbus-1-dev, libevas1-dev
-Standards-Version: 3.7.2
+Maintainer: Debian Pkg-e Team <pkg-e-devel@lists.alioth.debian.org>
+Uploaders: Albin Tonnerre <albin.tonnerre@gmail.com>, Niv Sardi <xaiki@debian.org>,
+ Xavier Oswald <x.oswald@free.fr>, Jan Luebbe <jluebbe@debian.org>
+Build-Depends: debhelper (>= 6), cdbs, libecore-dev, libdbus-1-dev, libevas-dev
+Standards-Version: 3.7.3
+Homepage: http://enlightenment.org
+Vcs-Git: git://git.debian.org/pkg-e/libs/edbus.git
+Vcs-Browser: http://git.debian.org/?p=pkg-e/libs/edbus.git
 
-Package: libedbus0-dev
+Package: libedbus-dev
 Section: libdevel
 Architecture: any
-Depends: libedbus0 (= ${binary-Version}), libdbus-1-dev
+Depends: libedbus0 (= ${binary:Version}), libdbus-1-dev
 Description: Development files for libedbus0
  Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
  .
