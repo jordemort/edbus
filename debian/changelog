@@ -2,4 +2,4 @@ edbus (0.1.0.042-1) experimental; urgency=low
 
   * Initial Release (Closes: #468268)
 
- -- Jan Luebbe <jluebbe@debian.org>  Mon, 03 Mar 2008 16:07:01 +0100
+ -- Albin Tonnerre <albin.tonnerre@gmail.com>  Mon, 21 Apr 2008 19:17:53 +0200

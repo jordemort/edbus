@@ -1,19 +1,16 @@
-This package was debianized by Victor Koeppel <v_koeppel@yahoo.fr> on
-Wed, 24 Mar 2004 15:44:55 +0100.
+This package was debianized by Debian Pkg-e Team <pkg-e-devel@lists.alioth.debian.org>
+Wed, 27 Feb 2008 23:07:21 +0000
 
-The source is from the e17/libs/embryo module of the enlightenment CVS
-tree. For more information, see:
+It was downloaded from http://download.enlightenment.org/snapshots/LATEST/
 
-  http://www.enlightenment.org/cvs.html
-
-Upstream Author: Carsten Haitzler <raster@rasterman.com>
+Upstream Author: Brian Mattern <rephorm@rephorm.com>
 
 Copyright:
 
-  Copyright (C) 2000 Carsten Haitzler and various contributors (see AUTHORS)
+  Copyright (C) 2006 Brian Mattern and various contributors
 
 License:
-  
+
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to
   deal in the Software without restriction, including without limitation the

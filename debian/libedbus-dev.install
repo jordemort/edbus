@@ -1,4 +1,8 @@
 debian/tmp/usr/include/*
 debian/tmp/usr/lib/pkgconfig/*.pc
-debian/tmp/usr/lib/lib*.a
-debian/tmp/usr/lib/lib*.so
+debian/tmp/usr/lib/libedbus.a
+debian/tmp/usr/lib/libehal.a
+debian/tmp/usr/lib/libnotify.a
+debian/tmp/usr/lib/libedbus.so
+debian/tmp/usr/lib/libehal.so
+debian/tmp/usr/lib/libenotify.so

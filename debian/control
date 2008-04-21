@@ -14,25 +14,17 @@ Package: libedbus-dev
 Section: libdevel
 Architecture: any
 Depends: libedbus0 (= ${binary:Version}), libdbus-1-dev
-Description: Development files for libedbus0
+Description: D-Bus and Hal wrapper libraries for use with the EFL - Development files
  Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
  .
- This packages contains headers and static libraries for Edbus
+ This packages contains headers and static libraries for libedbus, libehal and
+ libenotify
 
 Package: libedbus0
 Architecture: any
 Depends: ${shlibs:Depends}
-Description: libedbus
- Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
-
-Package: libehal0
-Architecture: any
-Depends: ${shlibs:Depends}
-Description: libehal
- Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
-
-Package: libenm0
-Architecture: any
-Depends: ${shlibs:Depends}
-Description: libenm
- Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
+Description: D-Bus and Hal wrapper libraries for use with the EFL
+ This package contains:
+  - libedbus0 and libehal0 : D-Bus and Hal-related wrappers to ease integrating
+    d-bus and hal with EFL-based applications
+  - libenotify0 : provides an EFL-based notification support
