@@ -3,7 +3,7 @@ Section: libs
 Priority: optional
 Maintainer: Debian Pkg-e Team <pkg-e-devel@lists.alioth.debian.org>
 Uploaders: Albin Tonnerre <albin.tonnerre@gmail.com>, Niv Sardi <xaiki@debian.org>,
- Xavier Oswald <x.oswald@free.fr>, Jan Luebbe <jluebbe@debian.org>
+ Xavier Oswald <x.oswald@free.fr>, Jan Lübbe <jluebbe@debian.org>
 Build-Depends: debhelper (>= 6), cdbs, libecore-dev, libdbus-1-dev, libevas-dev
 Standards-Version: 3.7.3
 Homepage: http://enlightenment.org
@@ -14,7 +14,7 @@ Package: libedbus-dev
 Section: libdevel
 Architecture: any
 Depends: libedbus0 (= ${binary:Version}), libdbus-1-dev
-Description: D-Bus and Hal wrapper libraries for use with the EFL - Development files
+Description: D-Bus and HAL wrapper libraries for use with the EFL - Development files
  Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
  .
  This packages contains headers and static libraries for libedbus, libehal and
@@ -23,8 +23,8 @@ Description: D-Bus and Hal wrapper libraries for use with the EFL - Development 
 Package: libedbus0
 Architecture: any
 Depends: ${shlibs:Depends}
-Description: D-Bus and Hal wrapper libraries for use with the EFL
+Description: D-Bus and HAL wrapper libraries for use with the EFL
  This package contains:
-  - libedbus0 and libehal0 : D-Bus and Hal-related wrappers to ease integrating
-    d-bus and hal with EFL-based applications
+  - libedbus0 and libehal0 : D-Bus and HAL-related wrappers to ease integrating
+    D-Bus and HAL with EFL-based applications
   - libenotify0 : provides an EFL-based notification support
