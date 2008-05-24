@@ -299,6 +299,11 @@ e_notify_marshal_notify(E_Notification *n)
   DBusMessage *msg;
   DBusMessageIter iter, sub;
 
+  if (!n->app_name) n->app_name = strdup("");
+  if (!n->app_icon) n->app_icon = strdup("");
+  if (!n->summary) n->summary = strdup("");
+  if (!n->body) n->body = strdup("");
+
   msg = e_notification_call_new("Notify");
   dbus_message_append_args(msg, 
     DBUS_TYPE_STRING, &(n->app_name),
@@ -452,6 +457,10 @@ e_notify_unmarshal_notify_hints(E_Notification *n, DBusMessageIter *iter)
   int x_set = 0, y_set = 0;
   int x, y;
   dbus_message_iter_recurse(iter, &arr);
+  
+  if (dbus_message_iter_get_arg_type(&arr) == DBUS_TYPE_INVALID)
+    return;
+  
   do
   {
     DBusMessageIter dict;
@@ -461,7 +470,6 @@ e_notify_unmarshal_notify_hints(E_Notification *n, DBusMessageIter *iter)
       DBusMessageIter variant;
       const char *s_val;
       char y_val;
-      dbus_int32_t i_val;
       dbus_bool_t b_val;
 
       dbus_message_iter_get_basic(&dict, &key);
@@ -494,12 +502,12 @@ e_notify_unmarshal_notify_hints(E_Notification *n, DBusMessageIter *iter)
         }
       else if (!strcmp(key, "x"))
       {
-        x = i_val;
+        dbus_message_iter_get_basic(&variant, &x);
         x_set = 1;
       }
       else if (!strcmp(key, "y"))
       {
-        y = i_val;
+        dbus_message_iter_get_basic(&variant, &y);
         y_set = 1;
       }
       else if (!strcmp(key, "image_data"))
