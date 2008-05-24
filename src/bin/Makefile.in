@@ -51,15 +51,20 @@ am__EXEEXT_1 = e_dbus_test$(EXEEXT) e_dbus_test_client$(EXEEXT)
 @BUILD_EHAL_TRUE@am__EXEEXT_2 = e_dbus_hal$(EXEEXT)
 @BUILD_ENM_TRUE@am__EXEEXT_3 = e_dbus_nm$(EXEEXT)
 @BUILD_ENOTIFY_TRUE@am__EXEEXT_4 = e_dbus_notify$(EXEEXT) \
-@BUILD_ENOTIFY_TRUE@	e_dbus_notification_daemon$(EXEEXT)
+@BUILD_ENOTIFY_TRUE@	e_dbus_notification_daemon$(EXEEXT) \
+@BUILD_ENOTIFY_TRUE@	e-notify-send$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
+am__e_notify_send_SOURCES_DIST = notify-send.c
+@BUILD_ENOTIFY_TRUE@am_e_notify_send_OBJECTS =  \
+@BUILD_ENOTIFY_TRUE@	e_notify_send-notify-send.$(OBJEXT)
+e_notify_send_OBJECTS = $(am_e_notify_send_OBJECTS)
+am__DEPENDENCIES_1 =
 am__e_dbus_hal_SOURCES_DIST = hal.c
 @BUILD_EHAL_TRUE@am__objects_1 = e_dbus_hal-hal.$(OBJEXT)
 @BUILD_EHAL_TRUE@am_e_dbus_hal_OBJECTS = $(am__objects_1)
 e_dbus_hal_OBJECTS = $(am_e_dbus_hal_OBJECTS)
-am__DEPENDENCIES_1 =
 @BUILD_EHAL_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 am__e_dbus_nm_SOURCES_DIST = nm.c
 @BUILD_ENM_TRUE@am__objects_2 = e_dbus_nm-nm.$(OBJEXT)
@@ -89,11 +94,12 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(e_dbus_hal_SOURCES) $(e_dbus_nm_SOURCES) \
-	$(e_dbus_notification_daemon_SOURCES) $(e_dbus_notify_SOURCES) \
-	$(e_dbus_test_SOURCES) $(e_dbus_test_client_SOURCES)
-DIST_SOURCES = $(am__e_dbus_hal_SOURCES_DIST) \
-	$(am__e_dbus_nm_SOURCES_DIST) \
+SOURCES = $(e_notify_send_SOURCES) $(e_dbus_hal_SOURCES) \
+	$(e_dbus_nm_SOURCES) $(e_dbus_notification_daemon_SOURCES) \
+	$(e_dbus_notify_SOURCES) $(e_dbus_test_SOURCES) \
+	$(e_dbus_test_client_SOURCES)
+DIST_SOURCES = $(am__e_notify_send_SOURCES_DIST) \
+	$(am__e_dbus_hal_SOURCES_DIST) $(am__e_dbus_nm_SOURCES_DIST) \
 	$(am__e_dbus_notification_daemon_SOURCES_DIST) \
 	$(am__e_dbus_notify_SOURCES_DIST) $(e_dbus_test_SOURCES) \
 	$(e_dbus_test_client_SOURCES)
@@ -123,6 +129,7 @@ CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -149,6 +156,7 @@ LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -219,7 +227,7 @@ EDBUS_CPPFLAGS = \
 EDBUS_PROG = e_dbus_test e_dbus_test_client
 @BUILD_EHAL_TRUE@EHAL_PROG = e_dbus_hal
 @BUILD_ENM_TRUE@ENM_PROG = e_dbus_nm
-@BUILD_ENOTIFY_TRUE@ENOTIFY_PROG = e_dbus_notify e_dbus_notification_daemon
+@BUILD_ENOTIFY_TRUE@ENOTIFY_PROG = e_dbus_notify e_dbus_notification_daemon e-notify-send
 e_dbus_test_SOURCES = \
 test.c
 
@@ -269,6 +277,12 @@ e_dbus_test_client_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la
 @BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_CPPFLAGS = $(EDBUS_CPPFLAGS)
 @BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_LDADD = $(top_builddir)/src/lib/dbus/libedbus.la $(top_builddir)/src/lib/notification/libenotify.la $(LIBS) 
 @BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la $(top_builddir)/src/lib/notification/libenotify.la
+@BUILD_ENOTIFY_TRUE@e_notify_send_SOURCES = \
+@BUILD_ENOTIFY_TRUE@ notify-send.c
+
+@BUILD_ENOTIFY_TRUE@e_notify_send_CPPFLAGS = $(EDBUS_CPPFLAGS)
+@BUILD_ENOTIFY_TRUE@e_notify_send_LDADD = $(top_builddir)/src/lib/notification/libenotify.la $(LIBS) 
+@BUILD_ENOTIFY_TRUE@e_notify_send_DEPENDENCIES = $(top_builddir)/src/lib/notification/libenotify.la
 all: all-am
 
 .SUFFIXES:
@@ -330,6 +344,9 @@ clean-binPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
+e-notify-send$(EXEEXT): $(e_notify_send_OBJECTS) $(e_notify_send_DEPENDENCIES) 
+	@rm -f e-notify-send$(EXEEXT)
+	$(LINK) $(e_notify_send_LDFLAGS) $(e_notify_send_OBJECTS) $(e_notify_send_LDADD) $(LIBS)
 e_dbus_hal$(EXEEXT): $(e_dbus_hal_OBJECTS) $(e_dbus_hal_DEPENDENCIES) 
 	@rm -f e_dbus_hal$(EXEEXT)
 	$(LINK) $(e_dbus_hal_LDFLAGS) $(e_dbus_hal_OBJECTS) $(e_dbus_hal_LDADD) $(LIBS)
@@ -361,6 +378,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_dbus_notify-notify.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_dbus_test-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_dbus_test_client-test_client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_notify_send-notify-send.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -382,6 +400,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+e_notify_send-notify-send.o: notify-send.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_notify_send_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_notify_send-notify-send.o -MD -MP -MF "$(DEPDIR)/e_notify_send-notify-send.Tpo" -c -o e_notify_send-notify-send.o `test -f 'notify-send.c' || echo '$(srcdir)/'`notify-send.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/e_notify_send-notify-send.Tpo" "$(DEPDIR)/e_notify_send-notify-send.Po"; else rm -f "$(DEPDIR)/e_notify_send-notify-send.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='notify-send.c' object='e_notify_send-notify-send.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_notify_send_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o e_notify_send-notify-send.o `test -f 'notify-send.c' || echo '$(srcdir)/'`notify-send.c
+
+e_notify_send-notify-send.obj: notify-send.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_notify_send_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_notify_send-notify-send.obj -MD -MP -MF "$(DEPDIR)/e_notify_send-notify-send.Tpo" -c -o e_notify_send-notify-send.obj `if test -f 'notify-send.c'; then $(CYGPATH_W) 'notify-send.c'; else $(CYGPATH_W) '$(srcdir)/notify-send.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/e_notify_send-notify-send.Tpo" "$(DEPDIR)/e_notify_send-notify-send.Po"; else rm -f "$(DEPDIR)/e_notify_send-notify-send.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='notify-send.c' object='e_notify_send-notify-send.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_notify_send_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o e_notify_send-notify-send.obj `if test -f 'notify-send.c'; then $(CYGPATH_W) 'notify-send.c'; else $(CYGPATH_W) '$(srcdir)/notify-send.c'; fi`
 
 e_dbus_hal-hal.o: hal.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_hal_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_dbus_hal-hal.o -MD -MP -MF "$(DEPDIR)/e_dbus_hal-hal.Tpo" -c -o e_dbus_hal-hal.o `test -f 'hal.c' || echo '$(srcdir)/'`hal.c; \

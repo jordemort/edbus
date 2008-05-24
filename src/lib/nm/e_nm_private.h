@@ -2,10 +2,13 @@
 #define E_NM_PRIVATE_H
 
 #define E_NM_SERVICE "org.freedesktop.NetworkManager"
-#define E_NM_INTERFACE_NETWORK_MANAGER "org.freedesktop.NetworkManager"
 #define E_NM_PATH_NETWORK_MANAGER "/org/freedesktop/NetworkManager"
+#define E_NM_INTERFACE_NETWORK_MANAGER "org.freedesktop.NetworkManager"
+#define E_NM_INTERFACE_ACCESSPOINT "org.freedesktop.NetworkManager.AccessPoint"
 #define E_NM_INTERFACE_DEVICE "org.freedesktop.NetworkManager.Device"
-
+#define E_NM_INTERFACE_DEVICE_WIRELESS "org.freedesktop.NetworkManager.Device.Wireless"
+#define E_NM_INTERFACE_DEVICE_WIRED "org.freedesktop.NetworkManager.Device.Wired"
+#define E_NM_INTERFACE_IP4CONFIG "org.freedesktop.NetworkManager.IP4Config"
 
 #define e_nm_manager_call_new(member) dbus_message_new_method_call(E_NM_SERVICE, E_NM_PATH_NETWORK_MANAGER, E_NM_INTERFACE_NETWORK_MANAGER, member)
 
@@ -13,6 +16,7 @@
 
 #define e_nm_network_call_new(member) dbus_message_new_method_call(E_NM_SERVICE, E_NM_PATH_NETWORK_MANAGER, E_NM_INTERFACE_NETWORK_MANAGER, member)
 
+#define e_nm_device_properties_get(con, dev, prop, cb, data) e_dbus_properties_get(con, E_NM_SERVICE, dev, E_NM_INTERFACE_DEVICE, prop, (E_DBus_Method_Return_Cb) cb, data)
 
 struct E_NM_Context
 {
@@ -27,7 +31,6 @@ struct E_NM_Context
   E_NM_Cb_Manager_Device_Removed cb_manager_device_removed;
   void *data_manager_device_removed;
 };
-
 
 
 int e_nm_get_from_nm(E_NM_Context *ctx, E_DBus_Callback_Func cb_func, void *data,
