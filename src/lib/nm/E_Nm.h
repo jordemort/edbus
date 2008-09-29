@@ -25,6 +25,29 @@
 # endif
 #endif
 
+typedef enum E_NM_Device_Cap E_NM_Device_Cap;
+enum E_NM_Device_Cap
+{
+  E_NM_DEVICE_CAP_NONE = 0x0,
+  E_NM_DEVICE_CAP_NM_SUPPORTED = 0x1,
+  E_NM_DEVICE_CAP_CARRIER_DETECT = 0x2
+};
+
+typedef enum E_NM_Device_State E_NM_Device_State;
+enum E_NM_Device_State
+{
+  E_NM_DEVICE_STATE_UNKNOWN = 0,
+  E_NM_DEVICE_STATE_DOWN = 1,
+  E_NM_DEVICE_STATE_DISCONNECTED = 2,
+  E_NM_DEVICE_STATE_PREPARE = 3,
+  E_NM_DEVICE_STATE_CONFIG = 4,
+  E_NM_DEVICE_STATE_NEED_AUTH = 5,
+  E_NM_DEVICE_STATE_IP_CONFIG = 6,
+  E_NM_DEVICE_STATE_ACTIVATED = 7,
+  E_NM_DEVICE_STATE_FAILED = 8,
+  E_NM_DEVICE_STATE_CANCELLED = 9
+};
+
 typedef struct E_NM_Context E_NM_Context;
 
 /**
@@ -34,15 +57,15 @@ typedef struct E_NM_Context E_NM_Context;
 typedef struct E_NM_Device E_NM_Device;
 struct E_NM_Device
 {
-  char *udi; /* object_path */
-  char *interface;
-  char *driver;
-  uint capabilities;
-  int  ip4address;
-  uint state;
-  char *ip4config; /* object_path */
-  int  carrier;
-  uint type;
+  char              *udi; /* object_path */
+  char              *interface;
+  char              *driver;
+  E_NM_Device_Cap    capabilities;
+  int                ip4address;
+  E_NM_Device_State  state;
+  char              *ip4config; /* object_path */
+  unsigned char      managed;
+  unsigned int       device_type;
 };
 
 typedef struct E_NM_Device_Wireless E_NM_Device_Wireless;
@@ -98,7 +121,7 @@ struct E_NM_Manager
   uint state;
 };
 
-typedef void (*E_NM_Cb_Manager_State_Change) (void *data, int state);
+typedef void (*E_NM_Cb_Manager_State_Changed) (void *data, int state);
 typedef void (*E_NM_Cb_Manager_Device_Added) (void *data, const char *device);
 typedef void (*E_NM_Cb_Manager_Device_Removed) (void *data, const char *device);
 
@@ -127,7 +150,7 @@ extern "C" {
    EAPI int e_nm_status(E_NM_Context *ctx, E_DBus_Callback_Func cb_func, void *data);
 /* signals */
 /* TODO: These have changed! */
-   /* deprecated */EAPI void e_nm_callback_manager_state_change_set(E_NM_Context *ctx, E_NM_Cb_Manager_State_Change cb_func, void *user_data);
+   /* deprecated */EAPI void e_nm_callback_manager_state_changed_set(E_NM_Context *ctx, E_NM_Cb_Manager_State_Changed cb_func, void *user_data);
    /* deprecated */EAPI void e_nm_callback_manager_device_added_set(E_NM_Context *ctx, E_NM_Cb_Manager_Device_Added cb_func, void *user_data);
    /* deprecated */EAPI void e_nm_callback_manager_device_removed_set(E_NM_Context *ctx, E_NM_Cb_Manager_Device_Removed cb_func, void *user_data);
 /* TODO: EAPI void e_nm_callback_device_no_longer_active() */
