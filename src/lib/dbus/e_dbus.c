@@ -22,6 +22,7 @@
 static int connection_slot = -1;
 
 static int init = 0;
+static int close_connection = 0;
 EAPI int E_DBUS_EVENT_SIGNAL = 0;
 
 static E_DBus_Connection *shared_connections[2] = {NULL, NULL};
@@ -133,7 +134,11 @@ e_dbus_connection_data_watch_add(E_DBus_Connection *cd, DBusWatch *watch)
   hd->watch = watch;
 
   hd->enabled = dbus_watch_get_enabled(watch);
+#if (DBUS_VERSION_MAJOR == 1 && DBUS_VERSION_MINOR == 1 && DBUS_VERSION_MICRO >= 1) || (DBUS_VERSION_MAJOR == 1 && DBUS_VERSION_MAJOR > 1) || (DBUS_VERSION_MAJOR > 1)
+  hd->fd = dbus_watch_get_unix_fd(hd->watch);
+#else
   hd->fd = dbus_watch_get_fd(hd->watch);
+#endif
   DEBUG(5, "watch add (enabled: %d)\n", hd->enabled);
   if (hd->enabled) e_dbus_fd_handler_add(hd);
 }
@@ -184,6 +189,9 @@ e_dbus_connection_free(void *data)
 
   if (cd->shared_type != -1)
     shared_connections[cd->shared_type] = NULL;
+
+  if (cd->signal_handlers)
+    ecore_list_destroy(cd->signal_handlers);
 
   if (cd->conn_name) free(cd->conn_name);
 
@@ -376,6 +384,7 @@ e_dbus_message_free(void *data, void *message)
 static DBusHandlerResult
 e_dbus_filter(DBusConnection *conn, DBusMessage *message, void *user_data)
 {
+  E_DBus_Connection *cd = user_data;
   DEBUG(3, "-----------------\nMessage!\n\n");
 
   DEBUG(3, "type: %s\n", dbus_message_type_to_string(dbus_message_get_type(message)));
@@ -396,8 +405,12 @@ e_dbus_filter(DBusConnection *conn, DBusMessage *message, void *user_data)
       DEBUG(3, "error: %s\n", dbus_message_get_error_name(message));
       break;
     case DBUS_MESSAGE_TYPE_SIGNAL:
-      ecore_event_add(E_DBUS_EVENT_SIGNAL, dbus_message_ref(message),
-                      e_dbus_message_free, NULL);
+      dbus_message_ref(message);
+
+      if (cd->signal_dispatcher)
+	cd->signal_dispatcher(cd, message);
+
+      ecore_event_add(E_DBUS_EVENT_SIGNAL, message, e_dbus_message_free, NULL);
       /* don't need to handle signals, they're for everyone who wants them */
       return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
       break;
@@ -430,6 +443,13 @@ e_dbus_idler(void *data)
   dbus_connection_unref(cd->conn);
   e_dbus_signal_handlers_clean(cd);
   e_dbus_idler_active--;
+  if (!e_dbus_idler_active && close_connection)
+  {
+    do
+    {
+      e_dbus_connection_close(cd);
+    } while (--close_connection);
+  }
   return 1;
 }
 
@@ -517,7 +537,7 @@ e_dbus_connection_setup(DBusConnection *conn)
 
   dbus_connection_set_wakeup_main_function(cd->conn, cb_main_wakeup, cd, NULL);
   dbus_connection_set_dispatch_status_function(cd->conn, cb_dispatch_status, cd, NULL);
-  dbus_connection_add_filter(cd->conn, e_dbus_filter, NULL, NULL);
+  dbus_connection_add_filter(cd->conn, e_dbus_filter, cd, NULL);
 
   cb_dispatch_status(cd->conn, dbus_connection_get_dispatch_status(cd->conn), cd);
 
@@ -534,10 +554,15 @@ e_dbus_connection_close(E_DBus_Connection *conn)
 {
   DEBUG(5, "e_dbus_connection_close\n");
 
+  if (e_dbus_idler_active)
+  {
+    close_connection++;
+    return;
+  }
   if (--(conn->refcount) != 0) return;
 
   dbus_connection_free_data_slot(&connection_slot);
-  dbus_connection_remove_filter(conn->conn, e_dbus_filter, NULL);
+  dbus_connection_remove_filter(conn->conn, e_dbus_filter, conn);
   dbus_connection_set_watch_functions (conn->conn,
                                        NULL,
                                        NULL,
@@ -551,6 +576,13 @@ e_dbus_connection_close(E_DBus_Connection *conn)
                                          NULL, NULL);
 
   dbus_connection_set_dispatch_status_function (conn->conn, NULL, NULL, NULL);
+
+  /* Idler functin must be cancelled when dbus connection is  unreferenced */
+  if (conn->idler)
+    {
+      ecore_idler_del(conn->idler);
+      conn->idler = NULL;
+    }
 
   dbus_connection_close(conn->conn);
   dbus_connection_unref(conn->conn);
@@ -578,8 +610,8 @@ e_dbus_init(void)
 {
   if (++init != 1) return init;
 
+  eina_init();
   E_DBUS_EVENT_SIGNAL = ecore_event_type_new();
-  e_dbus_signal_init();
   e_dbus_object_init();
   return init;
 }
@@ -592,6 +624,6 @@ e_dbus_shutdown(void)
 {
   if (--init) return init;
   e_dbus_object_shutdown();
-  e_dbus_signal_shutdown();
+  eina_shutdown();
   return init;
 }

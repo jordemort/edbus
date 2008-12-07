@@ -3,7 +3,7 @@ rm -f config.cache
 
 AC_INIT(e_dbus, 0.5.0.050, enlightenment-devel@lists.sourceforge.net)
 AC_PREREQ(2.52)
-AC_CONFIG_SRCDIR(configure.in)
+AC_CONFIG_SRCDIR(configure.ac)
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 
@@ -42,6 +42,8 @@ AC_ARG_ENABLE(enotify,
 				  [enable_enotify=$enableval],
 				  [enable_enotify="yes"])
 
+
+PKG_CHECK_MODULES([EINA], [eina-0])
 
 PKG_CHECK_MODULES([EDBUS], [
   dbus-1 >= 0.62
