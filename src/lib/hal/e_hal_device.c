@@ -89,7 +89,7 @@ unmarshal_device_get_all_properties(DBusMessage *msg, DBusError *err)
   }
 
   ret->properties = ecore_hash_new(ecore_str_hash, ecore_str_compare);
-  ecore_hash_free_key_cb_set(ret->properties, ECORE_FREE_CB(ecore_string_release));
+  ecore_hash_free_key_cb_set(ret->properties, ECORE_FREE_CB(eina_stringshare_del));
   ecore_hash_free_value_cb_set(ret->properties, ECORE_FREE_CB(e_hal_property_free));
 
 
@@ -145,7 +145,7 @@ unmarshal_device_get_all_properties(DBusMessage *msg, DBusError *err)
         printf("Error: unexpected property type (%s): %c\n", name, dbus_message_iter_get_arg_type(&v_iter));
         break;
     }
-    ecore_hash_set(ret->properties, (void *)ecore_string_instance(name), prop);
+    ecore_hash_set(ret->properties, (void *)eina_stringshare_add(name), prop);
 
     dbus_message_iter_next(&a_iter);
   }
@@ -239,6 +239,8 @@ e_hal_device_query_capability(E_DBus_Connection *conn, const char *udi, const ch
  * @param mount_point the path to mount to, or null for default
  * @param fstype the fstype of the device (e.g. volume.fstype property)
  * @param options a list of additional options (not sure... fstype dependant?)
+ * @param cb_func an optional callback to call when the mount is done
+ * @param data custom data pointer for the callback function
  */
 EAPI int
 e_hal_device_volume_mount(E_DBus_Connection *conn, const char *udi, const char *mount_point, const char *fstype, Ecore_List *options, E_DBus_Callback_Func cb_func, void *data)
@@ -273,11 +275,13 @@ e_hal_device_volume_mount(E_DBus_Connection *conn, const char *udi, const char *
 /* void Unmount(array{string} options) */
 
 /**
- * @brief Mount a Volume
+ * @brief Unmount a Volume
  *
  * @param conn the E_DBus_Connection
  * @param udi the udi of the device object
  * @param options a list of additional options (not sure... fstype dependant?)
+ * @param cb_func an optional callback to call when the unmount is done
+ * @param data cuatom data pointer for the callback function
  */
 EAPI int
 e_hal_device_volume_unmount(E_DBus_Connection *conn, const char *udi, Ecore_List *options, E_DBus_Callback_Func cb_func, void *data)
@@ -287,6 +291,42 @@ e_hal_device_volume_unmount(E_DBus_Connection *conn, const char *udi, Ecore_List
   int ret;
 
   msg = e_hal_device_volume_call_new(udi, "Unmount");
+
+  dbus_message_iter_init_append(msg, &iter);
+  dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "s", &subiter);
+  if (options)
+  {
+    const char *opt;
+    ecore_list_first_goto(options);
+    while ((opt = ecore_list_next(options)))
+    {
+      dbus_message_iter_append_basic(&subiter, DBUS_TYPE_STRING, &opt);
+    }
+  }
+  dbus_message_iter_close_container(&iter, &subiter) ;
+
+  ret = e_dbus_method_call_send(conn, msg, NULL, cb_func, NULL, -1, data) ? 1 : 0;
+  dbus_message_unref(msg);
+  return ret;
+}
+
+/**
+ * @brief Eject a Volume
+ *
+ * @param conn the E_DBus_Connection
+ * @param udi the udi of the device object
+ * @param options a list of additional options (not sure... fstype dependant?)
+ * @param cb_func an optional callback to call when the eject is done
+ * @param data cuatom data pointer for the callback function
+ */
+EAPI int
+e_hal_device_volume_eject(E_DBus_Connection *conn, const char *udi, Ecore_List *options, E_DBus_Callback_Func cb_func, void *data)
+{
+  DBusMessage *msg;
+  DBusMessageIter iter, subiter;
+  int ret;
+
+  msg = e_hal_device_volume_call_new(udi, "Eject");
 
   dbus_message_iter_init_append(msg, &iter);
   dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "s", &subiter);

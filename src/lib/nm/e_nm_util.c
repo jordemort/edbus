@@ -4,103 +4,305 @@
 #include <string.h>
 #include <Ecore_Data.h>
 
-/**
- * @internal
- * @brief returns an e_dbus callback for a given dbus type
- * @param rettype the return type we want to find a callback for
- **/
-static E_DBus_Unmarshal_Func
-e_nm_callback_by_type(int rettype)
-{
-  switch (rettype)
-  {
-    case DBUS_TYPE_STRING:
-      return cb_nm_string;
-      
-    case DBUS_TYPE_INT32:
-      return cb_nm_int32;
-      
-    case DBUS_TYPE_UINT32:
-      return cb_nm_uint32;
-      
-    case DBUS_TYPE_BOOLEAN:
-      return cb_nm_boolean;
+#define CHECK_SIGNATURE(msg, err, sig)                       \
+  if (dbus_error_is_set((err)))                              \
+  {                                                          \
+    printf("Error: %s - %s\n", (err)->name, (err)->message); \
+    return NULL;                                             \
+  }                                                          \
+                                                             \
+  if (!dbus_message_has_signature((msg), (sig)))             \
+  {                                                          \
+    dbus_set_error((err), DBUS_ERROR_INVALID_SIGNATURE, ""); \
+    return NULL;                                             \
+  }
 
-    default:
-      return cb_nm_generic;
+static E_NM_Variant *property_string(DBusMessageIter *iter, const char *sig, void *value);
+static E_NM_Variant *property_basic(DBusMessageIter *iter, const char *sig, void *value);
+static E_NM_Variant *property_variant(DBusMessageIter *iter, const char *sig, void *value);
+static E_NM_Variant *property_array(DBusMessageIter *iter, const char *sig, void *value);
+static void          property_free(E_NM_Variant *var);
+
+typedef E_NM_Variant *(*Property_Cb)(DBusMessageIter *iter, const char *sig, void *value);
+
+typedef struct Sig_Property Sig_Property;
+struct Sig_Property
+{
+  const char *sig;
+  Property_Cb func;
+};
+
+static const Sig_Property sigs[] = {
+  { .sig = "s", property_string },
+  { .sig = "o", property_string },
+  { .sig = "u", property_basic },
+  { .sig = "b", property_basic },
+  { .sig = "y", property_basic },
+  { .sig = "t", property_basic },
+  { .sig = "v", property_variant },
+  { .sig = "a", property_array },
+  { .sig = "as", property_array },
+  { .sig = "ao", property_array },
+  { .sig = "ay", property_array },
+  { .sig = "au", property_array },
+  { .sig = "aau", property_array },
+  { .sig = NULL }
+};
+
+static const Property_Cb
+find_property_cb(const char *sig)
+{
+  const Sig_Property *t;
+
+  if (!sig) return NULL;
+
+  for (t = sigs; t->sig; t++)
+  {
+    if (!strcmp(t->sig, sig))
+      return t->func;
+  }
+  fprintf(stderr, "Missing property parser for sig: %s\n", sig);
+  return NULL;
+}
+
+static const Property *
+find_property(const char *name, const Property *properties)
+{
+  const Property *p;
+
+  if (!name) return NULL;
+
+  for (p = properties; p->name; p++)
+  {
+    if (!strcmp(p->name, name))
+      return p;
+  }
+  return NULL;
+}
+
+static E_NM_Variant *
+property_string(DBusMessageIter *iter, const char *sig, void *value)
+{
+  const char   *str;
+  E_NM_Variant *var = NULL;
+
+  if ((value) && (!sig))
+  {
+    printf("Error: Can't have value and no sig\n");
+    return NULL;
+  }
+  dbus_message_iter_get_basic(iter, &str);
+  if (sig)
+  {
+    if (!check_arg_type(iter, sig[0])) return NULL;
+    if (!value) value = &var;
+  }
+  else
+  {
+    var = malloc(sizeof(E_NM_Variant));
+    var->type = dbus_message_iter_get_arg_type(iter);
+    value = &var->s;
+  }
+  *((char **)value) = strdup(str);
+
+  return var;
+}
+
+static E_NM_Variant *
+property_basic(DBusMessageIter *iter, const char *sig, void *value)
+{
+  E_NM_Variant *var = NULL;
+
+  if ((value) && (!sig))
+  {
+    printf("Error: Can't have value and no sig\n");
+    return NULL;
+  }
+  if (sig)
+  {
+    if (!check_arg_type(iter, sig[0])) return NULL;
+    if (!value)
+    {
+      // TODO: Only alloc right size
+      var = malloc(sizeof(long long));
+      value = var;
+    }
+  }
+  else
+  {
+    var = malloc(sizeof(E_NM_Variant));
+    var->type = dbus_message_iter_get_arg_type(iter);
+    value = var;
+  }
+  dbus_message_iter_get_basic(iter, value);
+
+  return var;
+}
+
+static E_NM_Variant *
+property_variant(DBusMessageIter *iter, const char *sig, void *value)
+{
+  DBusMessageIter v_iter;
+  Property_Cb     func;
+  char            tmp[2];
+
+  if (!check_arg_type(iter, 'v')) return NULL;
+  dbus_message_iter_recurse(iter, &v_iter);
+  tmp[0] = dbus_message_iter_get_arg_type(&v_iter);
+  tmp[1] = 0;
+  func = find_property_cb(tmp);
+  if (!func) return NULL;
+  return (*func)(&v_iter, NULL, NULL);
+}
+
+static E_NM_Variant *
+property_array(DBusMessageIter *iter, const char *sig, void *value)
+{
+  DBusMessageIter   a_iter;
+  Ecore_List      **list;
+  Property_Cb       func;
+  E_NM_Variant    *var = NULL;
+  const char       *subsig = NULL;
+
+  if ((value) && (!sig))
+  {
+    printf("Error: Can't have value and no sig\n");
+    return NULL;
+  }
+
+  dbus_message_iter_recurse(iter, &a_iter);
+  if (sig)
+  {
+
+    if (!check_arg_type(iter, sig[0])) return NULL;
+    subsig = (sig + 1);
+    func = find_property_cb(subsig);
+    if (!func) return NULL;
+    if (!value) value = &var;
+    list = (Ecore_List **)value;
+    *list = ecore_list_new();
+    if (subsig[0] == 'a') 
+      ecore_list_free_cb_set(*list, ECORE_FREE_CB(ecore_list_destroy));
+    else
+      ecore_list_free_cb_set(*list, free);
+  }
+  else
+  {
+    char tmp[] = { dbus_message_iter_get_arg_type(&a_iter), 0 };
+    func = find_property_cb(tmp);
+    if (!func) return NULL;
+    var = malloc(sizeof(E_NM_Variant));
+    var->type = dbus_message_iter_get_arg_type(iter);
+    list = (Ecore_List **)&var->a;
+    *list = ecore_list_new();
+    ecore_list_free_cb_set(*list, ECORE_FREE_CB(property_free));
+  }
+
+  while (dbus_message_iter_get_arg_type(&a_iter) != DBUS_TYPE_INVALID)
+  {
+    void *subvar;
+
+    subvar = (*func)(&a_iter, subsig, NULL);
+    if (subvar) ecore_list_append(*list, subvar);
+    dbus_message_iter_next(&a_iter);
+  }
+
+  return var;
+}
+
+static void
+property_free(E_NM_Variant *var)
+{
+  if (!var) return;
+  if ((var->type == 's') || (var->type == 'o'))
+    free(var->s);
+  else if (var->type == 'a')
+    ecore_list_destroy(var->a);
+  free(var);
+}
+
+void
+property(void *data, DBusMessage *msg, DBusError *err)
+{
+  DBusMessageIter  iter, v_iter;
+  Property_Data   *d;
+  void            *value;
+  Property_Cb      func = NULL;
+
+  d = data;
+  if (dbus_error_is_set(err))
+  {
+    printf("Error: %s - %s\n", err->name, err->message);
+    goto error;
+  }
+  if (!dbus_message_has_signature(msg, "v")) goto error;
+  dbus_message_iter_init(msg, &iter);
+  dbus_message_iter_recurse(&iter, &v_iter);
+  if (d->property->func)
+  {
+    d->property->func(d, &v_iter);
+    return;
+  }
+
+  value = ((char *)d->reply + d->property->offset);
+  func = find_property_cb(d->property->sig);
+  if (func) (*func)(&v_iter, d->property->sig, value);
+
+  d->property++;
+  if (d->property->name)
+    e_nm_device_properties_get(d->nmi->conn, d->object, d->property->name, property, d);
+  else
+  {
+    if (d->cb_func) d->cb_func(d->data, d->reply);
+    property_data_free(d);
+  }
+  return;
+
+error:
+  if (d->reply) free(d->reply); /* TODO: Correct free for object */
+  if (d->cb_func) d->cb_func(d->data, NULL);
+  property_data_free(d);
+}
+
+void
+parse_properties(void *data, const Property *properties, DBusMessage *msg)
+{
+  DBusMessageIter iter, a_iter;
+
+  if (!dbus_message_has_signature(msg, "a{sv}")) return;
+
+  dbus_message_iter_init(msg, &iter);
+
+  dbus_message_iter_recurse(&iter, &a_iter);
+  while (dbus_message_iter_get_arg_type(&a_iter) != DBUS_TYPE_INVALID)
+  {
+    DBusMessageIter d_iter, v_iter;
+    const Property *p;
+    Property_Cb func;
+    const char *name;
+    void *value;
+
+    dbus_message_iter_recurse(&a_iter, &d_iter);
+    if (!check_arg_type(&d_iter, 's')) return;
+    dbus_message_iter_get_basic(&d_iter, &name);
+
+    dbus_message_iter_next(&d_iter);
+    if (!check_arg_type(&d_iter, 'v')) return;
+    dbus_message_iter_recurse(&d_iter, &v_iter);
+
+    p = find_property(name, properties);
+    if (!p) goto next;
+    value = ((char *)data + p->offset);
+    func = find_property_cb(p->sig);
+    if (!func) goto next;
+    func(&v_iter, p->sig, value);
+
+next:
+    dbus_message_iter_next(&a_iter);
   }
 }
 
-/**
- * @internal
- * @brief returns an e_dbus free for a given dbus type
- * @param rettype the return type we want to find a free for
- **/
-static E_DBus_Free_Func
-e_nm_free_by_type(int rettype)
-{
-  switch (rettype)
-  {
-    case DBUS_TYPE_STRING:
-      return NULL;
-    case DBUS_TYPE_INT32:
-    case DBUS_TYPE_UINT32:
-    case DBUS_TYPE_BOOLEAN:
-    default:
-      return free_nm_generic;
-  }
-}
-
-/**
- * @internal
- * @brief Send "get" messages to NetworkManager via e_dbus
- * @param ctx an e_nm context
- * @param cb a callback, used when the method returns (or an error is received)
- * @param data user data to pass to the callback function
- * @param method the name of the method that should be called
- * @param rettype the type of the data that will be returned to the callback
- **/
-int
-e_nm_get_from_nm(E_NM_Context *ctx, E_DBus_Callback_Func cb_func, void *data,
-                 const char *method, int rettype)
-{
-  DBusMessage *msg;
-  int ret;
-
-  msg = e_nm_manager_call_new(method);
-  ret = e_dbus_method_call_send(ctx->conn, msg, e_nm_callback_by_type(rettype),
-                                cb_func, e_nm_free_by_type(rettype), -1, data) ? 1 : 0;
-  dbus_message_unref(msg);
-  return ret;
-}
-
-
-/**
- * @internal
- * @brief Send "get" messages to a Device via e_dbus
- * @param ctx an e_nm context
- * @param cb a callback, used when the method returns (or an error is received)
- * @param data user data to pass to the callback function
- * @param method the name of the method that should be called
- * @param rettype the type of the data that will be returned to the callback
- **/
-int
-e_nm_get_from_device(E_NM_Context *ctx, const char *device,
-                     E_DBus_Callback_Func cb_func, void *data,
-                     const char *method, int rettype)
-{
-  DBusMessage *msg;
-  int ret;
-
-  msg = e_nm_device_call_new(device, method);
-  ret = e_dbus_method_call_send(ctx->conn, msg, e_nm_callback_by_type(rettype),
-                                cb_func,
-				e_nm_free_by_type(rettype),
-				-1, data) ? 1 : 0;
-  dbus_message_unref(msg);
-  return ret;
-}
-
+#if 0
 /**
  * @internal
  * @brief Generic callback for methods that return nothing
@@ -131,6 +333,8 @@ cb_nm_int32(DBusMessage *msg, DBusError *err)
 {
   dbus_int32_t *i;
 
+  CHECK_SIGNATURE(msg, err, "i");
+
   i = malloc(sizeof(dbus_int32_t));
   /* Actually emit the integer */
   dbus_message_get_args(msg, err,
@@ -148,6 +352,8 @@ void *
 cb_nm_uint32(DBusMessage *msg, DBusError *err)
 {
   dbus_uint32_t *i;
+
+  CHECK_SIGNATURE(msg, err, "u");
 
   i = malloc(sizeof(dbus_uint32_t));
   /* Actually emit the unsigned integer */
@@ -167,6 +373,8 @@ cb_nm_boolean(DBusMessage *msg, DBusError *err)
 {
   dbus_bool_t *i;
 
+  CHECK_SIGNATURE(msg, err, "b");
+
   i = malloc(sizeof(dbus_bool_t));
   /* Actually emit the unsigned integer */
   dbus_message_get_args(msg, err,
@@ -178,35 +386,38 @@ cb_nm_boolean(DBusMessage *msg, DBusError *err)
 
 /**
  * @internal
- * @brief Callback for methods returning a single string
+ * @brief Callback for methods returning a single object path
  */
 void *
-cb_nm_string(DBusMessage *msg, DBusError *err)
+cb_nm_object_path(DBusMessage *msg, DBusError *err)
 {
   char *str;
 
-  /* Actually emit the string */
+  CHECK_SIGNATURE(msg, err, "o");
+
+  /* Actually emit the object_path */
   dbus_message_get_args(msg, err,
-                        DBUS_TYPE_STRING, &str,
+                        DBUS_TYPE_OBJECT_PATH, &str,
                         DBUS_TYPE_INVALID);
 
   return str;
 }
+#endif
 
 
 /**
  * @internal
- * @brief Callback for methods returning a list of strings or object paths
+ * @brief Callback for methods returning a list of object paths
  */
 void *
-cb_nm_string_list(DBusMessage *msg, DBusError *err)
+cb_nm_object_path_list(DBusMessage *msg, DBusError *err)
 {
   Ecore_List *devices;
   DBusMessageIter iter, sub;
 
+  CHECK_SIGNATURE(msg, err, "ao");
+
   dbus_message_iter_init(msg, &iter);
-  if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_ARRAY ||
-      dbus_message_iter_get_element_type(&iter) != DBUS_TYPE_OBJECT_PATH) return NULL;
 
   devices = ecore_list_new();
   dbus_message_iter_recurse(&iter, &sub);
@@ -214,19 +425,105 @@ cb_nm_string_list(DBusMessage *msg, DBusError *err)
   {
     char *dev = NULL;
 
+    if (!check_arg_type(&sub, 'o')) goto error;
     dbus_message_iter_get_basic(&sub, &dev);
     if (dev) ecore_list_append(devices, dev);
     dbus_message_iter_next(&sub);
   }
 
   return devices;
+error:
+  ecore_list_destroy(devices);
+  return NULL;
 }
 
 void
-free_nm_string_list(void *data)
+free_nm_object_path_list(void *data)
 {
   Ecore_List *list = data;
 
   if (list) ecore_list_destroy(list);
 }
 
+Ecore_Hash *
+parse_settings(DBusMessage *msg)
+{
+  Ecore_Hash *settings;
+  DBusMessageIter iter, a_iter;
+
+  if (!dbus_message_has_signature(msg, "a{sa{sv}}")) return NULL;
+
+  dbus_message_iter_init(msg, &iter);
+
+  settings = ecore_hash_new(ecore_str_hash, ecore_str_compare);
+  ecore_hash_free_key_cb_set(settings, free);
+  ecore_hash_free_value_cb_set(settings, ECORE_FREE_CB(ecore_hash_destroy));
+  dbus_message_iter_recurse(&iter, &a_iter);
+  while (dbus_message_iter_get_arg_type(&a_iter) != DBUS_TYPE_INVALID)
+  {
+    DBusMessageIter  d_iter, a2_iter;
+    E_NM_Variant   *prop;
+    const char      *name;
+    Ecore_Hash      *value;
+
+    dbus_message_iter_recurse(&a_iter, &d_iter);
+    if (!check_arg_type(&d_iter, 's')) goto error;
+    dbus_message_iter_get_basic(&d_iter, &name);
+
+    dbus_message_iter_next(&d_iter);
+    if (!check_arg_type(&d_iter, 'a')) goto error;
+    dbus_message_iter_recurse(&d_iter, &a2_iter);
+
+    value = ecore_hash_new(ecore_str_hash, ecore_str_compare);
+    ecore_hash_free_key_cb_set(value, free);
+    ecore_hash_free_value_cb_set(value, ECORE_FREE_CB(property_free));
+    ecore_hash_set(settings, strdup(name), value);
+    while (dbus_message_iter_get_arg_type(&a2_iter) != DBUS_TYPE_INVALID)
+    {
+      dbus_message_iter_recurse(&a2_iter, &d_iter);
+      if (!check_arg_type(&d_iter, 's')) goto error;
+      dbus_message_iter_get_basic(&d_iter, &name);
+      dbus_message_iter_next(&d_iter);
+      if (!check_arg_type(&d_iter, 'v')) goto error;
+      prop = property_variant(&d_iter, NULL, NULL);
+      if (prop) ecore_hash_set(value, strdup(name), prop);
+      dbus_message_iter_next(&a2_iter);
+    }
+
+    dbus_message_iter_next(&a_iter);
+  }
+
+  return settings;
+error:
+  ecore_hash_destroy(settings);
+  return NULL;
+}
+
+int
+check_arg_type(DBusMessageIter *iter, char type)
+{
+  char sig;
+ 
+  sig = dbus_message_iter_get_arg_type(iter);
+  return sig == type;
+}
+
+void
+property_data_free(Property_Data *data)
+{
+  if (data->object) free(data->object);
+  free(data);
+}
+
+const char *
+ip4_address2str(unsigned int address)
+{
+  static char buf[16];
+
+  snprintf(buf, sizeof(buf), "%u.%u.%u.%u",
+           ((address      ) & 0xff),
+           ((address >> 8 ) & 0xff),
+           ((address >> 16) & 0xff),
+           ((address >> 24) & 0xff));
+  return buf;
+}

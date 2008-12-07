@@ -1,290 +1,240 @@
 #include <E_Nm.h>
 #include <Ecore_Data.h>
-#include <dbus/dbus.h>
 
-#define E_NM_DEVICE_TYPE_WIRED 1
-#define E_NM_DEVICE_TYPE_WIRELESS 2
+#include <unistd.h>
 
-typedef struct NM_Manager NM_Manager;
-struct NM_Manager
-{
-  E_NM_Context *ctx;
-  Ecore_List *devices;
-};
+E_NM *nm = NULL;
+E_NMS *nms = NULL;
 
 static void
-cb_manager_get_udi(void *data, void *reply, DBusError *err)
+dump_variant(E_NM_Variant *var)
 {
-    DBusMessageIter iter, sub;
-    char *udi;
-
-    if (dbus_error_is_set(err))
+    if (!var) return;
+    switch (var->type)
     {
-        printf("Error: %s - %s\n", err->name, err->message);
-        return;
-    }
+        case 'a': {
+          E_NM_Variant *subvar;
 
-    dbus_message_iter_init(reply, &iter);
-    dbus_message_iter_recurse(&iter, &sub);
-    dbus_message_iter_get_basic(&sub, &udi);
-
-    printf("Got udi: %s\n", udi);
-}
-
-static void
-cb_manager_get_interface(void *data, void *reply, DBusError *err)
-{
-    DBusMessageIter iter, sub;
-    char *interface;
-
-    if (dbus_error_is_set(err))
-    {
-        printf("Error: %s - %s\n", err->name, err->message);
-        return;
-    }
-
-    dbus_message_iter_init(reply, &iter);
-    dbus_message_iter_recurse(&iter, &sub);
-    dbus_message_iter_get_basic(&sub, &interface);
-
-    printf("Got interface: %s\n", interface);
-}
-
-static void
-cb_manager_get_driver(void *data, void *reply, DBusError *err)
-{
-    DBusMessageIter iter, sub;
-    char *driver;
-
-    if (dbus_error_is_set(err))
-    {
-        printf("Error: %s - %s\n", err->name, err->message);
-        return;
-    }
-
-    dbus_message_iter_init(reply, &iter);
-    dbus_message_iter_recurse(&iter, &sub);
-    dbus_message_iter_get_basic(&sub, &driver);
-
-    printf("Got driver: %s\n", driver);
-}
-
-static void
-cb_manager_get_capabilities(void *data, void *reply, DBusError *err)
-{
-    DBusMessageIter iter, sub;
-    dbus_uint32_t caps;
-
-    if (dbus_error_is_set(err))
-    {
-        printf("Error: %s - %s\n", err->name, err->message);
-        return;
-    }
-
-    dbus_message_iter_init(reply, &iter);
-    dbus_message_iter_recurse(&iter, &sub);
-    dbus_message_iter_get_basic(&sub, &caps);
-
-    printf("Got capabilities:\n");
-    if (caps & E_NM_DEVICE_CAP_NM_SUPPORTED)
-        printf("\tNM_DEVICE_CAP_NM_SUPPORTED\n");
-    if (caps & E_NM_DEVICE_CAP_CARRIER_DETECT)
-        printf("\tNM_DEVICE_CAP_CARRIER_DETECT\n");
-    if (!caps)
-        printf("\tNM_DEVICE_CAP_NONE\n");
-
-}
-
-static void
-cb_manager_get_ip4address(void *data, void *reply, DBusError *err)
-{
-    DBusMessageIter iter, sub;
-    dbus_int32_t ip;
-
-    if (dbus_error_is_set(err))
-    {
-        printf("Error: %s - %s\n", err->name, err->message);
-        return;
-    }
-
-    dbus_message_iter_init(reply, &iter);
-    dbus_message_iter_recurse(&iter, &sub);
-    dbus_message_iter_get_basic(&sub, &ip);
-
-    printf("Got IPv4 address: %i.%i.%i.%i\n",
-           (ip       & 0xff),
-           ((ip >> 8 ) & 0xff),
-           ((ip >> 16) & 0xff),
-           ((ip >> 24) & 0xff)
-           );
-}
-
-static void
-cb_manager_get_state(void *data, void *reply, DBusError *err)
-{
-    DBusMessageIter iter, sub;
-    dbus_uint32_t state;
-
-    if (dbus_error_is_set(err))
-    {
-        printf("Error: %s - %s\n", err->name, err->message);
-        return;
-    }
-
-    dbus_message_iter_init(reply, &iter);
-    dbus_message_iter_recurse(&iter, &sub);
-    dbus_message_iter_get_basic(&sub, &state);
-
-    printf("Got state: %i = ", state);
-    switch (state)
-    {
-        case E_NM_DEVICE_STATE_UNKNOWN:
-            printf("NM_DEVICE_STATE_UNKNOWN\n");
+          printf("\n   - ");
+          ecore_list_first_goto(var->a);
+          while ((subvar = ecore_list_next(var->a)))
+              dump_variant(subvar);
+          break;
+        }
+        case 's':
+        case 'o':
+            printf("%s ", var->s);
             break;
-        case E_NM_DEVICE_STATE_DOWN:
-            printf("NM_DEVICE_STATE_DOWN\n");
+        case 'u':
+            printf("%d ", var->u);
             break;
-        case E_NM_DEVICE_STATE_DISCONNECTED:
-            printf("NM_DEVICE_STATE_DISCONNECTED\n");
+        case 'b':
+            printf("%d ", var->b);
             break;
-        case E_NM_DEVICE_STATE_PREPARE:
-            printf("NM_DEVICE_STATE_PREPARE\n");
+        case 'y':
+            printf("%d ", var->y);
             break;
-        case E_NM_DEVICE_STATE_CONFIG:
-            printf("NM_DEVICE_STATE_CONFIG\n");
-            break;
-        case E_NM_DEVICE_STATE_NEED_AUTH:
-            printf("NM_DEVICE_STATE_NEED_AUTH\n");
-            break;
-        case E_NM_DEVICE_STATE_IP_CONFIG:
-            printf("NM_DEVICE_STATE_IP_CONFIG\n");
-            break;
-        case E_NM_DEVICE_STATE_ACTIVATED:
-            printf("NM_DEVICE_STATE_ACTIVATED\n");
-            break;
-        case E_NM_DEVICE_STATE_FAILED:
-            printf("NM_DEVICE_STATE_FAILED\n");
-            break;
-        case E_NM_DEVICE_STATE_CANCELLED:
-            printf("NM_DEVICE_STATE_CANCELLED\n");
+        case 't':
+            printf("%lld ", var->t);
             break;
     }
 }
 
 static void
-cb_manager_get_ip4config(void *data, void *reply, DBusError *err)
+dump_values(void *value, void *data)
 {
-    DBusMessageIter iter, sub;
-    char *ip4config;
+    Ecore_Hash_Node *node;
 
-    if (dbus_error_is_set(err))
-    {
-        printf("Error: %s - %s\n", err->name, err->message);
-        return;
-     }
+    node = value;
+    printf(" - name: %s - ", (char *)node->key);
+    dump_variant(node->value);
+    printf("\n");
+}
+ 
+static void
+dump_settings(void *value, void *data)
+{
+    Ecore_Hash_Node *node;
 
-    dbus_message_iter_init(reply, &iter);
-    dbus_message_iter_recurse(&iter, &sub);
-    dbus_message_iter_get_basic(&sub, &ip4config);
-
-    printf("Got IPv4 config path: %s\n", ip4config);
+    node = value;
+    printf("name: %s\n", (char *)node->key);
+    printf("values:\n");
+    ecore_hash_for_each_node(node->value, dump_values, NULL);
+    printf("\n");
 }
 
-static void
-cb_manager_get_carrier(void *data, void *reply, DBusError *err)
+static int
+cb_nms_connection_settings(void *data, Ecore_Hash *settings)
 {
-    DBusMessageIter iter, sub;
-    dbus_uint32_t carrier;
-
-    if (dbus_error_is_set(err))
-    {
-        printf("Error: %s - %s\n", err->name, err->message);
-        return;
-    }
-
-    dbus_message_iter_init(reply, &iter);
-    dbus_message_iter_recurse(&iter, &sub);
-    dbus_message_iter_get_basic(&sub, &carrier);
-
-    printf("Got carrier: %i\n", carrier);
+    printf("Secrets:\n");
+    if (settings)
+        ecore_hash_for_each_node(settings, dump_settings, NULL);
+    return 1;
 }
 
-static void
-cb_manager_get_type(void *data, void *reply, DBusError *err)
+static int
+cb_nms_connection_secrets(void *data, Ecore_Hash *secrets)
 {
-    DBusMessageIter iter, sub;
-    dbus_uint32_t type;
-
-    if (dbus_error_is_set(err))
-    {
-        printf("Error: %s - %s\n", err->name, err->message);
-        return;
-    }
-
-    dbus_message_iter_init(reply, &iter);
-    dbus_message_iter_recurse(&iter, &sub);
-    dbus_message_iter_get_basic(&sub, &type);
-
-    printf("Got type: %i (1 = ethernet, 2 = wireless)\n", type);
+    printf("Secrets:\n");
+    if (secrets)
+        ecore_hash_for_each_node(secrets, dump_settings, NULL);
+    return 1;
 }
 
-static void
-cb_manager_get_devices(void *data, void *reply, DBusError *err)
+static int
+cb_nms_connections(void *data, Ecore_List *list)
 {
-    NM_Manager *app = data;
-    const char *dev;
+    E_NMS_Connection *conn;
 
-    if (dbus_error_is_set(err))
+    if (list)
     {
-        printf("Error: %s - %s\n", err->name, err->message);
-        return;
+        ecore_list_first_goto(list);
+        while ((conn = ecore_list_next(list)))
+        {
+            e_nms_connection_dump(conn);
+            e_nms_connection_get_settings(conn, cb_nms_connection_settings, NULL);
+            e_nms_connection_secrets_get_secrets(conn, "802-11-wireless-security", NULL, 0, cb_nms_connection_secrets, NULL);
+        }
+        ecore_list_destroy(list);
     }
+    //ecore_main_loop_quit();
+    return 1;
+}
+
+static int
+cb_access_point(void *data, E_NM_Access_Point *ap)
+{
+    e_nm_access_point_dump(ap);
+    e_nm_access_point_free(ap);
+    return 1;
+}
+
+static int
+cb_activate_connection(void *data, E_NM_Device *device)
+{
+    E_NM_Active_Connection *conn;
+
+    conn = data;
+    sleep(1);
+    e_nm_active_connection_dump(conn);
+    e_nm_activate_connection(nm, conn->service_name, conn->path, device, conn->specific_object);
+    return 1;
+}
+
+static int
+cb_active_connection(void *data, E_NM_Active_Connection *conn)
+{
+    const char *device;
+    e_nm_deactivate_connection(nm, conn);
+    ecore_list_first_goto(conn->devices);
+    while ((device = ecore_list_next(conn->devices)))
+         e_nm_device_get(nm, device, cb_activate_connection, conn);
+    /*
+    e_nm_active_connection_dump(conn);
+    e_nm_active_connection_free(conn);
+    */
+    return 1;
+}
+
+static int
+cb_ip4_config(void *data, E_NM_IP4_Config *config)
+{
+    e_nm_ip4_config_dump(config);
+    e_nm_ip4_config_free(config);
+    return 1;
+}
+
+static int
+cb_access_points(void *data, Ecore_List *list)
+{
+    E_NM_Access_Point *ap;
+
+    if (list)
+    {
+        ecore_list_first_goto(list);
+        while ((ap = ecore_list_next(list)))
+        {
+            e_nm_access_point_dump(ap);
+        }
+        ecore_list_destroy(list);
+    }
+    return 1;
+}
+
+static int
+cb_get_devices(void *data, Ecore_List *list)
+{
+    E_NM_Device *device;
+
+    if (list)
+    {
+        ecore_list_first_goto(list);
+        while ((device = ecore_list_next(list)))
+        {
+            e_nm_device_dump(device);
+            if (device->device_type == E_NM_DEVICE_TYPE_WIRELESS)
+            {
+		/*
+                e_nm_device_wireless_get_access_points(device, cb_access_points, NULL);
+                e_nm_access_point_get(nm, device->wireless.active_access_point, cb_access_point, NULL);
+                e_nm_ip4_config_get(nm, device->ip4_config, cb_ip4_config, NULL);
+		*/
+            }
+        }
+        //ecore_list_destroy(list);
+    }
+    //ecore_main_loop_quit();
+    return 1;
+}
+
+static int
+cb_nm(void *data, E_NM *reply)
+{
+    if (!reply)
+    {
+        ecore_main_loop_quit();
+        return 1;
+    }
+    nm = reply;
+    /*
+    e_nm_wireless_enabled_set(nm, 1);
+    if (nm->active_connections)
+    {
+        const char *conn;
+        ecore_list_first_goto(nm->active_connections);
+        while ((conn = ecore_list_next(nm->active_connections)))
+            e_nm_active_connection_get(nm, conn, cb_active_connection, NULL);
+    }
+    */
+    /*
+    e_nm_get_devices(nm, cb_get_devices, nm);
+    */
+    nms = e_nms_get(nm);
+    e_nms_dump(nms);
+    e_nms_list_connections(nms, cb_nms_connections, nms);
+    return 1;
+}
    
-    app->devices = reply;
-    ecore_list_first_goto(app->devices);
-    printf("Got devices:\n");
-    while ((dev = ecore_list_next(app->devices)))
-    {
-        printf("%s\n", dev);
-        e_nm_device_get_udi(app->ctx, dev, cb_manager_get_udi, app);
-        e_nm_device_get_interface(app->ctx, dev, cb_manager_get_interface, app);
-        e_nm_device_get_driver(app->ctx, dev, cb_manager_get_driver, app);
-        e_nm_device_get_capabilities(app->ctx, dev, cb_manager_get_capabilities, app);
-        e_nm_device_get_ip4address(app->ctx, dev, cb_manager_get_ip4address, app);
-        e_nm_device_get_state(app->ctx, dev, cb_manager_get_state, app);
-        /* FIXME: Getting the ip4config needs fixing */
-        //e_nm_device_get_ip4config(app->ctx, dev, cb_manager_get_ip4config, app);
-        /* FIXME: Only call this when the device supports it */
-	// e_nm_device_get_carrier(app->ctx, dev, cb_manager_get_carrier, app);
-        e_nm_device_get_type(app->ctx, dev, cb_manager_get_type, app);
-     }
-}
 
 int 
 main(int argc, char **argv)
 {
-    NM_Manager *app;
     ecore_init();
-    ecore_string_init();
+    eina_stringshare_init();
     e_dbus_init();
    
-    app = calloc(1, sizeof(NM_Manager));
-   
-    app->ctx = e_nm_new();
-    if (!app->ctx)
+    if (!e_nm_get(cb_nm, (void *)0xdeadbeef))
     {
         printf("Error connecting to system bus. Is it running?\n");
         return 1;
     }
    
-    e_nm_get_devices(app->ctx, cb_manager_get_devices, app);
-   
     ecore_main_loop_begin();
+    e_nms_free(nms);
+    e_nm_free(nm);
    
-    e_nm_free(app->ctx);
-    free(app);
     e_dbus_shutdown();
-    ecore_string_shutdown();
+    eina_stringshare_shutdown();
     ecore_shutdown();
     return 0;
 }
