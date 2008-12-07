@@ -1,3 +1,16 @@
+edbus (0.5.0.050+svn20081126-1) experimental; urgency=low
+
+   * Upstream SVN snapshot
+    - Packages renamed due to API changes
+      + libedbus-dev->libedbus-0.5.0.050a-dev, libedbus0->libedbus-0.5.0.050a
+    - Add debian/patches/{01-fix-library-soname,02-reapply-autofoo}: Use release
+      instead of version-info to create libedbus SONAME, to prevent things
+      from breaking when the API changes again.
+    - build-depend and make libedbus-0.5.0.050a-dev depend on libeina-0.0.1a-dev
+  * [lintian] Add ${misc:Depends} to package dependencies
+
+ -- Albin Tonnerre <albin.tonnerre@gmail.com>  Wed, 24 Dec 2008 12:40:27 +0100
+
 edbus (0.5.0.050-1) experimental; urgency=low
 
   * New upstream release

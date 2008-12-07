@@ -1,0 +1,47 @@
+diff --git a/configure.ac b/configure.ac
+index cb97e73..60ea993 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -8,6 +8,7 @@ AC_CANONICAL_BUILD
+ AC_CANONICAL_HOST
+ 
+ AM_INIT_AUTOMAKE(1.6 dist-bzip2)
++AM_MAINTAINER_MODE
+ AM_CONFIG_HEADER(config.h)
+ 
+ AC_PROG_CC
+diff --git a/src/lib/dbus/Makefile.am b/src/lib/dbus/Makefile.am
+index d010eb6..ad94e3b 100644
+--- a/src/lib/dbus/Makefile.am
++++ b/src/lib/dbus/Makefile.am
+@@ -19,5 +19,5 @@ libedbus_la_SOURCES = \
+ 
+ libedbus_la_LIBADD = \
+ @EDBUS_LIBS@ @EINA_LIBS@
+-libedbus_la_LDFLAGS      = -version-info @version_info@
++libedbus_la_LDFLAGS      = -release @PACKAGE_VERSION@$(DEBIAN_MINOR)
+ 
+diff --git a/src/lib/hal/Makefile.am b/src/lib/hal/Makefile.am
+index 3080239..a586956 100644
+--- a/src/lib/hal/Makefile.am
++++ b/src/lib/hal/Makefile.am
+@@ -19,6 +19,6 @@ libehal_la_LIBADD = \
+ @EDBUS_LIBS@ \
+ $(top_builddir)/src/lib/dbus/libedbus.la \
+ @EINA_LIBS@
+-libehal_la_LDFLAGS      = -version-info @version_info@
++libehal_la_LDFLAGS      = -release @PACKAGE_VERSION@$(DEBIAN_MINOR)
+ 
+ endif
+diff --git a/src/lib/notification/Makefile.am b/src/lib/notification/Makefile.am
+index 6e4b664..4d13ba5 100644
+--- a/src/lib/notification/Makefile.am
++++ b/src/lib/notification/Makefile.am
+@@ -22,6 +22,6 @@ libenotify_la_LIBADD = \
+ @EDBUS_LIBS@ @EVAS_LIBS@ \
+ $(top_builddir)/src/lib/dbus/libedbus.la \
+ @EINA_LIBS@
+-libenotify_la_LDFLAGS      = -version-info @version_info@
++libenotify_la_LDFLAGS      = -release @PACKAGE_VERSION@$(DEBIAN_MINOR)
+ 
+ endif
