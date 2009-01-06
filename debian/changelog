@@ -1,3 +1,10 @@
+edbus (0.5.0.050+svn20081126-2) experimental; urgency=low
+
+  * Remove version from -dev packages name
+  * Actually add ${misc:Depends} to packages dependencies
+
+ -- Albin Tonnerre <albin.tonnerre@gmail.com>  Tue, 06 Jan 2009 21:59:31 +0100
+
 edbus (0.5.0.050+svn20081126-1) experimental; urgency=low
 
    * Upstream SVN snapshot
