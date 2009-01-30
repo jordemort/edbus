@@ -54,12 +54,13 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__libenm_la_SOURCES_DIST = e_nm_private.h e_nm.c e_nm_manager.c \
 	e_nm_access_point.c e_nm_device.c e_nm_ip4_config.c e_nms.c \
-	e_nms_connection.c e_nm_active_connection.c e_nm_util.c
+	e_nms_connection.c e_nm_active_connection.c e_nm_variant.c \
+	e_nm_util.c
 @BUILD_ENM_TRUE@am_libenm_la_OBJECTS = e_nm.lo e_nm_manager.lo \
 @BUILD_ENM_TRUE@	e_nm_access_point.lo e_nm_device.lo \
 @BUILD_ENM_TRUE@	e_nm_ip4_config.lo e_nms.lo \
 @BUILD_ENM_TRUE@	e_nms_connection.lo e_nm_active_connection.lo \
-@BUILD_ENM_TRUE@	e_nm_util.lo
+@BUILD_ENM_TRUE@	e_nm_variant.lo e_nm_util.lo
 libenm_la_OBJECTS = $(am_libenm_la_OBJECTS)
 libenm_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -212,6 +213,7 @@ AM_CPPFLAGS = \
 @BUILD_ENM_TRUE@e_nms.c \
 @BUILD_ENM_TRUE@e_nms_connection.c \
 @BUILD_ENM_TRUE@e_nm_active_connection.c \
+@BUILD_ENM_TRUE@e_nm_variant.c \
 @BUILD_ENM_TRUE@e_nm_util.c
 
 @BUILD_ENM_TRUE@libenm_la_LIBADD = \
@@ -299,6 +301,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_nm_ip4_config.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_nm_manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_nm_util.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_nm_variant.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_nms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_nms_connection.Plo@am__quote@
 
