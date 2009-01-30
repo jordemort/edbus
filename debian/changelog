@@ -1,3 +1,10 @@
+edbus (0.5.0.050+svn20090130-1) experimental; urgency=low
+
+  * New SVN snapshot
+    - libedbus-0.5.0.050a is now libedbus-0.5.0.050b due to API change
+
+ -- Albin Tonnerre <albin.tonnerre@gmail.com>  Fri, 30 Jan 2009 14:53:12 +0100
+
 edbus (0.5.0.050+svn20081126-2) experimental; urgency=low
 
   * Remove version from -dev packages name
