@@ -221,6 +221,13 @@ property_free(E_NM_Variant *var)
   free(var);
 }
 
+int
+property_get(E_DBus_Connection *conn, Property_Data *data)
+
+{
+  return e_dbus_properties_get(conn, data->service, data->object, data->interface, data->property->name, property, data) ? 1 : 0;
+}
+
 void
 property(void *data, DBusMessage *msg, DBusError *err)
 {
@@ -250,7 +257,7 @@ property(void *data, DBusMessage *msg, DBusError *err)
 
   d->property++;
   if (d->property->name)
-    e_nm_device_properties_get(d->nmi->conn, d->object, d->property->name, property, d);
+    e_dbus_properties_get(d->nmi->conn, d->service, d->object, d->interface, d->property->name, property, d);
   else
   {
     if (d->cb_func) d->cb_func(d->data, d->reply);
@@ -448,23 +455,21 @@ free_nm_object_path_list(void *data)
 Ecore_Hash *
 parse_settings(DBusMessage *msg)
 {
-  Ecore_Hash *settings;
+  Eina_Hash *settings;
   DBusMessageIter iter, a_iter;
 
   if (!dbus_message_has_signature(msg, "a{sa{sv}}")) return NULL;
 
   dbus_message_iter_init(msg, &iter);
 
-  settings = ecore_hash_new(ecore_str_hash, ecore_str_compare);
-  ecore_hash_free_key_cb_set(settings, free);
-  ecore_hash_free_value_cb_set(settings, ECORE_FREE_CB(ecore_hash_destroy));
+  settings = eina_hash_string_small_new(EINA_FREE_CB(eina_hash_free));
   dbus_message_iter_recurse(&iter, &a_iter);
   while (dbus_message_iter_get_arg_type(&a_iter) != DBUS_TYPE_INVALID)
   {
     DBusMessageIter  d_iter, a2_iter;
     E_NM_Variant   *prop;
     const char      *name;
-    Ecore_Hash      *value;
+    Eina_Hash      *value;
 
     dbus_message_iter_recurse(&a_iter, &d_iter);
     if (!check_arg_type(&d_iter, 's')) goto error;
@@ -474,10 +479,8 @@ parse_settings(DBusMessage *msg)
     if (!check_arg_type(&d_iter, 'a')) goto error;
     dbus_message_iter_recurse(&d_iter, &a2_iter);
 
-    value = ecore_hash_new(ecore_str_hash, ecore_str_compare);
-    ecore_hash_free_key_cb_set(value, free);
-    ecore_hash_free_value_cb_set(value, ECORE_FREE_CB(property_free));
-    ecore_hash_set(settings, strdup(name), value);
+    value = eina_hash_string_small_new(EINA_FREE_CB(property_free));
+    eina_hash_add(settings, name, value);
     while (dbus_message_iter_get_arg_type(&a2_iter) != DBUS_TYPE_INVALID)
     {
       dbus_message_iter_recurse(&a2_iter, &d_iter);
@@ -486,7 +489,7 @@ parse_settings(DBusMessage *msg)
       dbus_message_iter_next(&d_iter);
       if (!check_arg_type(&d_iter, 'v')) goto error;
       prop = property_variant(&d_iter, NULL, NULL);
-      if (prop) ecore_hash_set(value, strdup(name), prop);
+      if (prop) eina_hash_add(value, name, prop);
       dbus_message_iter_next(&a2_iter);
     }
 
@@ -495,7 +498,7 @@ parse_settings(DBusMessage *msg)
 
   return settings;
 error:
-  ecore_hash_destroy(settings);
+  eina_hash_free(settings);
   return NULL;
 }
 
@@ -527,3 +530,4 @@ ip4_address2str(unsigned int address)
            ((address >> 24) & 0xff));
   return buf;
 }
+

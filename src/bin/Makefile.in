@@ -279,11 +279,11 @@ e_dbus_test_client_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la
 @BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_LDADD = $(top_builddir)/src/lib/dbus/libedbus.la $(top_builddir)/src/lib/notification/libenotify.la
 @BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la $(top_builddir)/src/lib/notification/libenotify.la
 @BUILD_ENOTIFY_TRUE@e_notify_send_SOURCES = \
-@BUILD_ENOTIFY_TRUE@ notify-send.c
+@BUILD_ENOTIFY_TRUE@	notify-send.c
 
 @BUILD_ENOTIFY_TRUE@e_notify_send_CPPFLAGS = $(EDBUS_CPPFLAGS)
-@BUILD_ENOTIFY_TRUE@e_notify_send_LDADD = $(top_builddir)/src/lib/notification/libenotify.la
-@BUILD_ENOTIFY_TRUE@e_notify_send_DEPENDENCIES = $(top_builddir)/src/lib/notification/libenotify.la
+@BUILD_ENOTIFY_TRUE@e_notify_send_LDADD = $(top_builddir)/src/lib/dbus/libedbus.la $(top_builddir)/src/lib/notification/libenotify.la
+@BUILD_ENOTIFY_TRUE@e_notify_send_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la $(top_builddir)/src/lib/notification/libenotify.la
 all: all-am
 
 .SUFFIXES:
