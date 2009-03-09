@@ -1,3 +1,9 @@
+edbus (0.5.0.050+svn20090130-1~fr.1) freerunner; urgency=low
+
+  * Build for Freerunner
+
+ -- Nikita V. Youshchenko <yoush@debian.org>  Mon, 09 Mar 2009 21:01:04 +0300
+
 edbus (0.5.0.050+svn20090130-1) experimental; urgency=low
 
   * New SVN snapshot
