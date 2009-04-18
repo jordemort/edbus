@@ -1,3 +1,13 @@
+edbus (0.5.0.050+svn?????) UNRELEASED; urgency=low
+
+  * New SVN snapshot
+    - Drop patches, no longer needed
+    - Package renaming due to upstream SONAME change.
+      + Update shlibs and .install files
+  * Update Standards-Version
+
+ -- Albin Tonnerre <albin.tonnerre@gmail.com>  Sat, 18 Apr 2009 19:16:57 +0200
+
 edbus (0.5.0.050+svn20090130-1) experimental; urgency=low
 
   * New SVN snapshot
