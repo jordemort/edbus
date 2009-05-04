@@ -1,7 +1,7 @@
 # get rid of that stupid cache mechanism
 rm -f config.cache
 
-AC_INIT(e_dbus, 0.5.0.050, enlightenment-devel@lists.sourceforge.net)
+AC_INIT(e_dbus, 0.5.0.060, enlightenment-devel@lists.sourceforge.net)
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(configure.ac)
 AC_CANONICAL_BUILD
@@ -23,7 +23,18 @@ VMIN=`echo $PACKAGE_VERSION | awk -F. '{printf("%s", $2);}'`
 VMIC=`echo $PACKAGE_VERSION | awk -F. '{printf("%s", $3);}'`
 SNAP=`echo $PACKAGE_VERSION | awk -F. '{printf("%s", $4);}'`
 version_info=`expr $VMAJ + $VMIN`":$VMIC:$VMIN"
+release="ver-pre-01"
+econnman_release_info="-release $release"
+edbus_release_info="-release $release"
+ehal_release_info="-release $release"
+enm_release_info="-release $release"
+enotify_release_info="-release $release"
 AC_SUBST(version_info)
+AC_SUBST(econnman_release_info)
+AC_SUBST(edbus_release_info)
+AC_SUBST(ehal_release_info)
+AC_SUBST(enm_release_info)
+AC_SUBST(enotify_release_info)
 
 dnl Check enabled modules to build
 AC_ARG_ENABLE(ehal,
@@ -32,12 +43,17 @@ AC_ARG_ENABLE(ehal,
 				  [enable_ehal=$enableval],
 				  [enable_ehal="yes"])
 AC_ARG_ENABLE(enm,
-				  AC_HELP_STRING([--disable-enm], 
-									  [Disable enm build]),
+				  AC_HELP_STRING([--enable-enm],
+									  [Enable enm (network manager) build]),
 				  [enable_enm=$enableval],
-				  [enable_enm="yes"])
+				  [enable_enm="no"])
+AC_ARG_ENABLE(econnman,
+				  AC_HELP_STRING([--enable-econnman],
+									  [Enable econnman build]),
+				  [enable_econnman=$enableval],
+				  [enable_econnman="no"])
 AC_ARG_ENABLE(enotify,
-				  AC_HELP_STRING([--disable-enotify], 
+				  AC_HELP_STRING([--disable-enotify],
 									  [Disable enotify build]),
 				  [enable_enotify=$enableval],
 				  [enable_enotify="yes"])
@@ -73,6 +89,7 @@ AC_ARG_ENABLE(build-test-gui,
 AM_CONDITIONAL([BUILD_EHAL],    [test "x${enable_ehal}"    = "xyes"])
 AM_CONDITIONAL([BUILD_ENM],     [test "x${enable_enm}"     = "xyes"])
 AM_CONDITIONAL([BUILD_ENOTIFY], [test "x${enable_enotify}" = "xyes"])
+AM_CONDITIONAL([BUILD_ECONNMAN], [test "x${enable_econnman}" = "xyes"])
 
 AC_OUTPUT([
 e_dbus.spec
@@ -83,11 +100,13 @@ src/lib/dbus/Makefile
 src/lib/hal/Makefile
 src/lib/nm/Makefile
 src/lib/notification/Makefile
+src/lib/connman/Makefile
 src/bin/Makefile
 edbus.pc
 ehal.pc
 enotify.pc
 enm.pc
+econnman.pc
 ])
 
 
@@ -105,6 +124,7 @@ echo "Modules:"
 echo
 echo "  EHal.................: $enable_ehal"
 echo "  ENM..................: $enable_enm"
+echo "  EConnman.............: $enable_econnman"
 echo "  ENotify..............: $enable_enotify"
 echo
 echo "Configuration Options Summary:"
