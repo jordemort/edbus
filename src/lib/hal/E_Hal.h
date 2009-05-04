@@ -38,7 +38,7 @@ typedef struct E_Hal_Properties E_Hal_Properties;
 
 struct E_Hal_String_List_Return
 {
-  Ecore_List *strings; /* list of const char * */
+  Eina_List *strings; /* list of const char * */
 };
 
 struct E_Hal_Bool_Return
@@ -77,7 +77,7 @@ struct E_Hal_Property
     dbus_bool_t b;
     double d;
     dbus_uint64_t u64;
-    Ecore_List *strlist;
+    Eina_List *strlist;
   } val;
 };
 
@@ -105,15 +105,15 @@ extern "C" {
 #endif
 
 /* org.freedesktop.Hal.Device */
-   EAPI int e_hal_device_get_property(E_DBus_Connection *conn, const char *udi, const char *property, E_DBus_Callback_Func cb_func, void *data);
-   EAPI int e_hal_device_get_all_properties(E_DBus_Connection *conn, const char *udi, E_DBus_Callback_Func cb_func, void *data);
-   EAPI int e_hal_device_query_capability(E_DBus_Connection *conn, const char *udi, const char *capability, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall *e_hal_device_get_property(E_DBus_Connection *conn, const char *udi, const char *property, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall *e_hal_device_get_all_properties(E_DBus_Connection *conn, const char *udi, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall *e_hal_device_query_capability(E_DBus_Connection *conn, const char *udi, const char *capability, E_DBus_Callback_Func cb_func, void *data);
 
 /* org.freedesktop.Hal.Manager */
-   EAPI int e_hal_manager_get_all_devices(E_DBus_Connection *conn, E_DBus_Callback_Func cb_func, void *data);
-   EAPI int e_hal_manager_device_exists(E_DBus_Connection *conn, const char *udi, E_DBus_Callback_Func cb_func, void *data);
-   EAPI int e_hal_manager_find_device_string_match(E_DBus_Connection *conn, const char *key, const char *value, E_DBus_Callback_Func cb_func, void *data);
-   EAPI int e_hal_manager_find_device_by_capability(E_DBus_Connection *conn, const char *capability, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall *e_hal_manager_get_all_devices(E_DBus_Connection *conn, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall *e_hal_manager_device_exists(E_DBus_Connection *conn, const char *udi, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall *e_hal_manager_find_device_string_match(E_DBus_Connection *conn, const char *key, const char *value, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall *e_hal_manager_find_device_by_capability(E_DBus_Connection *conn, const char *capability, E_DBus_Callback_Func cb_func, void *data);
 
 /* utility functions */
    EAPI void           e_hal_property_free(E_Hal_Property *prop);
@@ -122,12 +122,12 @@ extern "C" {
    EAPI int            e_hal_property_int_get(E_Hal_Properties *properties, const char *key, int *err);
    EAPI dbus_uint64_t  e_hal_property_uint64_get(E_Hal_Properties *properties, const char *key, int *err);
    EAPI double         e_hal_property_double_get(E_Hal_Properties *properties, const char *key, int *err);
-   EAPI Ecore_List    *e_hal_property_strlist_get(E_Hal_Properties *properties, const char *key, int *err);
+   EAPI Eina_List     *e_hal_property_strlist_get(E_Hal_Properties *properties, const char *key, int *err);
 
 /* (un)mount */
-   EAPI int e_hal_device_volume_mount(E_DBus_Connection *conn, const char *udi, const char *mount_point, const char *fstype, Ecore_List *options, E_DBus_Callback_Func cb_func, void *data);
-   EAPI int e_hal_device_volume_unmount(E_DBus_Connection *conn, const char *udi, Ecore_List *options, E_DBus_Callback_Func cb_func, void *data);
-   EAPI int e_hal_device_volume_eject(E_DBus_Connection *conn, const char *udi, Ecore_List *options, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall *e_hal_device_volume_mount(E_DBus_Connection *conn, const char *udi, const char *mount_point, const char *fstype, Eina_List *options, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall *e_hal_device_volume_unmount(E_DBus_Connection *conn, const char *udi, Eina_List *options, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall *e_hal_device_volume_eject(E_DBus_Connection *conn, const char *udi, Eina_List *options, E_DBus_Callback_Func cb_func, void *data);
 
 #ifdef __cplusplus
 }

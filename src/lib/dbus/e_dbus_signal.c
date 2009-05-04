@@ -9,14 +9,15 @@
 
 struct E_DBus_Signal_Handler
 {
-  char *sender;
-  char *path;
-  char *interface;
-  char *member;
-
-  E_DBus_Signal_Cb cb_signal;
-  void *data;
-  unsigned char delete_me : 1;
+   char *sender;
+   char *path;
+   char *interface;
+   char *member;
+   
+   E_DBus_Signal_Cb cb_signal;
+   DBusPendingCall *get_name_owner_pending;
+   void *data;
+   unsigned char delete_me : 1;
 };
 
 static void cb_signal_dispatcher(E_DBus_Connection *conn, DBusMessage *msg);
@@ -46,6 +47,7 @@ cb_name_owner(void *data, DBusMessage *msg, DBusError *err)
   E_DBus_Signal_Handler *sh;
 
   sh = d->sh;
+  sh->get_name_owner_pending = NULL;
   free(d);
 
   if (dbus_error_is_set(err))
@@ -69,8 +71,7 @@ cb_name_owner(void *data, DBusMessage *msg, DBusError *err)
     DEBUG(1, "ERROR: %s %s\n", err->name, err->message);
 /* FIXME: this is bad. the handler gets silently freed and the caller has no
  * idea that it was freed - or if, or when.
-  if (ecore_list_goto(conn->signal_handlers, sh))
-    ecore_list_remove(conn->signal_handlers);
+  conn->signal_handlers = eina_list_remove(conn->signal_handlers, sh);
   e_dbus_signal_handler_free(sh);
  */
   dbus_error_free(err);
@@ -183,9 +184,7 @@ e_dbus_signal_handler_add(E_DBus_Connection *conn, const char *sender, const cha
 
   if (!conn->signal_handlers)
     {
-       conn->signal_handlers = ecore_list_new();
-       ecore_list_free_cb_set
-	 (conn->signal_handlers, ECORE_FREE_CB(e_dbus_signal_handler_free));
+       conn->signal_handlers = NULL;
        conn->signal_dispatcher = cb_signal_dispatcher;
     }
 
@@ -201,10 +200,11 @@ e_dbus_signal_handler_add(E_DBus_Connection *conn, const char *sender, const cha
 	 }
        data->conn = conn;
        data->sh = sh;
-       e_dbus_get_name_owner(conn, sender, cb_name_owner, data);
+       sh->get_name_owner_pending = 
+         e_dbus_get_name_owner(conn, sender, cb_name_owner, data);
     }
 
-  ecore_list_append(conn->signal_handlers, sh);
+  conn->signal_handlers = eina_list_append(conn->signal_handlers, sh);
   return sh;
 }
 
@@ -222,6 +222,11 @@ e_dbus_signal_handler_del(E_DBus_Connection *conn, E_DBus_Signal_Handler *sh)
   char match[DBUS_MAXIMUM_MATCH_RULE_LENGTH];
   int len, sender_len, path_len, interface_len, member_len;
 
+   if (sh->get_name_owner_pending)
+     {
+        dbus_pending_call_cancel(sh->get_name_owner_pending);
+        sh->get_name_owner_pending = NULL;
+     }
   sh->delete_me = 1;
   if (e_dbus_idler_active)
   {
@@ -248,8 +253,7 @@ e_dbus_signal_handler_del(E_DBus_Connection *conn, E_DBus_Signal_Handler *sh)
   dbus_bus_remove_match(conn->conn, match, NULL);
 
   if (!conn->signal_handlers) return;
-  if (!ecore_list_goto(conn->signal_handlers, sh)) return;
-  ecore_list_remove(conn->signal_handlers);
+  conn->signal_handlers = eina_list_remove(conn->signal_handlers, sh);
   e_dbus_signal_handler_free(sh);
 }
 
@@ -257,9 +261,9 @@ static void
 cb_signal_dispatcher(E_DBus_Connection *conn, DBusMessage *msg)
 {
   E_DBus_Signal_Handler *sh;
+  Eina_List *l;
 
-  ecore_list_first_goto(conn->signal_handlers);
-  while ((sh = ecore_list_next(conn->signal_handlers)))
+  EINA_LIST_FOREACH(conn->signal_handlers, l, sh)
   {
     if ((!sh->cb_signal) || (sh->delete_me)) continue;
 
@@ -276,14 +280,22 @@ void
 e_dbus_signal_handlers_clean(E_DBus_Connection *conn)
 {
   E_DBus_Signal_Handler *sh;
+  Eina_List *l, *l_next;
 
   if (!e_dbus_handler_deletions) return;
+  e_dbus_handler_deletions = 0;
   if (!conn->signal_handlers) return;
-  ecore_list_first_goto(conn->signal_handlers);
-  while ((sh = ecore_list_next(conn->signal_handlers)))
+  EINA_LIST_FOREACH_SAFE(conn->signal_handlers, l, l_next, sh)
   {
     if (sh->delete_me)
       e_dbus_signal_handler_del(conn, sh);
   }
-  e_dbus_handler_deletions = 0;
+}
+
+void
+e_dbus_signal_handlers_free_all(E_DBus_Connection *conn)
+{
+   E_DBus_Signal_Handler *sh;
+   EINA_LIST_FREE(conn->signal_handlers, sh)
+     e_dbus_signal_handler_free(sh);
 }
