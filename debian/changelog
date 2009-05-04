@@ -1,12 +1,15 @@
-edbus (0.5.0.050+svn?????) UNRELEASED; urgency=low
+edbus (0.5.0.060-1) experimental; urgency=low
 
   * New SVN snapshot
     - Drop patches, no longer needed
     - Package renaming due to upstream SONAME change.
       + Update shlibs and .install files
-  * Update Standards-Version
+  * Update Standards-Version, no change required
+  * Package name purposedly doesn't match SONAME, in an attempt to make the
+    former a bit more meaningful than libedbus-ver-pre-01-0
+    - Override the lintian warning: package-name-doesnt-match-sonames
 
- -- Albin Tonnerre <albin.tonnerre@gmail.com>  Sat, 18 Apr 2009 19:16:57 +0200
+ -- Albin Tonnerre <albin.tonnerre@gmail.com>  Thu, 07 May 2009 13:46:05 +0200
 
 edbus (0.5.0.050+svn20090130-1) experimental; urgency=low
 
