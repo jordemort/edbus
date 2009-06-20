@@ -6,7 +6,7 @@ Uploaders: Albin Tonnerre <albin.tonnerre@gmail.com>, Niv Sardi <xaiki@debian.or
  Xavier Oswald <x.oswald@free.fr>, Jan Lübbe <jluebbe@debian.org>
 Build-Depends: debhelper (>= 6), cdbs, libecore-dev (>= 0.9.9.061), libdbus-1-dev,
  libevas-dev (>= 0.9.9.061), libeina-dev (>= 0.0.2.060)
-Standards-Version: 3.8.1
+Standards-Version: 3.8.2
 Homepage: http://enlightenment.org
 Vcs-Git: git://git.debian.org/pkg-e/libs/edbus.git
 Vcs-Browser: http://git.debian.org/?p=pkg-e/libs/edbus.git
