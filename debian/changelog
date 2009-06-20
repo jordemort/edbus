@@ -1,10 +1,11 @@
-edbus (0.5.0.061-1) UNRELEASED; urgency=low
+edbus (0.5.0.061-1) unstable; urgency=low
 
   * New upstream snapshot
   * Rename packages due to API changes
   * Update to Standards-Version 3.8.2, no change required
+  * Upload to unstable
 
- -- Albin Tonnerre <albin.tonnerre@gmail.com>  Thu, 18 Jun 2009 19:19:19 +0200
+ -- Albin Tonnerre <albin.tonnerre@gmail.com>  Sat, 20 Jun 2009 17:38:53 +0200
 
 edbus (0.5.0.060-1) experimental; urgency=low
 
