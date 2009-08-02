@@ -4,8 +4,8 @@ Priority: optional
 Maintainer: Debian Pkg-e Team <pkg-e-devel@lists.alioth.debian.org>
 Uploaders: Albin Tonnerre <albin.tonnerre@gmail.com>, Niv Sardi <xaiki@debian.org>,
  Xavier Oswald <x.oswald@free.fr>, Jan Lübbe <jluebbe@debian.org>
-Build-Depends: debhelper (>= 6), cdbs, libecore-dev (>= 0.9.9.061), libdbus-1-dev,
- libevas-dev (>= 0.9.9.061), libeina-dev (>= 0.0.2.060)
+Build-Depends: debhelper (>= 6), cdbs, libecore-dev (>= 0.9.9.062), libdbus-1-dev,
+ libevas-dev (>= 0.9.9.062), libeina-dev (>= 0.0.2.062)
 Standards-Version: 3.8.2
 Homepage: http://enlightenment.org
 Vcs-Git: git://git.debian.org/pkg-e/libs/edbus.git
@@ -14,15 +14,15 @@ Vcs-Browser: http://git.debian.org/?p=pkg-e/libs/edbus.git
 Package: libedbus-dev
 Section: libdevel
 Architecture: any
-Depends: ${misc:Depends}, libedbus-svn-02 (= ${binary:Version}), libdbus-1-dev,
- libeina-dev (>= 0.0.2.060), libecore-dev (>= 0.9.9.061), libevas-dev (>= 0.9.9.061)
+Depends: ${misc:Depends}, libedbus-svn-03 (= ${binary:Version}), libdbus-1-dev,
+ libeina-dev (>= 0.0.2.062), libecore-dev (>= 0.9.9.062), libevas-dev (>= 0.9.9.062)
 Description: D-Bus and HAL wrapper libraries for use with the EFL - Development files
  Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
  .
  This packages contains headers and static libraries for libedbus, libehal and
  libenotify
 
-Package: libedbus-svn-02
+Package: libedbus-svn-03
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: D-Bus and HAL wrapper libraries for use with the EFL
