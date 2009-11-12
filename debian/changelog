@@ -1,3 +1,10 @@
+edbus (0.5.0.063-1) unstable; urgency=low
+
+  * New upstream snapshot
+  * Bump Standards-Version to 3.8.3
+
+ -- Albin Tonnerre <albin.tonnerre@gmail.com>  Sat, 05 Dec 2009 09:41:38 +0100
+
 edbus (0.5.0.062-1) unstable; urgency=low
 
   * New upstream snapshot
