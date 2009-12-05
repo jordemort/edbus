@@ -1,19 +1,24 @@
 # get rid of that stupid cache mechanism
 rm -f config.cache
 
-AC_INIT([e_dbus], [0.5.0.062], [enlightenment-devel@lists.sourceforge.net])
+AC_INIT([e_dbus], [0.5.0.063], [enlightenment-devel@lists.sourceforge.net])
+release="ver-svn-05"
 AC_PREREQ([2.52])
 AC_CONFIG_SRCDIR([configure.ac])
+AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 
-AM_INIT_AUTOMAKE(1.6 dist-bzip2)
-AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE([1.6 dist-bzip2])
+AM_CONFIG_HEADER([config.h])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_PROG_CC
 AC_HEADER_STDC
 AM_PROG_CC_C_O
+AC_C___ATTRIBUTE__
 
+AC_LIBTOOL_WIN32_DLL
 define([AC_LIBTOOL_LANG_CXX_CONFIG], [:])dnl
 define([AC_LIBTOOL_LANG_F77_CONFIG], [:])dnl
 AC_PROG_LIBTOOL
@@ -23,7 +28,6 @@ VMIN=`echo $PACKAGE_VERSION | awk -F. '{printf("%s", $2);}'`
 VMIC=`echo $PACKAGE_VERSION | awk -F. '{printf("%s", $3);}'`
 SNAP=`echo $PACKAGE_VERSION | awk -F. '{printf("%s", $4);}'`
 version_info=`expr $VMAJ + $VMIN`":$VMIC:$VMIN"
-release="ver-svn-03"
 econnman_release_info="-release $release"
 edbus_release_info="-release $release"
 ehal_release_info="-release $release"
@@ -37,27 +41,36 @@ AC_SUBST(enm_release_info)
 AC_SUBST(enotify_release_info)
 
 dnl Check enabled modules to build
-AC_ARG_ENABLE(ehal,
-				  AC_HELP_STRING([--disable-ehal],
-									  [Disable ehal build]),
-				  [enable_ehal=$enableval],
-				  [enable_ehal="yes"])
-AC_ARG_ENABLE(enm,
-				  AC_HELP_STRING([--enable-enm],
-									  [Enable enm (network manager) build]),
-				  [enable_enm=$enableval],
-				  [enable_enm="no"])
-AC_ARG_ENABLE(econnman,
-				  AC_HELP_STRING([--enable-econnman],
-									  [Enable econnman build]),
-				  [enable_econnman=$enableval],
-				  [enable_econnman="no"])
-AC_ARG_ENABLE(enotify,
-				  AC_HELP_STRING([--disable-enotify],
-									  [Disable enotify build]),
-				  [enable_enotify=$enableval],
-				  [enable_enotify="yes"])
+AC_ARG_ENABLE([ehal],
+   [AC_HELP_STRING([--disable-ehal], [Disable ehal build])],
+   [enable_ehal=$enableval],
+   [enable_ehal="yes"])
 
+AC_ARG_ENABLE([enm],
+   [AC_HELP_STRING([--enable-enm], [Enable enm (network manager) build])],
+   [enable_enm=$enableval],
+   [enable_enm="no"])
+
+AC_ARG_ENABLE([econnman],
+   [AC_HELP_STRING([--enable-econnman], [Enable econnman build])],
+   [enable_econnman=$enableval],
+   [enable_econnman="no"])
+
+AC_ARG_ENABLE([enotify],
+   [AC_HELP_STRING([--disable-enotify], [Disable enotify build])],
+   [enable_enotify=$enableval],
+   [enable_enotify="yes"])
+
+# pkg-config
+PKG_PROG_PKG_CONFIG
+
+# Check whether pkg-config supports Requires.private
+if $PKG_CONFIG --atleast-pkgconfig-version 0.22; then
+   pkgconfig_requires_private="Requires.private"
+else
+   pkgconfig_requires_private="Requires"
+fi
+AC_SUBST(pkgconfig_requires_private)
 
 PKG_CHECK_MODULES([EINA], [eina-0])
 
@@ -68,28 +81,34 @@ PKG_CHECK_MODULES([EDBUS], [
 
 
 dnl evas
-if test "x${enable_enotify}" = "xyes"
-then
-	PKG_CHECK_MODULES(EVAS, [evas >= 0.9.9], [], [enable_enotify="no"])
+if test "x${enable_enotify}" = "xyes" ; then
+   PKG_CHECK_MODULES(EVAS, [evas >= 0.9.9], [], [enable_enotify="no"])
 fi
 
-AC_ARG_ENABLE(build-test-gui,
-  AS_HELP_STRING([--enable-build-test-gui], [Build with gui for testing]),
-  [ PKG_CHECK_MODULES([HAL_TEST_GUI], [
-    ewl
-    efreet
-    ],
+AC_ARG_ENABLE([build-test-gui],
+   [AS_HELP_STRING([--enable-build-test-gui], [Build with gui for testing])],
+   [PKG_CHECK_MODULES([HAL_TEST_GUI],
+       [ewl efreet],
     # temporarily disable until update to newer tree2 api
     [AC_DEFINE([EWL_GUI], 0, [An ewl gui for e_dbus_hal])],
-    [AC_DEFINE([EWL_GUI], 0, [An ewl gui for e_dbus_hal])]
-    )
- ]
-)
+    [AC_DEFINE([EWL_GUI], 0, [An ewl gui for e_dbus_hal])])
+   ])
 
-AM_CONDITIONAL([BUILD_EHAL],    [test "x${enable_ehal}"    = "xyes"])
-AM_CONDITIONAL([BUILD_ENM],     [test "x${enable_enm}"     = "xyes"])
-AM_CONDITIONAL([BUILD_ENOTIFY], [test "x${enable_enotify}" = "xyes"])
+AM_CONDITIONAL([BUILD_EHAL],     [test "x${enable_ehal}"     = "xyes"])
+AM_CONDITIONAL([BUILD_ENM],      [test "x${enable_enm}"      = "xyes"])
+AM_CONDITIONAL([BUILD_ENOTIFY],  [test "x${enable_enotify}"  = "xyes"])
 AM_CONDITIONAL([BUILD_ECONNMAN], [test "x${enable_econnman}" = "xyes"])
+
+EFL_EDBUS_BUILD=""
+lt_enable_auto_import=""
+case "$host_os" in
+   mingw* | cegcc*)
+      EFL_EDBUS_BUILD="-DEFL_EDBUS_BUILD"
+      lt_enable_auto_import="-Wl,--enable-auto-import"
+   ;;
+esac
+AC_SUBST(EFL_EDBUS_BUILD)
+AC_SUBST(lt_enable_auto_import)
 
 AC_OUTPUT([
 e_dbus.spec

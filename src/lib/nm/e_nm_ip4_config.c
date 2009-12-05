@@ -1,7 +1,13 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <stdio.h>
+#include <string.h>
+
 #include "E_Nm.h"
 #include "e_nm_private.h"
-
-#include <string.h>
+#include "e_dbus_private.h"
 
 static const Property ip4_config_properties[] = {
   { .name = "Addresses", .sig = "aau", .offset = offsetof(E_NM_IP4_Config, addresses) },
@@ -41,11 +47,20 @@ e_nm_ip4_config_get(E_NM *nm, const char *ip4_config,
 EAPI void
 e_nm_ip4_config_free(E_NM_IP4_Config *config)
 {
+  Eina_List *l;
+  void *data;
+
   if (!config) return;
-  if (config->addresses) ecore_list_destroy(config->addresses);
-  if (config->nameservers) ecore_list_destroy(config->nameservers);
-  if (config->domains) ecore_list_destroy(config->domains);
-  if (config->routes) ecore_list_destroy(config->routes);
+  EINA_LIST_FREE(config->addresses, l)
+    EINA_LIST_FREE(l, data)
+      free(data);
+  EINA_LIST_FREE(config->nameservers, data)
+    free(data);
+  EINA_LIST_FREE(config->domains, data)
+    free(data);
+  EINA_LIST_FREE(config->routes, l)
+    EINA_LIST_FREE(l, data)
+      free(data);
   free(config);
 }
 
@@ -54,50 +69,47 @@ e_nm_ip4_config_dump(E_NM_IP4_Config *config)
 {
   unsigned int *u;
   const char   *domain;
-  Ecore_List   *list;
+  Eina_List    *list, *l;
 
   if (!config) return;
   printf("E_NM_IP4_Config:\n");
-  if (config->addresses)
+  printf("addresses  :\n");
+  EINA_LIST_FOREACH(config->addresses, l, list)
   {
-    printf("addresses  :\n");
-    ecore_list_first_goto(config->addresses);
-    while ((list = ecore_list_next(config->addresses)))
+    char buffer[1024];
+    Eina_List *l2;
+
+    strcpy(buffer, " -");
+    EINA_LIST_FOREACH(list, l2, u)
     {
-      printf(" -");
-      ecore_list_first_goto(list);
-      while ((u = ecore_list_next(list)))
-        printf(" %s", ip4_address2str(*u));
-      printf("\n");
+      strcat(buffer, " ");
+      strcat(buffer, ip4_address2str(*u));
     }
+    printf("%s\n", buffer);
   }
-  if (config->nameservers)
+  printf("nameservers:\n");
+  EINA_LIST_FOREACH(config->nameservers, l, u)
   {
-    printf("nameservers:\n");
-    ecore_list_first_goto(config->nameservers);
-    while ((u = ecore_list_next(config->nameservers)))
-      printf(" - %s\n", ip4_address2str(*u));
+    printf(" - %s\n", ip4_address2str(*u));
   }
-  if (config->domains)
+  printf("domains    :\n");
+  EINA_LIST_FOREACH(config->domains, l, domain)
   {
-    printf("domains    :\n");
-    ecore_list_first_goto(config->domains);
-    while ((domain = ecore_list_next(config->domains)))
-      printf(" - %s\n", domain);
+    printf(" - %s\n", domain);
   }
-  if (config->routes)
+  printf("routes     :\n");
+  EINA_LIST_FOREACH(config->routes, l, list)
   {
-    printf("routes     :\n");
-    ecore_list_first_goto(config->routes);
-    while ((list = ecore_list_next(config->routes)))
+    char buffer[1024];
+    Eina_List *l2;
+
+    strcpy(buffer, " -");
+    EINA_LIST_FOREACH(list, l2, u)
     {
-      printf(" -");
-      ecore_list_first_goto(list);
-      while ((u = ecore_list_next(list)))
-        printf(" %s", ip4_address2str(*u));
-      printf("\n");
+      strcat(buffer, " ");
+      strcat(buffer, ip4_address2str(*u));
     }
+    printf("%s\n", buffer);
   }
-  printf("\n");
 }
 

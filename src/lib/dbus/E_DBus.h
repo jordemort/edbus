@@ -3,23 +3,29 @@
 
 #define DBUS_API_SUBJECT_TO_CHANGE
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
+#ifdef _WIN32
+# ifdef interface
+#  undef interface
+# endif
+#endif
 
 #include <dbus/dbus.h>
-#include <Ecore.h>
 #include <Eina.h>
 
 #ifdef EAPI
-#undef EAPI
+# undef EAPI
 #endif
-#ifdef _MSC_VER
-# ifdef BUILDING_DLL
-#  define EAPI __declspec(dllexport)
+
+#ifdef _WIN32
+# ifdef EFL_EDBUS_BUILD
+#  ifdef DLL_EXPORT
+#   define EAPI __declspec(dllexport)
+#  else
+#   define EAPI
+#  endif /* ! DLL_EXPORT */
 # else
 #  define EAPI __declspec(dllimport)
-# endif
+# endif /* ! EFL_EDBUS_BUILD */
 #else
 # ifdef __GNUC__
 #  if __GNUC__ >= 4
@@ -35,7 +41,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+   EAPI extern int E_DBUS_DOMAIN_GLOBAL;
    EAPI extern int E_DBUS_EVENT_SIGNAL;
 
    typedef struct E_DBus_Connection E_DBus_Connection;

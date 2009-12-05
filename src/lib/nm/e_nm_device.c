@@ -3,10 +3,16 @@
  * the org.freedesktop.NetworkManager.Device DBus interface.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <stdio.h>
+#include <string.h>
+
 #include "E_Nm.h"
 #include "e_nm_private.h"
-
-#include <string.h>
+#include "e_dbus_private.h"
 
 static void property_device_type(Property_Data *data, DBusMessageIter *iter);
 
@@ -57,7 +63,7 @@ cb_state_changed(void *data, DBusMessage *msg)
                         DBUS_TYPE_INVALID);
   if (dbus_error_is_set(&err))
   {
-    printf("Error: %s - %s\n", err.name, err.message);
+    ERR("%s - %s", err.name, err.message);
     return;
   }
 
@@ -107,7 +113,7 @@ cb_wireless_access_point_added(void *data, DBusMessage *msg)
                         DBUS_TYPE_INVALID);
   if (dbus_error_is_set(&err))
   {
-    printf("Error: %s - %s\n", err.name, err.message);
+    ERR("%s - %s", err.name, err.message);
     return;
   }
 
@@ -131,7 +137,7 @@ cb_wireless_access_point_removed(void *data, DBusMessage *msg)
                         DBUS_TYPE_INVALID);
   if (dbus_error_is_set(&err))
   {
-    printf("Error: %s - %s\n", err.name, err.message);
+    ERR("%s - %s", err.name, err.message);
     return;
   }
 
@@ -167,15 +173,15 @@ property_device_type(Property_Data *data, DBusMessageIter *iter)
     case E_NM_DEVICE_TYPE_WIRED:
       data->property = device_wired_properties;
       data->interface = E_NM_INTERFACE_DEVICE_WIRED;
-      ecore_list_append(dev->handlers, e_nm_device_wired_signal_handler_add(data->nmi->conn, dev->dev.udi, "PropertiesChanged", cb_wired_properties_changed, dev));
+      dev->handlers = eina_list_append(dev->handlers, e_nm_device_wired_signal_handler_add(data->nmi->conn, dev->dev.udi, "PropertiesChanged", cb_wired_properties_changed, dev));
       property_get(data->nmi->conn, data);
       break;
     case E_NM_DEVICE_TYPE_WIRELESS:
       data->property = device_wireless_properties;
       data->interface = E_NM_INTERFACE_DEVICE_WIRELESS;
-      ecore_list_append(dev->handlers, e_nm_device_wireless_signal_handler_add(data->nmi->conn, dev->dev.udi, "PropertiesChanged", cb_wireless_properties_changed, dev));
-      ecore_list_append(dev->handlers, e_nm_device_wireless_signal_handler_add(data->nmi->conn, dev->dev.udi, "AccessPointAdded", cb_wireless_access_point_added, dev));
-      ecore_list_append(dev->handlers, e_nm_device_wireless_signal_handler_add(data->nmi->conn, dev->dev.udi, "AccessPointRemoved", cb_wireless_access_point_removed, dev));
+      dev->handlers = eina_list_append(dev->handlers, e_nm_device_wireless_signal_handler_add(data->nmi->conn, dev->dev.udi, "PropertiesChanged", cb_wireless_properties_changed, dev));
+      dev->handlers = eina_list_append(dev->handlers, e_nm_device_wireless_signal_handler_add(data->nmi->conn, dev->dev.udi, "AccessPointAdded", cb_wireless_access_point_added, dev));
+      dev->handlers = eina_list_append(dev->handlers, e_nm_device_wireless_signal_handler_add(data->nmi->conn, dev->dev.udi, "AccessPointRemoved", cb_wireless_access_point_removed, dev));
       property_get(data->nmi->conn, data);
       break;
     default:
@@ -192,16 +198,14 @@ error:
 }
 
 static void
-check_done(Reply_Data *d, Ecore_List *list)
+check_done(Reply_Data *d, Eina_List *list)
 {
-  ecore_list_first_goto(list);
-  if (ecore_list_empty_is(list))
+  if (!list)
   {
     d->cb_func(d->data, NULL);
-    ecore_list_destroy(list);
     free(d);
   }
-  else if (ecore_list_current(list) != (void *)-1)
+  else if (eina_list_data_get(list) != (void *)-1)
   {
     d->cb_func(d->data, list);
     free(d);
@@ -212,15 +216,16 @@ static int
 cb_access_point(void *data, E_NM_Access_Point *ap)
 {
   Reply_Data  *d;
-  Ecore_List  *list;
+  Eina_List   *list;
 
   d = data;
   list = d->reply;
   if (ap)
-    ecore_list_append(list, ap);
-  ecore_list_first_remove(list);
+    list = eina_list_append(list, ap);
+  list = eina_list_remove_list(list, list);
 
   check_done(d, list);
+  d->reply = list;
   return 1;
 }
 
@@ -229,27 +234,26 @@ cb_access_points(void *data, void *reply, DBusError *err)
 {
   Reply_Data           *d;
   E_NM_Device_Internal *dev;
-  Ecore_List           *access_points;
-  Ecore_List           *list;
+  Eina_List            *access_points;
+  Eina_List            *list = NULL;
+  Eina_List            *l;
   const char           *ap;
 
   d = data;
   dev = d->object;
   if (dbus_error_is_set(err))
   {
-    printf("Error: %s - %s\n", err->name, err->message);
+    ERR("%s - %s", err->name, err->message);
     d->cb_func(d->data, NULL);
     free(d);
     return;
   }
   access_points = reply;
-  ecore_list_first_goto(access_points);
-  list = ecore_list_new();
-  ecore_list_free_cb_set(list, ECORE_FREE_CB(e_nm_access_point_free));
-  d->reply = list;
-  while ((ap = ecore_list_next(access_points)))
+  //TODO: ecore_list_free_cb_set(list, ECORE_FREE_CB(e_nm_access_point_free));
+  EINA_LIST_FOREACH(access_points, l, ap)
   {
-    ecore_list_prepend(list, (void *)-1);
+    list = eina_list_prepend(list, (void *)-1);
+    d->reply = list;
     e_nm_access_point_get(&(dev->nmi->nm), ap, cb_access_point, d);
   }
 }
@@ -276,9 +280,8 @@ e_nm_device_get(E_NM *nm, const char *device,
   d->object = strdup(device);
   d->interface = E_NM_INTERFACE_DEVICE;
 
-  dev->handlers = ecore_list_new();
-  ecore_list_append(dev->handlers, e_nm_device_signal_handler_add(nmi->conn, device, "StateChanged", cb_state_changed, dev));
-  ecore_list_append(dev->handlers, e_nm_device_signal_handler_add(nmi->conn, device, "PropertiesChanged", cb_properties_changed, dev));
+  dev->handlers = eina_list_append(dev->handlers, e_nm_device_signal_handler_add(nmi->conn, device, "StateChanged", cb_state_changed, dev));
+  dev->handlers = eina_list_append(dev->handlers, e_nm_device_signal_handler_add(nmi->conn, device, "PropertiesChanged", cb_properties_changed, dev));
  
   return property_get(nmi->conn, d);
 }
@@ -287,6 +290,7 @@ EAPI void
 e_nm_device_free(E_NM_Device *device)
 {
   E_NM_Device_Internal *dev;
+  void *data;
 
   if (!device) return;
   dev = (E_NM_Device_Internal *)device;
@@ -305,14 +309,8 @@ e_nm_device_free(E_NM_Device *device)
       if (dev->dev.wireless.active_access_point) free(dev->dev.wireless.active_access_point);
       break;
   }
-  if (dev->handlers)
-  {
-    E_DBus_Signal_Handler *sh;
-
-    while ((sh = ecore_list_first_remove(dev->handlers)))
-      e_dbus_signal_handler_del(dev->nmi->conn, sh);
-    ecore_list_destroy(dev->handlers);
-  }
+  EINA_LIST_FREE(dev->handlers, data)
+    e_dbus_signal_handler_del(dev->nmi->conn, data);
   free(dev);
 }
 
@@ -324,7 +322,7 @@ e_nm_device_dump(E_NM_Device *dev)
   printf("udi                  : %s\n", dev->udi);
   printf("interface            : %s\n", dev->interface);
   printf("driver               : %s\n", dev->driver);
-  printf("capabilities         :");
+  printf("capabilities         : ");
   if (dev->capabilities & E_NM_DEVICE_CAP_NM_SUPPORTED)
     printf(" E_NM_DEVICE_CAP_NM_SUPPORTED");
   if (dev->capabilities & E_NM_DEVICE_CAP_CARRIER_DETECT)
@@ -395,7 +393,7 @@ e_nm_device_dump(E_NM_Device *dev)
       }
       printf("bitrate              : %u\n", dev->wireless.bitrate);
       printf("active_access_point  : %s\n", dev->wireless.active_access_point);
-      printf("wireless_capabilities:");
+      printf("wireless_capabilities: ");
       if (dev->wireless.wireless_capabilities & E_NM_802_11_DEVICE_CAP_CIPHER_WEP40)
         printf(" E_NM_802_11_DEVICE_CAP_CIPHER_WEP40");
       if (dev->wireless.wireless_capabilities & E_NM_802_11_DEVICE_CAP_CIPHER_WEP104)
@@ -413,11 +411,10 @@ e_nm_device_dump(E_NM_Device *dev)
       printf("\n");
       break;
   }
-  printf("\n");
 }
 
 EAPI int
-e_nm_device_wireless_get_access_points(E_NM_Device *device, int (*cb_func)(void *data, Ecore_List *access_points), void *data)
+e_nm_device_wireless_get_access_points(E_NM_Device *device, int (*cb_func)(void *data, Eina_List *access_points), void *data)
 {
   DBusMessage          *msg;
   Reply_Data           *d;
