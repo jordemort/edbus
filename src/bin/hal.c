@@ -1,12 +1,16 @@
-#include "E_Hal.h"
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <string.h>
+
+#include <Ecore.h>
+#include <E_Hal.h>
 
 #if EWL_GUI
 #include <Ewl.h>
 #include <Efreet.h>
 #endif
-
-#include <string.h>
 
 /* test app */
 
@@ -99,7 +103,7 @@ storage_free(Storage *storage)
 {
   Volume *v;
   Eina_List *l;
-  printf("storage_free: %s\n", storage->udi);
+  EINA_LOG_INFO("storage_free: %s", storage->udi);
 
   /* disconnect storage from volume */
   EINA_LIST_FOREACH(storage->volumes, l, v)
@@ -363,7 +367,7 @@ volume_append(const char *udi)
 {
   Volume *v;
   if (!udi) return NULL;
-  printf("ADDING %s\n", udi);
+  EINA_LOG_INFO("ADDING %s", udi);
   v = volume_new();
   v->udi = strdup(udi);
   volumes = eina_list_append(volumes, v);
@@ -376,7 +380,7 @@ volume_append(const char *udi)
 }
 
 static void
-cb_test_get_all_devices(void *user_data, void *reply_data, DBusError *error)
+cb_test_get_all_devices(void *user_data __UNUSED__, void *reply_data, DBusError *error)
 {
   E_Hal_Manager_Get_All_Devices_Return *ret = reply_data;
   Eina_List *l;
@@ -393,12 +397,12 @@ cb_test_get_all_devices(void *user_data, void *reply_data, DBusError *error)
 
   EINA_LIST_FOREACH(ret->strings, l, device)
   {
-    printf("device: %s\n", device);
+     EINA_LOG_INFO("device: %s", device);
   }
 }
 
 static void
-cb_test_find_device_by_capability_storage(void *user_data, void *reply_data, DBusError *error)
+cb_test_find_device_by_capability_storage(void *user_data __UNUSED__, void *reply_data, DBusError *error)
 {
   E_Hal_Manager_Find_Device_By_Capability_Return *ret = reply_data;
   Eina_List *l;
@@ -418,7 +422,7 @@ cb_test_find_device_by_capability_storage(void *user_data, void *reply_data, DBu
 }
 
 static void
-cb_test_find_device_by_capability_volume(void *user_data, void *reply_data, DBusError *error)
+cb_test_find_device_by_capability_volume(void *user_data __UNUSED__, void *reply_data, DBusError *error)
 {
   E_Hal_Manager_Find_Device_By_Capability_Return *ret = reply_data;
   Eina_List *l;
@@ -478,22 +482,21 @@ error:
 }
 
 static void
-cb_signal_device_added(void *data, DBusMessage *msg)
+cb_signal_device_added(void *data __UNUSED__, DBusMessage *msg)
 {
   DBusError err;
   char *udi;
-  int ret;
 
   dbus_error_init(&err);
   dbus_message_get_args(msg, &err, DBUS_TYPE_STRING, &udi, DBUS_TYPE_INVALID);
   udi = strdup(udi);
-  printf("Device added: %s\n", udi); 
-  ret = e_hal_device_query_capability(conn, udi, "storage", cb_is_storage, strdup(udi));
+  EINA_LOG_INFO("Ehal: Device added: %s", udi);
+  e_hal_device_query_capability(conn, udi, "storage", cb_is_storage, strdup(udi));
   e_hal_device_query_capability(conn, udi, "volume", cb_is_volume, strdup(udi));
 }
 
 void
-cb_signal_device_removed(void *data, DBusMessage *msg)
+cb_signal_device_removed(void *data __UNUSED__, DBusMessage *msg)
 {
   DBusError err;
   char *udi;
@@ -501,13 +504,13 @@ cb_signal_device_removed(void *data, DBusMessage *msg)
   dbus_error_init(&err);
 
   dbus_message_get_args(msg, &err, DBUS_TYPE_STRING, &udi, DBUS_TYPE_INVALID);
-  printf("Removed: %s\n", udi);
+  EINA_LOG_INFO("Removed: %s", udi);
   storage_remove(udi);
   volume_remove(udi);
 }
 
 void
-cb_signal_new_capability(void *data, DBusMessage *msg)
+cb_signal_new_capability(void *data __UNUSED__, DBusMessage *msg)
 {
   DBusError err;
   char *udi, *capability;
@@ -540,7 +543,7 @@ cb_volume_unmounted(void *user_data, void *method_return, DBusError *error)
 {
   Volume *vol = user_data;
   vol->mounted = 0;
-  printf("Volume unmounted reply: %s\n", vol->udi);
+  EINA_LOG_INFO("Volume unmounted reply: %s", vol->udi);
 }
 
 static void
@@ -548,7 +551,7 @@ cb_volume_mounted(void *user_data, void *method_return, DBusError *error)
 {
   Volume *vol = user_data;
   vol->mounted = 1;
-  printf("Volume mounted reply: %s\n", vol->udi);
+  EINA_LOG_INFO("Volume mounted reply: %s", vol->udi);
 }
 
 static void
@@ -557,7 +560,7 @@ cb_device_view_clicked(Ewl_Widget *w, void *ev, void *data)
   Device *dev = data;
   char buf[4096];
 
-  printf("Device clicked: %s\n", dev->udi);
+  EINA_LOG_INFO("Device clicked: %s", dev->udi);
   if (dev->type == DEVICE_TYPE_VOLUME)
   {
     Volume *vol = (Volume *)dev;
@@ -583,7 +586,7 @@ cb_device_view_clicked(Ewl_Widget *w, void *ev, void *data)
         mount_point = buf;
       }
 
-      printf("Attempting to mount %s to %s\n", vol->udi, mount_point);
+      EINA_LOG_INFO("Attempting to mount %s to %s", vol->udi, mount_point);
       e_hal_device_volume_mount(conn, vol->udi, mount_point, vol->fstype, NULL, cb_volume_mounted, vol);
     }
   }
@@ -625,8 +628,8 @@ device_view_device_set(Ewl_Icon *icon, Device *dev)
   }
   else
   {
-    fprintf(stderr, "Invalid device type.");
-    buf[0] = 0;
+     EINA_LOG_ERR("Invalid device type.");
+     buf[0] = 0;
   }
 
   ewl_icon_label_set(icon, buf);
@@ -782,7 +785,7 @@ mountbox_mainwin_new(void)
 }
 #endif
 int 
-main(int argc, char **argv)
+main()
 {
 #if EWL_GUI
   Ewl_Widget *win;
@@ -791,14 +794,15 @@ main(int argc, char **argv)
   Volume *vol;
 
   ecore_init();
-  eina_stringshare_init();
+  eina_init();
   e_dbus_init();
+  e_hal_init();
 
 #if EWL_GUI
   efreet_init();
   if (!ewl_init(&argc, argv))
   {
-    fprintf(stderr, "Unable to init EWL.\n");
+    EINA_LOG_INFO("Unable to init EWL.");
     return 1;
   }
 #endif
@@ -806,7 +810,7 @@ main(int argc, char **argv)
   conn = e_dbus_bus_get(DBUS_BUS_SYSTEM);
   if (!conn)
   {
-    printf("Error connecting to system bus. Is it running?\n");
+    EINA_LOG_INFO("Error connecting to system bus. Is it running?");
     return 1;
   }
 
@@ -847,7 +851,8 @@ main(int argc, char **argv)
     }
   e_dbus_connection_close(conn);
   e_dbus_shutdown();
-  eina_stringshare_shutdown();
+  e_hal_shutdown();
+  eina_shutdown();
   ecore_shutdown();
   return 1;
 }

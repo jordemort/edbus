@@ -1,8 +1,14 @@
-#include <E_Nm.h>
-#include <Ecore_Data.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+
+#include <Ecore.h>
+
+#include <E_Nm.h>
 
 E_NM *nm = NULL;
 E_NMS *nms = NULL;
@@ -25,10 +31,10 @@ dump_variant(E_NM_Variant *var)
     {
         case 'a': {
           E_NM_Variant *subvar;
+	  Eina_List    *l;
 
           printf("a:");
-          ecore_list_first_goto(var->a);
-          while ((subvar = ecore_list_next(var->a)))
+          EINA_LIST_FOREACH(var->a, l, subvar)
           {
               dump_variant(subvar);
               printf(";");
@@ -58,24 +64,28 @@ dump_variant(E_NM_Variant *var)
 }
 
 static Eina_Bool
-dump_values(const Eina_Hash *hash, const void *key, void *value, void *data)
+dump_values(const Eina_Hash *hash __UNUSED__, const void *key, void *value, void *data __UNUSED__)
 {
     printf(" - name: %s - ", (char *)key);
     dump_variant(value);
     printf("\n");
+
+    return 1;
 }
  
 static Eina_Bool
-dump_settings(const Eina_Hash *hash, const void *key, void *value, void *fdata)
+dump_settings(const Eina_Hash *hash __UNUSED__, const void *key, void *value, void *fdata __UNUSED__)
 {
     printf("name: %s\n", (char *)key);
     printf("values:\n");
     eina_hash_foreach(value, dump_values, NULL);
     printf("\n");
+
+    return 1;
 }
 
 static int
-cb_nms_connection_secrets(void *data, Ecore_Hash *secrets)
+cb_nms_connection_secrets(void *data __UNUSED__, Eina_Hash *secrets)
 {
     printf("Secrets:\n");
     if (secrets)
@@ -84,32 +94,29 @@ cb_nms_connection_secrets(void *data, Ecore_Hash *secrets)
 }
 
 static int
-cb_nms_connection_settings(void *data, Ecore_Hash *settings)
+cb_nms_connection_settings(void *data, Eina_Hash *settings)
 {
     printf("Settings:\n");
     if (settings)
     {
-        if (ecore_hash_get(settings, "802-11-wireless-security"))
+        if (eina_hash_find(settings, "802-11-wireless-security"))
             e_nms_connection_secrets_get_secrets(data, "802-11-wireless-security", NULL, 0, cb_nms_connection_secrets, NULL);
         eina_hash_foreach(settings, dump_settings, NULL);
+	eina_hash_free(settings);
     }
     return 1;
 }
 
 static int
-cb_nms_connections(void *data, Ecore_List *list)
+cb_nms_connections(void *data __UNUSED__, Eina_List *list)
 {
     E_NMS_Connection *conn;
+    Eina_List        *l;
 
-    if (list)
+    EINA_LIST_FOREACH(list, l, conn)
     {
-        ecore_list_first_goto(list);
-        while ((conn = ecore_list_next(list)))
-        {
-            e_nms_connection_dump(conn);
-            e_nms_connection_get_settings(conn, cb_nms_connection_settings, conn);
-        }
-        //ecore_list_destroy(list);
+        e_nms_connection_dump(conn);
+        e_nms_connection_get_settings(conn, cb_nms_connection_settings, conn);
     }
     //ecore_main_loop_quit();
     //e_nms_list_connections(nms, cb_nms_connections, nms);
@@ -117,7 +124,7 @@ cb_nms_connections(void *data, Ecore_List *list)
 }
 
 static int
-cb_access_point(void *data, E_NM_Access_Point *ap)
+cb_access_point(void *data __UNUSED__, E_NM_Access_Point *ap)
 {
     e_nm_access_point_dump(ap);
     e_nm_access_point_free(ap);
@@ -137,12 +144,13 @@ cb_activate_connection(void *data, E_NM_Device *device)
 }
 
 static int
-cb_active_connection(void *data, E_NM_Active_Connection *conn)
+cb_active_connection(void *data __UNUSED__, E_NM_Active_Connection *conn)
 {
     const char *device;
+    Eina_List  *l;
+
     e_nm_deactivate_connection(nm, conn);
-    ecore_list_first_goto(conn->devices);
-    while ((device = ecore_list_next(conn->devices)))
+    EINA_LIST_FOREACH(conn->devices, l, device)
          e_nm_device_get(nm, device, cb_activate_connection, conn);
     /*
     e_nm_active_connection_dump(conn);
@@ -152,7 +160,7 @@ cb_active_connection(void *data, E_NM_Active_Connection *conn)
 }
 
 static int
-cb_ip4_config(void *data, E_NM_IP4_Config *config)
+cb_ip4_config(void *data __UNUSED__, E_NM_IP4_Config *config)
 {
     e_nm_ip4_config_dump(config);
     e_nm_ip4_config_free(config);
@@ -160,125 +168,107 @@ cb_ip4_config(void *data, E_NM_IP4_Config *config)
 }
 
 static int
-cb_access_points(void *data, Ecore_List *list)
+cb_access_points(void *data __UNUSED__, Eina_List *list)
 {
     E_NM_Access_Point *ap;
 
-    if (list)
+    EINA_LIST_FREE(list, ap)
     {
-        ecore_list_first_goto(list);
-        while ((ap = ecore_list_next(list)))
-        {
-            e_nm_access_point_dump(ap);
-        }
-        ecore_list_destroy(list);
+        e_nm_access_point_dump(ap);
+	e_nm_access_point_free(ap);
     }
     return 1;
 }
 
 static int
-cb_get_devices(void *data, Ecore_List *list)
+cb_get_devices(void *data __UNUSED__, Eina_List *list)
 {
     E_NM_Device *device;
+    Eina_List   *l;
 
-    if (list)
+    EINA_LIST_FOREACH(list, l, device)
     {
-        ecore_list_first_goto(list);
-        while ((device = ecore_list_next(list)))
+        e_nm_device_dump(device);
+        if (device->device_type == E_NM_DEVICE_TYPE_WIRELESS)
         {
-            e_nm_device_dump(device);
-            if (device->device_type == E_NM_DEVICE_TYPE_WIRELESS)
-            {
-                /*
-                e_nm_device_wireless_get_access_points(device, cb_access_points, NULL);
-                e_nm_access_point_get(nm, device->wireless.active_access_point, cb_access_point, NULL);
-                e_nm_ip4_config_get(nm, device->ip4_config, cb_ip4_config, NULL);
-                */
-            }
+            /*
+            e_nm_device_wireless_get_access_points(device, cb_access_points, NULL);
+            e_nm_access_point_get(nm, device->wireless.active_access_point, cb_access_point, NULL);
+            e_nm_ip4_config_get(nm, device->ip4_config, cb_ip4_config, NULL);
+            */
         }
-        //ecore_list_destroy(list);
     }
     //ecore_main_loop_quit();
     return 1;
 }
 
 static int
-cb_nms(void *data, E_NMS *reply)
+cb_nms(void *data __UNUSED__, E_NMS *reply)
 {
-    Ecore_Hash *settings, *values;
+    Eina_Hash *settings, *values;
     E_NM_Variant variant;
     const char ssid[] = { };
     const char *bssids[] = { };
 
-    settings = ecore_hash_new(ecore_str_hash, ecore_str_compare);
-    ecore_hash_free_key_cb_set(settings, free);
-    ecore_hash_free_value_cb_set(settings, ECORE_FREE_CB(ecore_hash_destroy));
+    settings = eina_hash_string_small_new(EINA_FREE_CB(eina_hash_free));
     /* connection */
-    values = ecore_hash_new(ecore_str_hash, ecore_str_compare);
-    ecore_hash_free_key_cb_set(values, free);
-    ecore_hash_free_value_cb_set(values, ECORE_FREE_CB(e_nm_variant_free));
-    ecore_hash_set(settings, strdup("connection"), values);
+    values = eina_hash_string_small_new(EINA_FREE_CB(e_nm_variant_free));
+    eina_hash_add(settings, strdup("connection"), values);
     memset(&variant, 0, sizeof(E_NM_Variant));
     variant.type = 't';
     variant.t = 1228201388;
-    ecore_hash_set(values, strdup("timestamp"), memdup(&variant, sizeof(E_NM_Variant)));
+    eina_hash_add(values, strdup("timestamp"), memdup(&variant, sizeof(E_NM_Variant)));
     memset(&variant, 0, sizeof(E_NM_Variant));
     variant.type = 's';
     variant.s = strdup("");
-    ecore_hash_set(values, strdup("id"), memdup(&variant, sizeof(E_NM_Variant)));
+    eina_hash_add(values, strdup("id"), memdup(&variant, sizeof(E_NM_Variant)));
     memset(&variant, 0, sizeof(E_NM_Variant));
     variant.type = 's';
     variant.s = strdup("");
-    ecore_hash_set(values, strdup("uuid"), memdup(&variant, sizeof(E_NM_Variant)));
+    eina_hash_add(values, strdup("uuid"), memdup(&variant, sizeof(E_NM_Variant)));
     memset(&variant, 0, sizeof(E_NM_Variant));
     variant.type = 's';
     variant.s = strdup("802-11-wireless");
-    ecore_hash_set(values, strdup("type"), memdup(&variant, sizeof(E_NM_Variant)));
+    eina_hash_add(values, strdup("type"), memdup(&variant, sizeof(E_NM_Variant)));
     memset(&variant, 0, sizeof(E_NM_Variant));
     variant.type = 'b';
     variant.b = 0;
-    ecore_hash_set(values, strdup("autoconnect"), memdup(&variant, sizeof(E_NM_Variant)));
+    eina_hash_add(values, strdup("autoconnect"), memdup(&variant, sizeof(E_NM_Variant)));
     /* 802-11-wireless */
-    values = ecore_hash_new(ecore_str_hash, ecore_str_compare);
-    ecore_hash_free_key_cb_set(values, free);
-    ecore_hash_free_value_cb_set(values, ECORE_FREE_CB(e_nm_variant_free));
-    ecore_hash_set(settings, strdup("802-11-wireless"), values);
+    values = eina_hash_string_small_new(EINA_FREE_CB(e_nm_variant_free));
+    eina_hash_add(settings, strdup("802-11-wireless"), values);
     memset(&variant, 0, sizeof(E_NM_Variant));
     variant.type = 's';
     variant.s = strdup("mode");
-    ecore_hash_set(values, strdup("infrastructure"), memdup(&variant, sizeof(E_NM_Variant)));
-    ecore_hash_set(values, strdup("ssid"), e_nm_variant_array_new('y', ssid, sizeof(ssid) / sizeof(ssid[0])));
-    ecore_hash_set(values, strdup("seen-bssids"), e_nm_variant_array_new('s', bssids, sizeof(bssids) / sizeof(bssids[0])));
+    eina_hash_add(values, strdup("infrastructure"), memdup(&variant, sizeof(E_NM_Variant)));
+    eina_hash_add(values, strdup("ssid"), e_nm_variant_array_new('y', ssid, sizeof(ssid) / sizeof(ssid[0])));
+    eina_hash_add(values, strdup("seen-bssids"), e_nm_variant_array_new('s', bssids, sizeof(bssids) / sizeof(bssids[0])));
     memset(&variant, 0, sizeof(E_NM_Variant));
     variant.type = 's';
     variant.s = strdup("802-11-wireless-security");
-    ecore_hash_set(values, strdup("security"), memdup(&variant, sizeof(E_NM_Variant)));
+    eina_hash_add(values, strdup("security"), memdup(&variant, sizeof(E_NM_Variant)));
     /* ipv4 */
-    values = ecore_hash_new(ecore_str_hash, ecore_str_compare);
-    ecore_hash_free_key_cb_set(values, free);
-    ecore_hash_free_value_cb_set(values, ECORE_FREE_CB(e_nm_variant_free));
-    ecore_hash_set(settings, strdup("ipv4"), values);
+    values = eina_hash_string_small_new(EINA_FREE_CB(e_nm_variant_free));
+    eina_hash_add(settings, strdup("ipv4"), values);
     memset(&variant, 0, sizeof(E_NM_Variant));
     variant.type = 's';
     variant.s = strdup("auto");
-    ecore_hash_set(values, strdup("method"), memdup(&variant, sizeof(E_NM_Variant)));
+    eina_hash_add(values, strdup("method"), memdup(&variant, sizeof(E_NM_Variant)));
     /* 802-11-wireless-security */
-    values = ecore_hash_new(ecore_str_hash, ecore_str_compare);
-    ecore_hash_free_key_cb_set(values, free);
-    ecore_hash_free_value_cb_set(values, ECORE_FREE_CB(e_nm_variant_free));
-    ecore_hash_set(settings, strdup("802-11-wireless-security"), values);
+    values = eina_hash_string_small_new(EINA_FREE_CB(e_nm_variant_free));
+    eina_hash_add(settings, strdup("802-11-wireless-security"), values);
     memset(&variant, 0, sizeof(E_NM_Variant));
     variant.type = 's';
     variant.s = strdup("none");
-    ecore_hash_set(values, strdup("key-mgmt"), memdup(&variant, sizeof(E_NM_Variant)));
+    eina_hash_add(values, strdup("key-mgmt"), memdup(&variant, sizeof(E_NM_Variant)));
     memset(&variant, 0, sizeof(E_NM_Variant));
     variant.type = 's';
     variant.s = strdup("open");
-    ecore_hash_set(values, strdup("auth-alg"), memdup(&variant, sizeof(E_NM_Variant)));
+    eina_hash_add(values, strdup("auth-alg"), memdup(&variant, sizeof(E_NM_Variant)));
     memset(&variant, 0, sizeof(E_NM_Variant));
     variant.type = 's';
     variant.s = strdup("");
-    ecore_hash_set(values, strdup("wep-key0"), memdup(&variant, sizeof(E_NM_Variant)));
+    eina_hash_add(values, strdup("wep-key0"), memdup(&variant, sizeof(E_NM_Variant)));
 
     nms = reply;
     e_nms_dump(nms);
@@ -290,7 +280,7 @@ cb_nms(void *data, E_NMS *reply)
 }
 
 static int
-cb_nm(void *data, E_NM *reply)
+cb_nm(void *data __UNUSED__, E_NM *reply)
 {
     if (!reply)
     {
@@ -317,10 +307,10 @@ cb_nm(void *data, E_NM *reply)
    
 
 int 
-main(int argc, char **argv)
+main()
 {
     ecore_init();
-    eina_stringshare_init();
+    eina_init();
     e_dbus_init();
    
     if (!e_nm_get(cb_nm, (void *)0xdeadbeef))
@@ -334,7 +324,7 @@ main(int argc, char **argv)
     e_nm_free(nm);
    
     e_dbus_shutdown();
-    eina_stringshare_shutdown();
+    eina_shutdown();
     ecore_shutdown();
     return 0;
 }

@@ -1,5 +1,7 @@
-#include <stdlib.h>
-#include "E_DBus.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "e_dbus_private.h"
 
 typedef struct E_DBus_Pending_Call_Data E_DBus_Pending_Call_Data;
@@ -18,7 +20,9 @@ cb_pending(DBusPendingCall *pending, void *user_data)
 
   if (!dbus_pending_call_get_completed(pending))
   {
-    printf("NOT COMPLETED\n");
+    INFO("E-dbus: NOT COMPLETED");
+    free(data);
+    dbus_pending_call_unref(pending);
     return;
   }
 
@@ -77,7 +81,12 @@ e_dbus_message_send(E_DBus_Connection *conn, DBusMessage *msg, E_DBus_Method_Ret
     pdata->data = data;
 
     if (!dbus_pending_call_set_notify(pending, cb_pending, pdata, free))
+    {
       free(pdata);
+      dbus_message_unref(msg);
+      dbus_pending_call_cancel(pending);
+      return NULL;
+    }
   }
 
   return pending;

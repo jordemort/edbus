@@ -1,11 +1,19 @@
 #ifndef E_DBUS_PRIVATE_H
 #define E_DBUS_PRIVATE_H
 
-#include "dbus/dbus.h"
-#include "Ecore_Data.h"
+#include <Ecore.h>
 
-#define DEBUG_LVL 0
-#define DEBUG(lvl, ...) if (lvl <= DEBUG_LVL) printf(__VA_ARGS__)
+#include "E_DBus.h"
+
+#ifndef E_DBUS_COLOR_DEFAULT
+#define E_DBUS_COLOR_DEFAULT EINA_COLOR_CYAN
+#endif
+EAPI extern int _e_dbus_log_dom;
+#define DBG(...)   EINA_LOG_DOM_DBG(_e_dbus_log_dom, __VA_ARGS__)
+#define INFO(...)    EINA_LOG_DOM_INFO(_e_dbus_log_dom, __VA_ARGS__)
+#define WARN(...) EINA_LOG_DOM_WARN(_e_dbus_log_dom, __VA_ARGS__)
+#define ERR(...)   EINA_LOG_DOM_ERR(_e_dbus_log_dom, __VA_ARGS__)
+
 
 struct E_DBus_Connection
 {

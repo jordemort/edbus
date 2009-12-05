@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "E_Notify.h"
 #include "E_Notification_Daemon.h"
 #include "e_notify_private.h"
@@ -7,7 +11,7 @@ static int e_notification_daemon_bus_init(E_Notification_Daemon *daemon);
 static int e_notification_daemon_object_init(E_Notification_Daemon *daemon);
 
 DBusMessage *
-method_get_capabilities(E_DBus_Object *obj, DBusMessage *message)
+method_get_capabilities(E_DBus_Object *obj __UNUSED__, DBusMessage *message)
 {
   const char *capabilities[] = {
     "body",
@@ -143,17 +147,17 @@ cb_request_name(void *data, DBusMessage *msg, DBusError *err)
 
   if (dbus_error_is_set(err))
   {
-    printf("Error (request_name): %s\n", err->message);
+    ERR("E-dbus-notification Error (request_name): %s", err->message);
     dbus_error_free(err);
     return;
   }
 
-  printf("received response with signature: '%s'\n", dbus_message_get_signature(msg));
+  INFO("E-dbus-notification received response with signature: '%s'", dbus_message_get_signature(msg));
   dbus_error_init(&new_err);
   dbus_message_get_args(msg, &new_err, DBUS_TYPE_UINT32, &ret, DBUS_TYPE_INVALID);
   if (dbus_error_is_set(&new_err))
   {
-    printf("Error (req name unmarshal): %s\n", new_err.message);
+    ERR("E-dbus-notification Error (req name unmarshal): %s", new_err.message);
     dbus_error_free(&new_err);
     return;
   }

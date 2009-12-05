@@ -1,7 +1,13 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <stdio.h>
+#include <string.h>
+
 #include "E_Nm.h"
 #include "e_nm_private.h"
-
-#include <string.h>
+#include "e_dbus_private.h"
 
 static const Property active_connection_properties[] = {
   { .name = "ServiceName", .sig = "s", .offset = offsetof(E_NM_Active_Connection, service_name) },
@@ -43,18 +49,22 @@ e_nm_active_connection_get(E_NM *nm, const char *connection,
 EAPI void
 e_nm_active_connection_free(E_NM_Active_Connection *conn)
 {
+  void *data;
+
   if (!conn) return;
   if (conn->path) free(conn->path);
   if (conn->service_name) free(conn->service_name);
   if (conn->connection) free(conn->connection);
   if (conn->specific_object) free(conn->specific_object);
-  if (conn->devices) ecore_list_destroy(conn->devices);
+  EINA_LIST_FREE(conn->devices, data)
+    free(data);
   free(conn);
 }
 
 EAPI void
 e_nm_active_connection_dump(E_NM_Active_Connection *conn)
 {
+  Eina_List  *l;
   const char *device;
 
   if (!conn) return;
@@ -63,8 +73,7 @@ e_nm_active_connection_dump(E_NM_Active_Connection *conn)
   printf("connection     : %s\n", conn->connection);
   printf("specific_object: %s\n", conn->specific_object);
   printf("devices        :\n");
-  ecore_list_first_goto(conn->devices);
-  while ((device = ecore_list_next(conn->devices)))
+  EINA_LIST_FOREACH(conn->devices, l, device)
     printf(" - %s\n", device);
   printf("state          : ");
   switch (conn->state)
@@ -80,6 +89,5 @@ e_nm_active_connection_dump(E_NM_Active_Connection *conn)
       break;
   }
   printf("default        : %d\n", conn->def);
-  printf("\n");
 }
 

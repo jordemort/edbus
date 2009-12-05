@@ -1,9 +1,12 @@
-#include "E_DBus.h"
-#include "e_dbus_private.h"
-#include <Eina.h>
-#include <stdio.h>
-#include <stdlib.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <string.h>
+
+#include <Ecore_Data.h>
+
+#include "e_dbus_private.h"
 
 static E_DBus_Interface *introspectable_interface = NULL;
 static E_DBus_Interface *properties_interface = NULL;
@@ -250,7 +253,7 @@ e_dbus_object_free(E_DBus_Object *obj)
 
   if (!obj) return;
 
-  DEBUG(5, "e_dbus_object_free (%s)\n", obj->path);
+  DBG("e_dbus_object_free (%s)", obj->path);
   dbus_connection_unregister_object_path(obj->conn->conn, obj->path);
   e_dbus_connection_close(obj->conn);
 
@@ -331,7 +334,7 @@ e_dbus_object_interface_attach(E_DBus_Object *obj, E_DBus_Interface *iface)
   e_dbus_interface_ref(iface);
   obj->interfaces = eina_list_append(obj->interfaces, iface);
   obj->introspection_dirty = 1;
-  DEBUG(4, "e_dbus_object_interface_attach (%s, %s) ", obj->path, iface->name);
+  DBG("e_dbus_object_interface_attach (%s, %s) ", obj->path, iface->name);
 }
 
 EAPI void
@@ -339,7 +342,7 @@ e_dbus_object_interface_detach(E_DBus_Object *obj, E_DBus_Interface *iface)
 {
   E_DBus_Interface *found;
 
-  DEBUG(4, "e_dbus_object_interface_detach (%s, %s) ", obj->path, iface->name);
+  DBG("e_dbus_object_interface_detach (%s, %s) ", obj->path, iface->name);
   found = eina_list_data_find(obj->interfaces, iface);
   if (found == NULL) return;
 
@@ -352,13 +355,13 @@ EAPI void
 e_dbus_interface_ref(E_DBus_Interface *iface)
 {
   iface->refcount++;
-  DEBUG(4, "e_dbus_interface_ref (%s) = %d\n", iface->name, iface->refcount);
+  DBG("e_dbus_interface_ref (%s) = %d", iface->name, iface->refcount);
 }
 
 EAPI void
 e_dbus_interface_unref(E_DBus_Interface *iface)
 {
-  DEBUG(4, "e_dbus_interface_unref (%s) = %d\n", iface->name, iface->refcount - 1);
+  DBG("e_dbus_interface_unref (%s) = %d", iface->name, iface->refcount - 1);
   if (--(iface->refcount) == 0)
     e_dbus_interface_free(iface);
 }
@@ -396,7 +399,7 @@ e_dbus_interface_method_add(E_DBus_Interface *iface, const char *member, const c
   E_DBus_Method *m;
 
   m = e_dbus_method_new(member, signature, reply_signature, func);
-  DEBUG(4, "Add method %s: %p\n", member, m);
+  DBG("E-dbus: Add method %s: %p", member, m);
   if (!m) return 0;
 
   iface->methods = eina_list_append(iface->methods, m);
@@ -418,7 +421,7 @@ e_dbus_interface_signal_add(E_DBus_Interface *iface, const char *name, const cha
   E_DBus_Signal *s;
 
   s = e_dbus_signal_new(name, signature);
-  DEBUG(4, "Add signal %s: %p\n", name, s);
+  DBG("E-dbus: Add signal %s: %p", name, s);
   if (!s) return 0;
 
   iface->signals = eina_list_append(iface->signals, s);
@@ -554,7 +557,7 @@ e_dbus_object_handler(DBusConnection *conn, DBusMessage *message, void *user_dat
 }
 
 static void
-e_dbus_object_unregister(DBusConnection *conn, void *user_data)
+e_dbus_object_unregister(DBusConnection *conn __UNUSED__, void *user_data __UNUSED__)
 {
   /* free up the object struct? */
 }
@@ -605,7 +608,7 @@ _introspect_interface_append(Ecore_Strbuf *buf, E_DBus_Interface *iface, int lev
   ecore_strbuf_append(buf, "\">\n");
   level++;
 
-  DEBUG(4, "introspect iface: %s\n", iface->name);
+  DBG("introspect iface: %s", iface->name);
   EINA_LIST_FOREACH(iface->methods, l, method)
     _introspect_method_append(buf, method, level);
   EINA_LIST_FOREACH(iface->signals, l, signal)
@@ -622,7 +625,7 @@ _introspect_method_append(Ecore_Strbuf *buf, E_DBus_Method *method, int level)
   char *type;
 
   _introspect_indent_append(buf, level);
-  DEBUG(4, "introspect method: %s\n", method->member);
+  DBG("introspect method: %s\n", method->member);
   ecore_strbuf_append(buf, "<method name=\"");
   ecore_strbuf_append(buf, method->member);
   ecore_strbuf_append(buf, "\">\n");
@@ -670,7 +673,7 @@ _introspect_signal_append(Ecore_Strbuf *buf, E_DBus_Signal *signal, int level)
   char *type;
 
   _introspect_indent_append(buf, level);
-  DEBUG(4, "introspect signal: %s\n", signal->name);
+  DBG("introspect signal: %s", signal->name);
   ecore_strbuf_append(buf, "<signal name=\"");
   ecore_strbuf_append(buf, signal->name);
   ecore_strbuf_append(buf, "\">\n");
