@@ -2,7 +2,7 @@ Source: edbus
 Section: libs
 Priority: optional
 Maintainer: Debian Pkg-e Team <pkg-e-devel@lists.alioth.debian.org>
-Uploaders: Albin Tonnerre <albin.tonnerre@gmail.com>, Niv Sardi <xaiki@debian.org>,
+Uploaders: Albin Tonnerre <lutin@debian.org>, Niv Sardi <xaiki@debian.org>,
  Xavier Oswald <x.oswald@free.fr>, Jan Lübbe <jluebbe@debian.org>
 Build-Depends: debhelper (>= 6), cdbs, libecore-dev (>= 0.9.9.063), libdbus-1-dev,
  libevas-dev (>= 0.9.9.063), libeina-dev (>= 0.9.9.063)
