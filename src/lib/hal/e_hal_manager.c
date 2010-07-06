@@ -33,7 +33,8 @@ unmarshal_string_list(DBusMessage *msg, DBusError *err)
     char *dev = NULL;
 
     dbus_message_iter_get_basic(&sub, &dev);
-    if (dev) ret->strings = eina_list_append(ret->strings, dev);
+    if (dev)
+      ret->strings = eina_list_append(ret->strings, eina_stringshare_add(dev));
     dbus_message_iter_next(&sub);
   }
 
@@ -44,9 +45,11 @@ static void
 free_string_list(void *data)
 {
   E_Hal_String_List_Return *ret = data;
+  const char *str;
 
   if (!ret) return;
-  eina_list_free(ret->strings);
+  EINA_LIST_FREE(ret->strings, str)
+    eina_stringshare_del(str);
   free(ret);
 }
 

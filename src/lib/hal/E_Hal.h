@@ -1,12 +1,13 @@
 #ifndef E_HAL_H
 #define E_HAL_H
+
+#include <Eina.h>
 #include <E_DBus.h>
-#include <Ecore_Data.h>
-#include <eina_stringshare.h>
 
 #ifdef EAPI
-#undef EAPI
+# undef EAPI
 #endif
+
 #ifdef _MSC_VER
 # ifdef BUILDING_DLL
 #  define EAPI __declspec(dllexport)
@@ -24,6 +25,12 @@
 #  define EAPI
 # endif
 #endif
+
+/**
+ * @defgroup EHal_Group EHal
+ *
+ * @{
+ */
 
 #define E_HAL_SENDER "org.freedesktop.Hal"
 #define E_HAL_MANAGER_PATH "/org/freedesktop/Hal/Manager"
@@ -43,7 +50,7 @@ struct E_Hal_String_List_Return
 
 struct E_Hal_Bool_Return
 {
-  char boolean;
+  Eina_Bool boolean;
 };
 
 struct E_Hal_UDI_Return
@@ -119,13 +126,13 @@ extern "C" {
    EAPI DBusPendingCall *e_hal_manager_find_device_by_capability(E_DBus_Connection *conn, const char *capability, E_DBus_Callback_Func cb_func, void *data);
 
 /* utility functions */
-   EAPI void           e_hal_property_free(E_Hal_Property *prop);
-   EAPI char          *e_hal_property_string_get(E_Hal_Properties *properties, const char *key, int *err);
-   EAPI char           e_hal_property_bool_get(E_Hal_Properties *properties, const char *key, int *err);
-   EAPI int            e_hal_property_int_get(E_Hal_Properties *properties, const char *key, int *err);
-   EAPI dbus_uint64_t  e_hal_property_uint64_get(E_Hal_Properties *properties, const char *key, int *err);
-   EAPI double         e_hal_property_double_get(E_Hal_Properties *properties, const char *key, int *err);
-   EAPI Eina_List     *e_hal_property_strlist_get(E_Hal_Properties *properties, const char *key, int *err);
+   EAPI void                e_hal_property_free(E_Hal_Property *prop);
+   EAPI const char         *e_hal_property_string_get(E_Hal_Properties *properties, const char *key, int *err);
+   EAPI Eina_Bool           e_hal_property_bool_get(E_Hal_Properties *properties, const char *key, int *err);
+   EAPI int                 e_hal_property_int_get(E_Hal_Properties *properties, const char *key, int *err);
+   EAPI uint64_t            e_hal_property_uint64_get(E_Hal_Properties *properties, const char *key, int *err);
+   EAPI double              e_hal_property_double_get(E_Hal_Properties *properties, const char *key, int *err);
+   EAPI const Eina_List    *e_hal_property_strlist_get(E_Hal_Properties *properties, const char *key, int *err);
 
 /* (un)mount */
    EAPI DBusPendingCall *e_hal_device_volume_mount(E_DBus_Connection *conn, const char *udi, const char *mount_point, const char *fstype, Eina_List *options, E_DBus_Callback_Func cb_func, void *data);
@@ -135,5 +142,9 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+/**
+ * @}
+ */
 
 #endif

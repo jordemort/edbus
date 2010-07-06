@@ -17,6 +17,7 @@ unmarshal_device_get_property(DBusMessage *msg, DBusError *err)
   E_Hal_Device_Get_Property_Return *ret = NULL;
   DBusMessageIter iter;
   int type;
+  const char *str;
 
   ret = calloc(1, sizeof(E_Hal_Device_Get_Property_Return));
   if (!ret) 
@@ -29,16 +30,21 @@ unmarshal_device_get_property(DBusMessage *msg, DBusError *err)
   type = dbus_message_iter_get_arg_type(&iter);
   switch(type)
   {
-    case 's':
-      dbus_message_iter_get_basic(&iter, &(ret->val.s));
+    case DBUS_TYPE_STRING:
+      ret->type = E_HAL_PROPERTY_TYPE_STRING;
+      dbus_message_iter_get_basic(&iter, &str);
+      ret->val.s = eina_stringshare_add(str);
       break;
-    case 'i':
+    case DBUS_TYPE_INT32:
+      ret->type = E_HAL_PROPERTY_TYPE_INT;
       dbus_message_iter_get_basic(&iter, &(ret->val.i));
       break;
-    case 'b':
+    case DBUS_TYPE_BOOLEAN:
+      ret->type = E_HAL_PROPERTY_TYPE_BOOL;
       dbus_message_iter_get_basic(&iter, &(ret->val.b));
       break;
-    case 'd':
+    case DBUS_TYPE_DOUBLE:
+      ret->type = E_HAL_PROPERTY_TYPE_DOUBLE;
       dbus_message_iter_get_basic(&iter, &(ret->val.d));
       break;
   }
@@ -52,6 +58,14 @@ free_device_get_property(void *data)
   E_Hal_Device_Get_Property_Return *ret = data;
 
   if (!ret) return;
+  if (ret->type == E_HAL_PROPERTY_TYPE_STRLIST)
+  {
+    const char *str;
+    EINA_LIST_FREE(ret->val.strlist, str)
+      eina_stringshare_del(str);
+  }
+  else if (ret->type == E_HAL_PROPERTY_TYPE_STRING)
+    eina_stringshare_del(ret->val.s);
   free(ret);
 }
 
@@ -76,6 +90,7 @@ unmarshal_device_get_all_properties(DBusMessage *msg, DBusError *err)
   E_Hal_Device_Get_All_Properties_Return *ret = NULL;
   DBusMessageIter iter, a_iter, s_iter, v_iter;
 
+  /* a{sv} = array of string+variant */
   if (!dbus_message_has_signature(msg, "a{sv}")) 
   {
     dbus_set_error(err, DBUS_ERROR_INVALID_SIGNATURE, "");
@@ -96,6 +111,7 @@ unmarshal_device_get_all_properties(DBusMessage *msg, DBusError *err)
   while (dbus_message_iter_get_arg_type(&a_iter) != DBUS_TYPE_INVALID)
   {
     const char *name;
+    const char *str;
     E_Hal_Property *prop = calloc(1, sizeof(E_Hal_Property));
     dbus_message_iter_recurse(&a_iter, &s_iter);
     dbus_message_iter_get_basic(&s_iter, &name);
@@ -104,27 +120,28 @@ unmarshal_device_get_all_properties(DBusMessage *msg, DBusError *err)
     
     switch(dbus_message_iter_get_arg_type(&v_iter))
     {
-      case 's':
+      case DBUS_TYPE_STRING:
         prop->type = E_HAL_PROPERTY_TYPE_STRING;
-        dbus_message_iter_get_basic(&v_iter, &(prop->val.s));
+        dbus_message_iter_get_basic(&v_iter, &str);
+        prop->val.s = eina_stringshare_add(str);
         break;
-      case 'i':
+      case DBUS_TYPE_INT32:
         prop->type = E_HAL_PROPERTY_TYPE_INT;
         dbus_message_iter_get_basic(&v_iter, &(prop->val.i));
         break;
-      case 't':
+      case DBUS_TYPE_UINT64:
         prop->type = E_HAL_PROPERTY_TYPE_UINT64;
         dbus_message_iter_get_basic(&v_iter, &(prop->val.u64));
         break;
-      case 'b':
+      case DBUS_TYPE_BOOLEAN:
         prop->type = E_HAL_PROPERTY_TYPE_BOOL;
         dbus_message_iter_get_basic(&v_iter, &(prop->val.b));
         break;
-      case 'd':
+      case DBUS_TYPE_DOUBLE:
         prop->type = E_HAL_PROPERTY_TYPE_DOUBLE;
         dbus_message_iter_get_basic(&v_iter, &(prop->val.d));
         break;
-      case 'a':
+      case DBUS_TYPE_ARRAY:
         prop->type = E_HAL_PROPERTY_TYPE_STRLIST;
         {
           DBusMessageIter list_iter;
@@ -132,9 +149,8 @@ unmarshal_device_get_all_properties(DBusMessage *msg, DBusError *err)
           dbus_message_iter_recurse(&v_iter, &list_iter);
           while (dbus_message_iter_get_arg_type(&list_iter) != DBUS_TYPE_INVALID)
           {
-            char *str;
             dbus_message_iter_get_basic(&list_iter, &str);
-            prop->val.strlist = eina_list_append(prop->val.strlist, str);
+            prop->val.strlist = eina_list_append(prop->val.strlist, eina_stringshare_add(str));
             dbus_message_iter_next(&list_iter);
           }
         }
@@ -253,7 +269,7 @@ e_hal_device_volume_mount(E_DBus_Connection *conn, const char *udi, const char *
   dbus_message_iter_init_append(msg, &iter);
   dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &mount_point);
   dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &fstype);
-  dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "s", &subiter);
+  dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING_AS_STRING, &subiter);
 
   if (options)
   {
@@ -293,7 +309,7 @@ e_hal_device_volume_unmount(E_DBus_Connection *conn, const char *udi, Eina_List 
   msg = e_hal_device_volume_call_new(udi, "Unmount");
 
   dbus_message_iter_init_append(msg, &iter);
-  dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "s", &subiter);
+  dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING_AS_STRING, &subiter);
   if (options)
   {
     const char *opt;
@@ -330,7 +346,7 @@ e_hal_device_volume_eject(E_DBus_Connection *conn, const char *udi, Eina_List *o
   msg = e_hal_device_volume_call_new(udi, "Eject");
 
   dbus_message_iter_init_append(msg, &iter);
-  dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "s", &subiter);
+  dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING_AS_STRING, &subiter);
   if (options)
   {
     const char *opt;

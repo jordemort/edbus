@@ -13,7 +13,7 @@ e_connman_network_get(const char *path)
 
    if (!e_connman_element_is_network(network))
      {
-	WRN("E-Dbus connman: path '%s' is not a network!", path);
+	WRN("path '%s' is not a network!", path);
 	return NULL;
      }
 
@@ -21,47 +21,32 @@ e_connman_network_get(const char *path)
 }
 
 /**
- * Connect to network.
+ * Get property "Address" value.
  *
- * Call method Connect() at the given network on server in order to
- * connect to it.
+ * If this property isn't found then 0 is returned.
+ * If zero is returned, then this call failed and parameter-returned
+ * values shall be considered invalid.
  *
- * @param network_path to call method on server.
- * @param cb function to call when server replies or some error happens.
- * @param data data to give to cb when it is called.
+ * The network hardware address (mac-address for ethernet, wifi...).
  *
- * @return 1 on success, 0 otherwise.
- */
-bool
-e_connman_network_connect(E_Connman_Element *network, E_DBus_Method_Return_Cb cb, const void *data)
-{
-   const char name[] = "Connect";
-
-   EINA_SAFETY_ON_NULL_RETURN_VAL(network, 0);
-   return e_connman_element_call_full
-     (network, name, NULL, &network->_pending.network_connect, cb, data);
-}
-
-/**
- * Disconnect from network.
+ * This address can be used for directly displaying it in
+ * the application. It has pure informational purpose.
  *
- * Call method Disconnect() at the given network on server in order to
- * disconnect from it.
- *
- * @param network_path to call method on server.
- * @param cb function to call when server replies or some error happens.
- * @param data data to give to cb when it is called.
+ * @param network path to get property.
+ * @param address where to store the property value, must be a pointer
+ *        to string (const char **), it will not be allocated or
+ *        copied and references will be valid until element changes,
+ *        so copy it if you want to use it later.
  *
  * @return 1 on success, 0 otherwise.
  */
 bool
-e_connman_network_disconnect(E_Connman_Element *network, E_DBus_Method_Return_Cb cb, const void *data)
+e_connman_network_address_get(const E_Connman_Element *network, const char **address)
 {
-   const char name[] = "Disconnect";
-
    EINA_SAFETY_ON_NULL_RETURN_VAL(network, 0);
-   return e_connman_element_call_full
-     (network, name, NULL, &network->_pending.network_disconnect, cb, data);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(address, 0);
+   return e_connman_element_property_get_stringshared
+     (network, e_connman_prop_address, NULL, address);
 }
 
 /**
@@ -75,7 +60,7 @@ e_connman_network_disconnect(E_Connman_Element *network, E_DBus_Method_Return_Cb
  * example in case of WiFi this should be the UTF-8
  * valid version of the SSID.
  *
- * @param network_path to get property.
+ * @param network path to get property.
  * @param name where to store the property value, must be a pointer
  *        to string (const char **), it will not be allocated or
  *        copied and references will be valid until element changes,
@@ -93,33 +78,6 @@ e_connman_network_name_get(const E_Connman_Element *network, const char **name)
 }
 
 /**
- * Get property "Available" value.
- *
- * If this property isn't found then 0 is returned.
- * If zero is returned, then this call failed and parameter-returned
- * values shall be considered invalid.
- *
- * Indicates that this network is in range and
- * ready to be used.
- *
- * The scanning process can change this property.
- *
- * @param network_path to get property.
- * @param available where to store the property value, must be a pointer
- *        to boolean (bool **).
- *
- * @return 1 on success, 0 otherwise.
- */
-bool
-e_connman_network_available_get(const E_Connman_Element *network, bool *available)
-{
-   EINA_SAFETY_ON_NULL_RETURN_VAL(network, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(available, 0);
-   return e_connman_element_property_get_stringshared
-     (network, e_connman_prop_available, NULL, available);
-}
-
-/**
  * Get property "Connected" value.
  *
  * If this property isn't found then 0 is returned.
@@ -128,7 +86,7 @@ e_connman_network_available_get(const E_Connman_Element *network, bool *availabl
  *
  * Indicates that this network is currently connected.
  *
- * @param network_path to get property.
+ * @param network path to get property.
  * @param connected where to store the property value, must be a pointer
  *        to boolean (bool **).
  *
@@ -144,62 +102,6 @@ e_connman_network_connected_get(const E_Connman_Element *network, bool *connecte
 }
 
 /**
- * Get property "Remember" value.
- *
- * If this property isn't found then 0 is returned.
- * If zero is returned, then this call failed and parameter-returned
- * values shall be considered invalid.
- *
- * Indicates that this network will be remembered.
- *
- * For manually created networks this is set by
- * default.
- *
- * @param network_path to get property.
- * @param remember where to store the property value, must be a pointer
- *        to boolean (bool **).
- *
- * @return 1 on success, 0 otherwise.
- * @see e_connman_network_remember_set()
- */
-bool
-e_connman_network_remember_get(const E_Connman_Element *network, bool *remember)
-{
-   EINA_SAFETY_ON_NULL_RETURN_VAL(network, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(remember, 0);
-   return e_connman_element_property_get_stringshared
-     (network, e_connman_prop_remember, NULL, remember);
-}
-
-/**
- * Call method SetProperty("Remember", remember) at the given element on server.
- *
- * This is a server call, not local, so it may fail and in that case
- * no property is updated locally. If the value was set the event
- * E_CONNMAN_EVENT_ELEMENT_UPDATED will be added to main loop.
- *
- * Indicates that this network will be remembered.
- *
- * For manually created networks this is set by
- * default.
- *
- * @param network_path to set property.
- * @param remember value to set.
- * @param cb function to call when server replies or some error happens.
- * @param data data to give to cb when it is called.
- *
- * @return 1 on success, 0 otherwise.
- * @see e_connman_network_remember_get()
- */
-bool
-e_connman_network_remember_set(E_Connman_Element *network, bool remember, E_DBus_Method_Return_Cb cb, const void *data)
-{
-   EINA_SAFETY_ON_NULL_RETURN_VAL(network, 0);
-   return e_connman_element_property_set_full
-     (network, e_connman_prop_remember, DBUS_TYPE_BOOLEAN, &remember, cb, data);
-}
-
-/**
  * Get property "Strength" value.
  *
  * If this property isn't found then 0 is returned.
@@ -209,7 +111,7 @@ e_connman_network_remember_set(E_Connman_Element *network, bool remember, E_DBus
  * Indicates the signal strength of the network. This
  * is a normalized value between 0 and 100.
  *
- * @param network_path to get property.
+ * @param network path to get property.
  * @param strength where to store the property value, must be a pointer
  *        to byte (unsigned char*).
  *
@@ -221,14 +123,38 @@ e_connman_network_strength_get(const E_Connman_Element *network, unsigned char *
    EINA_SAFETY_ON_NULL_RETURN_VAL(network, 0);
    EINA_SAFETY_ON_NULL_RETURN_VAL(strength, 0);
    return e_connman_element_property_get_stringshared
-     (network, e_connman_prop_strengh, NULL, strength);
+     (network, e_connman_prop_strength, NULL, strength);
+}
+
+/**
+ * Get property "Frequency" value.
+ *
+ * If this property isn't found then 0 is returned.
+ * If zero is returned, then this call failed and parameter-returned
+ * values shall be considered invalid.
+ *
+ * Indicates the frequency of the network.
+ *
+ * @param network path to get property.
+ * @param frequency where to store the property value, must be a pointer
+ *        to uint16 (unsigned short*).
+ *
+ * @return 1 on success, 0 otherwise.
+ */
+bool
+e_connman_network_frequency_get(const E_Connman_Element *network, unsigned short *frequency)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(network, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(frequency, 0);
+   return e_connman_element_property_get_stringshared
+     (network, e_connman_prop_frequency, NULL, frequency);
 }
 
 /**
  * Get the device element this network
  * belongs to.
  *
- * @param network_path to get property.
+ * @param network path to get property.
  * @param element where to store element, just changed if return is 1
  *
  * @return 1 on success, 0 otherwise
@@ -258,7 +184,7 @@ e_connman_network_device_get(const E_Connman_Element *network, E_Connman_Element
  * If the network type is WiFi, then this property is
  * present and contains the binary SSID value.
  *
- * @param network_path to get property.
+ * @param network path to get property.
  * @param count return the number of elements in array.
  * @param wifi_ssid where to store the property value, must be a pointer
  *        to array of bytes (unsigned char **).
@@ -293,14 +219,13 @@ e_connman_network_wifi_ssid_get(const E_Connman_Element *network, unsigned int *
  * case the network was manually created it is also
  * changeable.
  *
- * @param network_path to get property.
+ * @param network path to get property.
  * @param wifi_mode where to store the property value, must be a pointer
  *        to string (const char **), it will not be allocated or
  *        copied and references will be valid until element changes,
  *        so copy it if you want to use it later.
  *
  * @return 1 on success, 0 otherwise.
- * @see e_connman_network_wifi_mode_set()
  */
 bool
 e_connman_network_wifi_mode_get(const E_Connman_Element *network, const char **wifi_mode)
@@ -309,38 +234,6 @@ e_connman_network_wifi_mode_get(const E_Connman_Element *network, const char **w
    EINA_SAFETY_ON_NULL_RETURN_VAL(wifi_mode, 0);
    return e_connman_element_property_get_stringshared
      (network, e_connman_prop_wifi_mode, NULL, wifi_mode);
-}
-
-/**
- * Call method SetProperty("WiFi.Mode", wifi_mode) at the given element on server.
- *
- * This is a server call, not local, so it may fail and in that case
- * no property is updated locally. If the value was set the event
- * E_CONNMAN_EVENT_ELEMENT_UPDATED will be added to main loop.
- *
- * If the network type is WiFi, then this property is
- * present and contains the mode of the network. The
- * possible values are "managed" or "adhoc".
- *
- * For scanned networks this value is read only, but in
- * case the network was manually created it is also
- * changeable.
- *
- * @param network_path to set property.
- * @param wifi_mode value to set.
- * @param cb function to call when server replies or some error happens.
- * @param data data to give to cb when it is called.
- *
- * @return 1 on success, 0 otherwise.
- * @see e_connman_network_wifi_mode_get()
- */
-bool
-e_connman_network_wifi_mode_set(E_Connman_Element *network, const char *wifi_mode, E_DBus_Method_Return_Cb cb, const void *data)
-{
-   EINA_SAFETY_ON_NULL_RETURN_VAL(network, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(wifi_mode, 0);
-   return e_connman_element_property_set_full
-     (network, e_connman_prop_wifi_mode, DBUS_TYPE_STRING, wifi_mode, cb, data);
 }
 
 /**
@@ -360,14 +253,13 @@ e_connman_network_wifi_mode_set(E_Connman_Element *network, const char *wifi_mod
  *
  * Possible values are "none", "wep", "wpa" and "wpa2".
  *
- * @param network_path to get property.
+ * @param network path to get property.
  * @param wifi_security where to store the property value, must be a pointer
  *        to string (const char **), it will not be allocated or
  *        copied and references will be valid until element changes,
  *        so copy it if you want to use it later.
  *
  * @return 1 on success, 0 otherwise.
- * @see e_connman_network_wifi_security_set()
  */
 bool
 e_connman_network_wifi_security_get(const E_Connman_Element *network, const char **wifi_security)
@@ -376,41 +268,6 @@ e_connman_network_wifi_security_get(const E_Connman_Element *network, const char
    EINA_SAFETY_ON_NULL_RETURN_VAL(wifi_security, 0);
    return e_connman_element_property_get_stringshared
      (network, e_connman_prop_wifi_security, NULL, wifi_security);
-}
-
-/**
- * Call method SetProperty("WiFi.Security", wifi_security) at the given element on server.
- *
- * This is a server call, not local, so it may fail and in that case
- * no property is updated locally. If the value was set the event
- * E_CONNMAN_EVENT_ELEMENT_UPDATED will be added to main loop.
- *
- * If the network type is WiFi, then this property is
- * present and contains the security method or key
- * management setting.
- *
- * For scanned networks this value is read only, but in
- * case the network was manually created it is also
- * changeable.
- *
- * Possible values are "none", "wep", "wpa" and "wpa2".
- *
- * @param network_path to set property.
- * @param wifi_security value to set.
- * @param cb function to call when server replies or some error happens.
- * @param data data to give to cb when it is called.
- *
- * @return 1 on success, 0 otherwise.
- * @see e_connman_network_wifi_security_get()
- */
-bool
-e_connman_network_wifi_security_set(E_Connman_Element *network, const char *wifi_security, E_DBus_Method_Return_Cb cb, const void *data)
-{
-   EINA_SAFETY_ON_NULL_RETURN_VAL(network, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(wifi_security, 0);
-   return e_connman_element_property_set_full
-     (network, e_connman_prop_wifi_security, DBUS_TYPE_STRING,
-      wifi_security, cb, data);
 }
 
 /**
@@ -427,14 +284,13 @@ e_connman_network_wifi_security_set(E_Connman_Element *network, const char *wifi
  * For systems using PolicyKit, the access to this value
  * will be protected by the security policy.
  *
- * @param network_path to get property.
+ * @param network path to get property.
  * @param wifi_passphrase where to store the property value, must be a pointer
  *        to string (const char **), it will not be allocated or
  *        copied and references will be valid until element changes,
  *        so copy it if you want to use it later.
  *
  * @return 1 on success, 0 otherwise.
- * @see e_connman_network_wifi_passphrase_set()
  */
 bool
 e_connman_network_wifi_passphrase_get(const E_Connman_Element *network, const char **wifi_passphrase)
@@ -446,32 +302,54 @@ e_connman_network_wifi_passphrase_get(const E_Connman_Element *network, const ch
 }
 
 /**
- * Call method SetProperty("WiFi.Passphrase", wifi_passphrase) at the given element on server.
+ * Get property "WiFi.Channel" value.
  *
- * This is a server call, not local, so it may fail and in that case
- * no property is updated locally. If the value was set the event
- * E_CONNMAN_EVENT_ELEMENT_UPDATED will be added to main loop.
+ * If this property isn't found then 0 is returned.
+ * If zero is returned, then this call failed and parameter-returned
+ * values shall be considered invalid.
  *
- * If the network type is WiFi and a passhrase is
- * requires, then this property is present and contains
- * the passphrase in clear text.
+ * Indicates the channel this network is.
+ *
+ * @param network path to get property.
+ * @param channel where to store the property value, must be a pointer
+ *        to uint16 (unsigned short*).
+ *
+ * @return 1 on success, 0 otherwise.
+ */
+bool
+e_connman_network_wifi_channel_get(const E_Connman_Element *network, unsigned short *wifi_channel)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(network, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(wifi_channel, 0);
+   return e_connman_element_property_get_stringshared
+     (network, e_connman_prop_wifi_channel, NULL, wifi_channel);
+}
+
+/**
+ * Get property "WiFi.EAP" value.
+ *
+ * If this property isn't found then 0 is returned.
+ * If zero is returned, then this call failed and parameter-returned
+ * values shall be considered invalid.
+ *
+ * This property is only available if WiFi.Security is "ieee8021x".
  *
  * For systems using PolicyKit, the access to this value
  * will be protected by the security policy.
  *
- * @param network_path to set property.
- * @param wifi_passphrase value to set.
- * @param cb function to call when server replies or some error happens.
- * @param data data to give to cb when it is called.
+ * @param network path to get property.
+ * @param wifi_eap where to store the property value, must be a pointer
+ *        to string (const char **), it will not be allocated or
+ *        copied and references will be valid until element changes,
+ *        so copy it if you want to use it later.
  *
  * @return 1 on success, 0 otherwise.
- * @see e_connman_network_wifi_passphrase_get()
  */
 bool
-e_connman_network_wifi_passphrase_set(E_Connman_Element *network, const char *wifi_passphrase, E_DBus_Method_Return_Cb cb, const void *data)
+e_connman_network_wifi_eap_get(const E_Connman_Element *network, const char **wifi_eap)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(network, 0);
-   return e_connman_element_property_set_full
-     (network, e_connman_prop_wifi_passphrase, DBUS_TYPE_STRING,
-      wifi_passphrase, cb, data);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(wifi_eap, 0);
+   return e_connman_element_property_get_stringshared
+     (network, e_connman_prop_wifi_eap, NULL, wifi_eap);
 }

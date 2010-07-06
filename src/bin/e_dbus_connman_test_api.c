@@ -1,11 +1,15 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "E_Connman.h"
 #include <stdio.h>
 #include <string.h>
 
-#define DBG(...) EINA_ERROR_PDBG(__VA_ARGS__)
-#define INF(...) EINA_ERROR_PINFO(__VA_ARGS__)
-#define WRN(...) EINA_ERROR_PWARN(__VA_ARGS__)
-#define ERR(...) EINA_ERROR_PERR(__VA_ARGS__)
+#define DBG(...) EINA_LOG_DBG(__VA_ARGS__)
+#define INF(...) EINA_LOG_INFO(__VA_ARGS__)
+#define WRN(...) EINA_LOG_WARN(__VA_ARGS__)
+#define ERR(...) EINA_LOG_ERR(__VA_ARGS__)
 
 static int success = 0;
 static int failure = 0;
@@ -146,6 +150,22 @@ _test_elements_get(E_Connman_Element *element, const char *name, bool (*func)(co
 }
 
 static bool
+_test_element_get_global(const char *name, bool (*func)(E_Connman_Element **value))
+{
+   E_Connman_Element *value;
+   bool ret;
+
+   INF("BEGIN: testing element get %s\n", name);
+   ret = func(&value);
+   if (ret)
+     INF("SUCCESS: testing element get %s: %p\n", name, value);
+   else
+     WRN("FAILURE: testing element get %s\n", name);
+
+   return ret;
+}
+
+static bool
 _test_elements_get_global(const char *name, bool (*func)(unsigned int *count, E_Connman_Element ***elements))
 {
    E_Connman_Element **value;
@@ -196,6 +216,27 @@ _test_bool_get_global(const char *name, bool (*func)(bool *value))
    return ret;
 }
 
+static bool
+_test_strings_get_global(const char *name, bool (*func)(unsigned int *count, const char ***elements))
+{
+   const char **value;
+   unsigned int count;
+   bool ret;
+
+   INF("BEGIN: testing strings get %s\n", name);
+   ret = func(&count, &value);
+   if (ret)
+     {
+	INF("SUCCESS: testing strings get %s: %p\n", name, value);
+	free(value);
+     }
+   else
+     WRN("FAILURE: testing strings get %s\n", name);
+
+   return ret;
+}
+
+
 struct test_desc
 {
    const char *name;
@@ -207,9 +248,11 @@ struct test_desc
      TEST_DESC_TYPE_UCHAR_ARRAY_GET,
      TEST_DESC_TYPE_ELEMENT_GET,
      TEST_DESC_TYPE_ELEMENTS_GET,
+     TEST_DESC_TYPE_ELEMENT_GET_GLOBAL,
      TEST_DESC_TYPE_ELEMENTS_GET_GLOBAL,
      TEST_DESC_TYPE_STRING_GET_GLOBAL,
      TEST_DESC_TYPE_BOOL_GET_GLOBAL,
+     TEST_DESC_TYPE_STRINGS_GET_GLOBAL,
      TEST_DESC_TYPE_LAST
    } type;
    union {
@@ -220,9 +263,11 @@ struct test_desc
       bool (*uchar_array_get)(const E_Connman_Element *element, unsigned int *count, unsigned char **value);
       bool (*element_get)(const E_Connman_Element *element, E_Connman_Element **value);
       bool (*elements_get)(const E_Connman_Element *element, unsigned int *count, E_Connman_Element ***elements);
+      bool (*element_get_global)(E_Connman_Element **element);
       bool (*elements_get_global)(unsigned int *count, E_Connman_Element ***elements);
       bool (*string_get_global)(const char **value);
       bool (*bool_get_global)(bool *value);
+      bool (*strings_get_global)(unsigned int *count, const char ***strings);
       void *dummy;
    } func;
    bool may_fail;
@@ -242,12 +287,16 @@ struct test_desc
   {#_func, TEST_DESC_TYPE_ELEMENT_GET, .func.element_get=_func, may_fail}
 #define TEST_DESC_ELEMENTS_GET(_func, may_fail)				\
   {#_func, TEST_DESC_TYPE_ELEMENTS_GET, .func.elements_get=_func, may_fail}
+#define TEST_DESC_ELEMENT_GET_GLOBAL(_func, may_fail)			\
+  {#_func, TEST_DESC_TYPE_ELEMENT_GET_GLOBAL, .func.element_get_global=_func, may_fail}
 #define TEST_DESC_ELEMENTS_GET_GLOBAL(_func, may_fail)			\
   {#_func, TEST_DESC_TYPE_ELEMENTS_GET_GLOBAL, .func.elements_get_global=_func, may_fail}
 #define TEST_DESC_STRING_GET_GLOBAL(_func, may_fail)			\
   {#_func, TEST_DESC_TYPE_STRING_GET_GLOBAL, .func.string_get_global=_func, may_fail}
 #define TEST_DESC_BOOL_GET_GLOBAL(_func, may_fail)			\
   {#_func, TEST_DESC_TYPE_BOOL_GET_GLOBAL, .func.bool_get_global=_func, may_fail}
+#define TEST_DESC_STRINGS_GET_GLOBAL(_func, may_fail)			\
+  {#_func, TEST_DESC_TYPE_STRINGS_GET_GLOBAL, .func.strings_get_global=_func, may_fail}
 #define TEST_DESC_SENTINEL {NULL, TEST_DESC_TYPE_LAST, .func.dummy=NULL}
 
 static bool
@@ -287,6 +336,10 @@ _test_element(E_Connman_Element *element, const struct test_desc *test_descs)
 	      r = _test_elements_get
 		(element, itr->name, itr->func.elements_get);
 	      break;
+	   case TEST_DESC_TYPE_ELEMENT_GET_GLOBAL:
+	      r = _test_element_get_global
+		(itr->name, itr->func.element_get_global);
+	      break;
 	   case TEST_DESC_TYPE_ELEMENTS_GET_GLOBAL:
 	      r = _test_elements_get_global
 		(itr->name, itr->func.elements_get_global);
@@ -298,6 +351,10 @@ _test_element(E_Connman_Element *element, const struct test_desc *test_descs)
 	   case TEST_DESC_TYPE_BOOL_GET_GLOBAL:
 	      r = _test_bool_get_global
 		(itr->name, itr->func.bool_get_global);
+	      break;
+	   case TEST_DESC_TYPE_STRINGS_GET_GLOBAL:
+	      r = _test_strings_get_global
+		(itr->name, itr->func.strings_get_global);
 	      break;
 	   default:
 	      ERR("unknown test type %d (%s)\n", itr->type, itr->name);
@@ -334,24 +391,24 @@ _test_element(E_Connman_Element *element, const struct test_desc *test_descs)
 
 static const struct test_desc test_desc_manager[] = {
   TEST_DESC_STRING_GET_GLOBAL(e_connman_manager_state_get, 0),
-  TEST_DESC_STRING_GET_GLOBAL(e_connman_manager_policy_get, 0),
-  //TEST_DESC_STRING_SET_GLOBAL(e_connman_manager_policy_set, 0),
   TEST_DESC_BOOL_GET_GLOBAL(e_connman_manager_offline_mode_get, 0),
+  //TEST_DESC_STRING_SET_GLOBAL(e_connman_manager_request_scan, 0),
   //TEST_DESC_BOOL_SET_GLOBAL(e_connman_manager_offline_mode_set, 0),
   TEST_DESC_ELEMENTS_GET_GLOBAL(e_connman_manager_profiles_get, 0),
-  TEST_DESC_ELEMENTS_GET_GLOBAL(e_connman_manager_devices_get, 0),
-  TEST_DESC_ELEMENTS_GET_GLOBAL(e_connman_manager_connections_get, 1),
+  TEST_DESC_ELEMENTS_GET_GLOBAL(e_connman_manager_services_get, 1),
+  TEST_DESC_STRING_GET_GLOBAL(e_connman_manager_technology_default_get, 0),
+  TEST_DESC_STRINGS_GET_GLOBAL(e_connman_manager_technologies_available_get, 0),
+  TEST_DESC_STRINGS_GET_GLOBAL(e_connman_manager_technologies_enabled_get, 0),
+  TEST_DESC_STRINGS_GET_GLOBAL(e_connman_manager_technologies_connected_get, 0),
+  TEST_DESC_ELEMENT_GET_GLOBAL(e_connman_manager_profile_active_get, 0),
   TEST_DESC_SENTINEL
 };
 
 static const struct test_desc test_desc_device[] = {
+  TEST_DESC_STRING_GET(e_connman_device_address_get, 0),
   TEST_DESC_STRING_GET(e_connman_device_name_get, 0),
   TEST_DESC_STRING_GET(e_connman_device_type_get, 0),
   TEST_DESC_STRING_GET(e_connman_device_interface_get, 0),
-  TEST_DESC_STRING_GET(e_connman_device_policy_get, 0),
-  //TEST_DESC_STRING_SET(e_connman_device_policy_set, 0),
-  TEST_DESC_UCHAR_GET(e_connman_device_priority_get, 0),
-  //TEST_DESC_UCHAR_SET(e_connman_device_priority_set, 0),
   TEST_DESC_BOOL_GET(e_connman_device_powered_get, 0),
   //TEST_DESC_BOOL_SET(e_connman_device_powered_set, 0),
   TEST_DESC_USHORT_GET(e_connman_device_scan_interval_get, 1),
@@ -362,54 +419,81 @@ static const struct test_desc test_desc_device[] = {
 };
 
 static const struct test_desc test_desc_profile[] = {
-  TEST_DESC_STRING_GET(e_connman_profile_name_get, 0),
-  TEST_DESC_SENTINEL
-};
-
-static const struct test_desc test_desc_connection[] = {
-  TEST_DESC_STRING_GET(e_connman_connection_type_get, 0),
-  TEST_DESC_STRING_GET(e_connman_connection_interface_get, 0),
-  TEST_DESC_UCHAR_GET(e_connman_connection_strength_get, 0),
-  TEST_DESC_BOOL_GET(e_connman_connection_default_get, 0),
-  TEST_DESC_ELEMENT_GET(e_connman_connection_device_get, 0),
-  TEST_DESC_ELEMENT_GET(e_connman_connection_network_get, 0),
-  TEST_DESC_STRING_GET(e_connman_connection_ipv4_method_get, 0),
-  TEST_DESC_STRING_GET(e_connman_connection_ipv4_address_get, 0),
+  TEST_DESC_STRING_GET(e_connman_profile_name_get, 1),
+  //TEST_DESC_STRING_SET(e_connman_profile_name_set, 1),
+  TEST_DESC_BOOL_GET(e_connman_profile_offline_mode_get, 0),
+  //TEST_DESC_BOOL_SET(e_connman_profile_offline_mode_set, 0),
+  TEST_DESC_ELEMENTS_GET(e_connman_profile_services_get, 1),
   TEST_DESC_SENTINEL
 };
 
 static const struct test_desc test_desc_network[] = {
+  TEST_DESC_STRING_GET(e_connman_network_address_get, 0),
   TEST_DESC_STRING_GET(e_connman_network_name_get, 0),
-  TEST_DESC_BOOL_GET(e_connman_network_available_get, 0),
   TEST_DESC_BOOL_GET(e_connman_network_connected_get, 0),
-  TEST_DESC_BOOL_GET(e_connman_network_remember_get, 0),
-  //TEST_DESC_BOOL_SET(e_connman_network_remember_set, 0),
   TEST_DESC_UCHAR_GET(e_connman_network_strength_get, 1),
+  TEST_DESC_USHORT_GET(e_connman_network_frequency_get, 1),
   TEST_DESC_ELEMENT_GET(e_connman_network_device_get, 0),
   TEST_DESC_UCHAR_ARRAY_GET(e_connman_network_wifi_ssid_get, 1),
   TEST_DESC_STRING_GET(e_connman_network_wifi_mode_get, 1),
-  // TEST_DESC_STRING_SET(e_connman_network_wifi_mode_set, 1),
   TEST_DESC_STRING_GET(e_connman_network_wifi_security_get, 1),
-  // TEST_DESC_STRING_SET(e_connman_network_wifi_security_set, 1),
   TEST_DESC_STRING_GET(e_connman_network_wifi_passphrase_get, 1),
-  //TEST_DESC_STRING_SET(e_connman_network_wifi_passphrase_set, 1),
+  TEST_DESC_USHORT_GET(e_connman_network_wifi_channel_get, 1),
+  TEST_DESC_STRING_GET(e_connman_network_wifi_eap_get, 1),
   TEST_DESC_SENTINEL
 };
 
-static int
-_quit(void *data)
+static const struct test_desc test_desc_service[] = {
+  /* TODO: need to check exactly what properties may fail */
+  TEST_DESC_STRING_GET(e_connman_service_state_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_error_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_name_get, 0),
+  TEST_DESC_STRING_GET(e_connman_service_type_get, 0),
+  TEST_DESC_STRING_GET(e_connman_service_mode_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_security_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_passphrase_get, 1),
+  //TEST_DESC_STRING_SET(e_connman_service_passphrase_set, 1),
+  TEST_DESC_BOOL_GET(e_connman_service_passphrase_required_get, 1),
+  TEST_DESC_UCHAR_GET(e_connman_service_strength_get, 1),
+  TEST_DESC_BOOL_GET(e_connman_service_favorite_get, 0),
+  TEST_DESC_BOOL_GET(e_connman_service_immutable_get, 0),
+  TEST_DESC_BOOL_GET(e_connman_service_auto_connect_get, 0),
+  //TEST_DESC_BOOL_SET(e_connman_service_auto_connect_set, 1),
+  TEST_DESC_BOOL_GET(e_connman_service_setup_required_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_apn_get, 1),
+  //TEST_DESC_STRING_SET(e_connman_service_apn_set, 1),
+  TEST_DESC_STRING_GET(e_connman_service_mcc_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_mnc_get, 1),
+  TEST_DESC_BOOL_GET(e_connman_service_roaming_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_ipv4_method_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_ipv4_address_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_ipv4_gateway_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_ipv4_netmask_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_ipv4_configuration_method_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_ipv4_configuration_address_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_ipv4_configuration_gateway_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_ipv4_configuration_netmask_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_ethernet_method_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_ethernet_address_get, 1),
+  TEST_DESC_USHORT_GET(e_connman_service_ethernet_mtu_get, 1),
+  TEST_DESC_STRING_GET(e_connman_service_ethernet_netmask_get, 1),
+  TEST_DESC_SENTINEL
+};
+
+static Eina_Bool
+_quit(__UNUSED__ void *data)
 {
    ecore_main_loop_quit();
-   return 0;
+   return ECORE_CALLBACK_CANCEL;
 }
 
-static int
-_on_exiter(void *data)
+static Eina_Bool
+_on_exiter(__UNUSED__ void *data)
 {
    e_connman_system_shutdown();
    ecore_idle_enterer_add(_quit, NULL);
    exiter = NULL;
-   return 0;
+   return ECORE_CALLBACK_CANCEL;
 }
 
 static void
@@ -426,7 +510,7 @@ struct test_element_timer_data
    Ecore_Timer *timer;
 };
 
-static int
+static Eina_Bool
 _test_element_timer(void *data)
 {
    struct test_element_timer_data *d = data;
@@ -436,12 +520,12 @@ _test_element_timer(void *data)
      _test_element(element, test_desc_device);
    else if (e_connman_element_is_profile(element))
      _test_element(element, test_desc_profile);
-   else if (e_connman_element_is_connection(element))
-     _test_element(element, test_desc_connection);
    else if (e_connman_element_is_network(element))
      _test_element(element, test_desc_network);
    else if (e_connman_element_is_manager(element))
      _test_element(element, test_desc_manager);
+   else if (e_connman_element_is_service(element))
+     _test_element(element, test_desc_service);
    else
      ERR("!!! don't know how to test %s [%s]\n",
 	 element->path, element->interface);
@@ -449,11 +533,11 @@ _test_element_timer(void *data)
    _exiter_reschedule();
 
    d->timer = NULL;
-   return 0;
+   return ECORE_CALLBACK_CANCEL;
 }
 
 static void
-_element_listener(void *data, const E_Connman_Element *element)
+_element_listener(void *data, __UNUSED__ const E_Connman_Element *element)
 {
    struct test_element_timer_data *d = data;
    if (d->timer)
@@ -471,38 +555,38 @@ _element_listener_free(void *data)
    free(d);
 }
 
-static int
-_on_element_add(void *data, int type, void *info)
+static Eina_Bool
+_on_element_add(__UNUSED__ void *data, __UNUSED__ int type, void *info)
 {
    E_Connman_Element *element = info;
    struct test_element_timer_data *d;
 
    d = malloc(sizeof(*d));
    if (!d)
-     return 1;
+     return ECORE_CALLBACK_PASS_ON;
 
    d->element = element;
    d->timer = ecore_timer_add(1.0, _test_element_timer, d);
    e_connman_element_listener_add
      (element, _element_listener, d, _element_listener_free);
 
-   return 1;
+   return ECORE_CALLBACK_PASS_ON;
 }
 
-static int
-_on_element_del(void *data, int type, void *info)
+static Eina_Bool
+_on_element_del(__UNUSED__ void *data, __UNUSED__ int type, __UNUSED__ void *info)
 {
-   return 1;
+   return ECORE_CALLBACK_PASS_ON;
 }
 
-static int
-_on_element_updated(void *data, int type, void *info)
+static Eina_Bool
+_on_element_updated(__UNUSED__ void *data, __UNUSED__ int type, __UNUSED__ void *info)
 {
-   return 1;
+   return ECORE_CALLBACK_PASS_ON;
 }
 
 int
-main(int argc, char *argv[])
+main(__UNUSED__ int argc, __UNUSED__ char *argv[])
 {
    E_DBus_Connection *c;
    int total;

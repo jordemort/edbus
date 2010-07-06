@@ -8,9 +8,6 @@ static unsigned int init_count = 0;
 static char *unique_name = NULL;
 
 static const char bus_name[] = "org.moblin.connman";
-static const char fdo_bus_name[] = "org.freedesktop.DBus";
-static const char fdo_interface[] = "org.freedesktop.DBus";
-static const char fdo_path[] = "/org/freedesktop/DBus";
 
 E_DBus_Connection *e_connman_conn = NULL;
 
@@ -26,6 +23,7 @@ const char *e_connman_iface_profile = NULL;
 const char *e_connman_iface_service = NULL;
 const char *e_connman_iface_device = NULL;
 const char *e_connman_iface_connection = NULL;
+const char *e_connman_iface_technology = NULL;
 
 const char *e_connman_prop_available = NULL;
 const char *e_connman_prop_connected = NULL;
@@ -34,8 +32,14 @@ const char *e_connman_prop_default = NULL;
 const char *e_connman_prop_device = NULL;
 const char *e_connman_prop_devices = NULL;
 const char *e_connman_prop_interface = NULL;
-const char *e_connman_prop_ipv4_address = NULL;
-const char *e_connman_prop_ipv4_method = NULL;
+const char *e_connman_prop_ipv4 = NULL;
+const char *e_connman_prop_ipv4_configuration = NULL;
+const char *e_connman_prop_ethernet = NULL;
+const char *e_connman_prop_method = NULL;
+const char *e_connman_prop_address = NULL;
+const char *e_connman_prop_gateway = NULL;
+const char *e_connman_prop_netmask = NULL;
+const char *e_connman_prop_mtu = NULL;
 const char *e_connman_prop_name = NULL;
 const char *e_connman_prop_network = NULL;
 const char *e_connman_prop_networks = NULL;
@@ -44,16 +48,40 @@ const char *e_connman_prop_policy = NULL;
 const char *e_connman_prop_powered = NULL;
 const char *e_connman_prop_priority = NULL;
 const char *e_connman_prop_profiles = NULL;
+const char *e_connman_prop_profile_active = NULL;
+const char *e_connman_prop_services = NULL;
+const char *e_connman_prop_technologies = NULL;
 const char *e_connman_prop_remember = NULL;
 const char *e_connman_prop_scan_interval = NULL;
 const char *e_connman_prop_scanning = NULL;
 const char *e_connman_prop_state = NULL;
-const char *e_connman_prop_strengh = NULL;
+const char *e_connman_prop_strength = NULL;
+const char *e_connman_prop_frequency = NULL;
 const char *e_connman_prop_type = NULL;
 const char *e_connman_prop_wifi_mode = NULL;
 const char *e_connman_prop_wifi_passphrase = NULL;
 const char *e_connman_prop_wifi_security = NULL;
 const char *e_connman_prop_wifi_ssid = NULL;
+const char *e_connman_prop_wifi_channel = NULL;
+const char *e_connman_prop_wifi_eap = NULL;
+const char *e_connman_prop_error = NULL;
+const char *e_connman_prop_mode = NULL;
+const char *e_connman_prop_security = NULL;
+const char *e_connman_prop_passphrase = NULL;
+const char *e_connman_prop_passphrase_required = NULL;
+const char *e_connman_prop_favorite = NULL;
+const char *e_connman_prop_immutable = NULL;
+const char *e_connman_prop_auto_connect = NULL;
+const char *e_connman_prop_setup_required = NULL;
+const char *e_connman_prop_apn = NULL;
+const char *e_connman_prop_mcc = NULL;
+const char *e_connman_prop_mnc = NULL;
+const char *e_connman_prop_roaming = NULL;
+const char *e_connman_prop_technology_default = NULL;
+const char *e_connman_prop_technologies_available = NULL;
+const char *e_connman_prop_technologies_enabled= NULL;
+const char *e_connman_prop_technologies_connected = NULL;
+
 
 int _e_dbus_connman_log_dom = -1;
 
@@ -87,16 +115,16 @@ e_connman_manager_sync_elements(void)
    E_Connman_Element *manager;
 
    if (!unique_name)
-     return FALSE;
+     return EINA_FALSE;
    manager = e_connman_element_register(manager_path, e_connman_iface_manager);
    if (manager)
      e_connman_element_properties_sync(manager);
    else
-     return FALSE;
+     return EINA_FALSE;
 
    DBG("sync_manager: %s (%s)", unique_name, bus_name);
 
-   return TRUE;
+   return EINA_TRUE;
 }
 
 static void
@@ -112,10 +140,10 @@ _e_connman_system_name_owner_exit(void)
 static void
 _e_connman_system_name_owner_enter(const char *uid)
 {
-   DBG("E-Dbus connman: enter connman at %s (old was %s)", uid, unique_name);
+   DBG("enter connman at %s (old was %s)", uid, unique_name);
    if (unique_name && strcmp(unique_name, uid) == 0)
      {
-	DBG("E-Dbus connman: same unique_name for connman, ignore.");
+	DBG("same unique_name for connman, ignore.");
 	return;
      }
 
@@ -129,7 +157,7 @@ _e_connman_system_name_owner_enter(const char *uid)
 }
 
 static void
-_e_connman_system_name_owner_changed(void *data, DBusMessage *msg)
+_e_connman_system_name_owner_changed(void *data __UNUSED__, DBusMessage *msg)
 {
    DBusError err;
    const char *name, *from, *to;
@@ -141,7 +169,7 @@ _e_connman_system_name_owner_changed(void *data, DBusMessage *msg)
 			      DBUS_TYPE_STRING, &to,
 			      DBUS_TYPE_INVALID))
      {
-	ERR("E-Dbus connman: could not get NameOwnerChanged arguments: %s: %s",
+	ERR("could not get NameOwnerChanged arguments: %s: %s",
 	    err.name, err.message);
 	dbus_error_free(&err);
 	return;
@@ -150,24 +178,24 @@ _e_connman_system_name_owner_changed(void *data, DBusMessage *msg)
    if (strcmp(name, bus_name) != 0)
      return;
 
-   DBG("E-Dbus connman: NameOwnerChanged from=[%s] to=[%s]", from, to);
+   DBG("NameOwnerChanged from=[%s] to=[%s]", from, to);
 
    if (from[0] == '\0' && to[0] != '\0')
      _e_connman_system_name_owner_enter(to);
    else if (from[0] != '\0' && to[0] == '\0')
      {
-	DBG("E-Dbus connman: exit connman at %s", from);
+	DBG("exit connman at %s", from);
 	if (strcmp(unique_name, from) != 0)
-	  DBG("E-Dbus connman: %s was not the known name %s, ignored.", from, unique_name);
+	  DBG("%s was not the known name %s, ignored.", from, unique_name);
 	else
 	  _e_connman_system_name_owner_exit();
      }
    else
-     DBG("E-Dbus connman: unknow change from %s to %s", from, to);
+     DBG("unknow change from %s to %s", from, to);
 }
 
 static void
-_e_connman_get_name_owner(void *data, DBusMessage *msg, DBusError *err)
+_e_connman_get_name_owner(void *data __UNUSED__, DBusMessage *msg, DBusError *err)
 {
    DBusMessageIter itr;
    int t;
@@ -185,7 +213,7 @@ _e_connman_get_name_owner(void *data, DBusMessage *msg, DBusError *err)
    dbus_message_iter_get_basic(&itr, &uid);
    if (!uid)
      {
-	ERR("E-Dbus connman: no name owner!");
+	ERR("no name owner!");
 	return;
      }
 
@@ -222,13 +250,15 @@ e_connman_system_init(E_DBus_Connection *edbus_conn)
 
    if (init_count > 1)
      return init_count;
-   
-   _e_dbus_connman_log_dom = eina_log_domain_register("e_dbus_connman",EINA_LOG_DEFAULT_COLOR);
 
-   if(_e_dbus_connman_log_dom < 0) 
+   _e_dbus_connman_log_dom = eina_log_domain_register
+     ("e_dbus_connman", EINA_LOG_DEFAULT_COLOR);
+
+   if(_e_dbus_connman_log_dom < 0)
      {
-       ERR("E-Dbus connman error : impossible to create a log domain for edbus_connman module");
-       return -1;
+	EINA_LOG_ERR
+	  ("impossible to create a log domain for edbus_connman module");
+	return -1;
      }
 
    if (E_CONNMAN_EVENT_MANAGER_IN == 0)
@@ -254,6 +284,8 @@ e_connman_system_init(E_DBus_Connection *edbus_conn)
      e_connman_iface_device = eina_stringshare_add("org.moblin.connman.Device");
    if (e_connman_iface_connection == NULL)
      e_connman_iface_connection = eina_stringshare_add("org.moblin.connman.Connection");
+   if (e_connman_iface_technology == NULL)
+     e_connman_iface_technology = eina_stringshare_add("org.moblin.connman.Technology");
 
    if (e_connman_prop_available == NULL)
      e_connman_prop_available = eina_stringshare_add("Available");
@@ -269,10 +301,22 @@ e_connman_system_init(E_DBus_Connection *edbus_conn)
      e_connman_prop_devices = eina_stringshare_add("Devices");
    if (e_connman_prop_interface == NULL)
      e_connman_prop_interface = eina_stringshare_add("Interface");
-   if (e_connman_prop_ipv4_address == NULL)
-     e_connman_prop_ipv4_address = eina_stringshare_add("IPv4.Address");
-   if (e_connman_prop_ipv4_method == NULL)
-     e_connman_prop_ipv4_method = eina_stringshare_add("IPv4.Method");
+   if (e_connman_prop_ipv4 == NULL)
+     e_connman_prop_ipv4 = eina_stringshare_add("IPv4");
+   if (e_connman_prop_ipv4_configuration == NULL)
+     e_connman_prop_ipv4_configuration = eina_stringshare_add("IPv4.Configuration");
+   if (e_connman_prop_ethernet == NULL)
+     e_connman_prop_ethernet = eina_stringshare_add("Ethernet");
+   if (e_connman_prop_method == NULL)
+     e_connman_prop_method = eina_stringshare_add("Method");
+   if (e_connman_prop_address == NULL)
+     e_connman_prop_address = eina_stringshare_add("Address");
+   if (e_connman_prop_gateway == NULL)
+     e_connman_prop_gateway = eina_stringshare_add("Gateway");
+   if (e_connman_prop_netmask == NULL)
+     e_connman_prop_netmask = eina_stringshare_add("Netmask");
+   if (e_connman_prop_mtu == NULL)
+     e_connman_prop_mtu = eina_stringshare_add("MTU");
    if (e_connman_prop_name == NULL)
      e_connman_prop_name = eina_stringshare_add("Name");
    if (e_connman_prop_network == NULL)
@@ -289,6 +333,12 @@ e_connman_system_init(E_DBus_Connection *edbus_conn)
      e_connman_prop_priority = eina_stringshare_add("Priority");
    if (e_connman_prop_profiles == NULL)
      e_connman_prop_profiles = eina_stringshare_add("Profiles");
+   if (e_connman_prop_profile_active == NULL)
+     e_connman_prop_profile_active = eina_stringshare_add("ActiveProfile");
+   if (e_connman_prop_services == NULL)
+     e_connman_prop_services = eina_stringshare_add("Services");
+   if (e_connman_prop_technologies == NULL)
+     e_connman_prop_technologies = eina_stringshare_add("Technologies");
    if (e_connman_prop_remember == NULL)
      e_connman_prop_remember = eina_stringshare_add("Remember");
    if (e_connman_prop_scan_interval == NULL)
@@ -297,8 +347,10 @@ e_connman_system_init(E_DBus_Connection *edbus_conn)
      e_connman_prop_scanning = eina_stringshare_add("Scanning");
    if (e_connman_prop_state == NULL)
      e_connman_prop_state = eina_stringshare_add("State");
-   if (e_connman_prop_strengh == NULL)
-     e_connman_prop_strengh = eina_stringshare_add("Strength");
+   if (e_connman_prop_strength == NULL)
+     e_connman_prop_strength = eina_stringshare_add("Strength");
+   if (e_connman_prop_frequency == NULL)
+     e_connman_prop_frequency = eina_stringshare_add("Frequency");
    if (e_connman_prop_type == NULL)
      e_connman_prop_type = eina_stringshare_add("Type");
    if (e_connman_prop_wifi_mode == NULL)
@@ -309,10 +361,48 @@ e_connman_system_init(E_DBus_Connection *edbus_conn)
      e_connman_prop_wifi_security = eina_stringshare_add("WiFi.Security");
    if (e_connman_prop_wifi_ssid == NULL)
      e_connman_prop_wifi_ssid = eina_stringshare_add("WiFi.SSID");
+   if (e_connman_prop_wifi_channel == NULL)
+     e_connman_prop_wifi_channel = eina_stringshare_add("WiFi.Channel");
+   if (e_connman_prop_wifi_eap == NULL)
+     e_connman_prop_wifi_eap = eina_stringshare_add("WiFi.EAP");
+   if (e_connman_prop_error == NULL)
+     e_connman_prop_error = eina_stringshare_add("Error");
+   if (e_connman_prop_mode == NULL)
+     e_connman_prop_mode = eina_stringshare_add("Mode");
+   if (e_connman_prop_security == NULL)
+     e_connman_prop_security = eina_stringshare_add("Security");
+   if (e_connman_prop_passphrase == NULL)
+     e_connman_prop_passphrase = eina_stringshare_add("Passphrase");
+   if (e_connman_prop_passphrase_required == NULL)
+     e_connman_prop_passphrase_required = eina_stringshare_add("PassphraseRequired");
+   if (e_connman_prop_favorite == NULL)
+     e_connman_prop_favorite = eina_stringshare_add("Favorite");
+   if (e_connman_prop_immutable == NULL)
+     e_connman_prop_immutable = eina_stringshare_add("Immutable");
+   if (e_connman_prop_auto_connect == NULL)
+     e_connman_prop_auto_connect = eina_stringshare_add("AutoConnect");
+   if (e_connman_prop_setup_required == NULL)
+     e_connman_prop_setup_required = eina_stringshare_add("SetupRequired");
+   if (e_connman_prop_apn == NULL)
+     e_connman_prop_apn = eina_stringshare_add("APN");
+   if (e_connman_prop_mcc == NULL)
+     e_connman_prop_mcc = eina_stringshare_add("MCC");
+   if (e_connman_prop_mnc == NULL)
+     e_connman_prop_mnc = eina_stringshare_add("MCN");
+   if (e_connman_prop_roaming == NULL)
+     e_connman_prop_roaming = eina_stringshare_add("Roaming");
+   if (e_connman_prop_technology_default == NULL)
+     e_connman_prop_technology_default = eina_stringshare_add("DefaultTechnology");
+   if (e_connman_prop_technologies_available == NULL)
+     e_connman_prop_technologies_available = eina_stringshare_add("AvailableTechnologies");
+   if (e_connman_prop_technologies_enabled == NULL)
+     e_connman_prop_technologies_enabled = eina_stringshare_add("EnabledTechnologies");
+   if (e_connman_prop_technologies_connected == NULL)
+     e_connman_prop_technologies_connected = eina_stringshare_add("ConnectedTechnologies");
 
    e_connman_conn = edbus_conn;
    cb_name_owner_changed = e_dbus_signal_handler_add
-     (e_connman_conn, fdo_bus_name, fdo_path, fdo_interface, "NameOwnerChanged",
+     (e_connman_conn, E_DBUS_FDO_BUS, E_DBUS_FDO_PATH, E_DBUS_FDO_INTERFACE, "NameOwnerChanged",
       _e_connman_system_name_owner_changed, NULL);
 
    if (pending_get_name_owner)
@@ -346,7 +436,7 @@ e_connman_system_shutdown(void)
 {
    if (init_count == 0)
      {
-	ERR("E-Dbus connman Error: connman system already shut down.");
+	ERR("connman system already shut down.");
 	return 0;
      }
    init_count--;
@@ -359,6 +449,7 @@ e_connman_system_shutdown(void)
    _stringshare_del(&e_connman_iface_service);
    _stringshare_del(&e_connman_iface_device);
    _stringshare_del(&e_connman_iface_connection);
+   _stringshare_del(&e_connman_iface_technology);
 
    _stringshare_del(&e_connman_prop_available);
    _stringshare_del(&e_connman_prop_connected);
@@ -367,8 +458,14 @@ e_connman_system_shutdown(void)
    _stringshare_del(&e_connman_prop_device);
    _stringshare_del(&e_connman_prop_devices);
    _stringshare_del(&e_connman_prop_interface);
-   _stringshare_del(&e_connman_prop_ipv4_address);
-   _stringshare_del(&e_connman_prop_ipv4_method);
+   _stringshare_del(&e_connman_prop_ipv4);
+   _stringshare_del(&e_connman_prop_ipv4_configuration);
+   _stringshare_del(&e_connman_prop_ethernet);
+   _stringshare_del(&e_connman_prop_method);
+   _stringshare_del(&e_connman_prop_address);
+   _stringshare_del(&e_connman_prop_gateway);
+   _stringshare_del(&e_connman_prop_netmask);
+   _stringshare_del(&e_connman_prop_mtu);
    _stringshare_del(&e_connman_prop_name);
    _stringshare_del(&e_connman_prop_network);
    _stringshare_del(&e_connman_prop_networks);
@@ -377,16 +474,39 @@ e_connman_system_shutdown(void)
    _stringshare_del(&e_connman_prop_powered);
    _stringshare_del(&e_connman_prop_priority);
    _stringshare_del(&e_connman_prop_profiles);
+   _stringshare_del(&e_connman_prop_profile_active);
+   _stringshare_del(&e_connman_prop_services);
+   _stringshare_del(&e_connman_prop_technologies);
    _stringshare_del(&e_connman_prop_remember);
    _stringshare_del(&e_connman_prop_scan_interval);
    _stringshare_del(&e_connman_prop_scanning);
    _stringshare_del(&e_connman_prop_state);
-   _stringshare_del(&e_connman_prop_strengh);
+   _stringshare_del(&e_connman_prop_strength);
+   _stringshare_del(&e_connman_prop_frequency);
    _stringshare_del(&e_connman_prop_type);
    _stringshare_del(&e_connman_prop_wifi_mode);
    _stringshare_del(&e_connman_prop_wifi_passphrase);
    _stringshare_del(&e_connman_prop_wifi_security);
    _stringshare_del(&e_connman_prop_wifi_ssid);
+   _stringshare_del(&e_connman_prop_wifi_channel);
+   _stringshare_del(&e_connman_prop_wifi_eap);
+   _stringshare_del(&e_connman_prop_error);
+   _stringshare_del(&e_connman_prop_mode);
+   _stringshare_del(&e_connman_prop_security);
+   _stringshare_del(&e_connman_prop_passphrase);
+   _stringshare_del(&e_connman_prop_passphrase_required);
+   _stringshare_del(&e_connman_prop_favorite);
+   _stringshare_del(&e_connman_prop_immutable);
+   _stringshare_del(&e_connman_prop_auto_connect);
+   _stringshare_del(&e_connman_prop_setup_required);
+   _stringshare_del(&e_connman_prop_apn);
+   _stringshare_del(&e_connman_prop_mcc);
+   _stringshare_del(&e_connman_prop_mnc);
+   _stringshare_del(&e_connman_prop_roaming);
+   _stringshare_del(&e_connman_prop_technology_default);
+   _stringshare_del(&e_connman_prop_technologies_available);
+   _stringshare_del(&e_connman_prop_technologies_enabled);
+   _stringshare_del(&e_connman_prop_technologies_connected);
 
    if (pending_get_name_owner)
      {

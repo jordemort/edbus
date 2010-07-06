@@ -11,7 +11,13 @@ EAPI void
 e_hal_property_free(E_Hal_Property *prop)
 {
   if (prop->type == E_HAL_PROPERTY_TYPE_STRLIST)
-    eina_list_free(prop->val.strlist);
+  {
+    const char *str;
+    EINA_LIST_FREE(prop->val.strlist, str)
+      eina_stringshare_del(str);
+  }
+  else if (prop->type == E_HAL_PROPERTY_TYPE_STRING)
+    eina_stringshare_del(prop->val.s);
   free(prop);
 }
 
@@ -21,20 +27,20 @@ e_hal_property_free(E_Hal_Property *prop)
  * @param key the key of the property to retrieve
  * @param err a pointer to an int, which if supplied, will be set to 0 on success and 1 on an error
  */
-EAPI char *
+EAPI const char *
 e_hal_property_string_get(E_Hal_Properties *properties, const char *key, int *err)
 {
   E_Hal_Property *prop;
   if (err) *err = 0;
   if (!properties->properties) return NULL;
   prop = eina_hash_find(properties->properties, key);
-  if (prop) return strdup(prop->val.s);
+  if (prop) return prop->val.s;
 
   if (err) *err = 1;
   return NULL;
 }
 
-EAPI char
+EAPI Eina_Bool
 e_hal_property_bool_get(E_Hal_Properties *properties, const char *key, int *err)
 {
   E_Hal_Property *prop;
@@ -60,7 +66,7 @@ e_hal_property_int_get(E_Hal_Properties *properties, const char *key, int *err)
   return 0;
 }
 
-EAPI dbus_uint64_t
+EAPI uint64_t
 e_hal_property_uint64_get(E_Hal_Properties *properties, const char *key, int *err)
 {
   E_Hal_Property *prop;
@@ -86,7 +92,7 @@ e_hal_property_double_get(E_Hal_Properties *properties, const char *key, int *er
   return 0;
 }
 
-EAPI Eina_List *
+EAPI const Eina_List *
 e_hal_property_strlist_get(E_Hal_Properties *properties, const char *key, int *err)
 {
   E_Hal_Property *prop;

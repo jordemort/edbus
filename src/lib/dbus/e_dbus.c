@@ -46,9 +46,9 @@ struct E_DBus_Timeout_Data
   int interval;
 };
 
-static int e_dbus_idler(void *data);
+static Eina_Bool e_dbus_idler(void *data);
 
-static int
+static Eina_Bool
 e_dbus_fd_handler(void *data, Ecore_Fd_Handler *fd_handler)
 {
   E_DBus_Handler_Data *hd;
@@ -62,7 +62,7 @@ e_dbus_fd_handler(void *data, Ecore_Fd_Handler *fd_handler)
     DBG("handler disabled");
     if (hd->fd_handler) ecore_main_fd_handler_del(hd->fd_handler);
     hd->fd_handler = NULL;
-    return 0;
+    return ECORE_CALLBACK_CANCEL;
   }
   if (ecore_main_fd_handler_active_get(fd_handler, ECORE_FD_READ)) condition |= DBUS_WATCH_READABLE;
   if (ecore_main_fd_handler_active_get(fd_handler, ECORE_FD_WRITE)) condition |= DBUS_WATCH_WRITABLE;
@@ -72,9 +72,8 @@ e_dbus_fd_handler(void *data, Ecore_Fd_Handler *fd_handler)
   dbus_watch_handle(hd->watch, condition);
   hd = NULL;
 
-  return 1;
+  return ECORE_CALLBACK_RENEW;
 }
-
 
 static void
 e_dbus_fd_handler_add(E_DBus_Handler_Data *hd)
@@ -127,7 +126,7 @@ e_dbus_connection_data_watch_add(E_DBus_Connection *cd, DBusWatch *watch)
   hd->watch = watch;
 
   hd->enabled = dbus_watch_get_enabled(watch);
-#if (DBUS_VERSION_MAJOR == 1 && DBUS_VERSION_MINOR == 1 && DBUS_VERSION_MICRO>= 1) || (DBUS_VERSION_MAJOR == 1 && DBUS_VERSION_MAJOR > 1) || (DBUS_VERSION_MAJOR > 1)
+#if (DBUS_VERSION_MAJOR == 1 && DBUS_VERSION_MINOR == 1 && DBUS_VERSION_MICRO>= 1) || (DBUS_VERSION_MAJOR == 1 && DBUS_VERSION_MINOR > 1) || (DBUS_VERSION_MAJOR > 1)
   hd->fd = dbus_watch_get_unix_fd(hd->watch);
 #else
   hd->fd = dbus_watch_get_fd(hd->watch);
@@ -155,7 +154,7 @@ e_dbus_connection_new(DBusConnection *conn)
   else
     DBG("Not connected");
 
-  cd->shared_type = -1;
+  cd->shared_type = (unsigned int)-1;
   cd->fd_handlers = NULL;
   cd->timeouts = NULL;
 
@@ -176,7 +175,7 @@ e_dbus_connection_free(void *data)
   EINA_LIST_FREE(cd->timeouts, timer)
     ecore_timer_del(timer);
 
-  if (cd->shared_type != -1)
+  if (cd->shared_type != (unsigned int)-1)
     shared_connections[cd->shared_type] = NULL;
 
   e_dbus_signal_handlers_free_all(cd);
@@ -227,7 +226,7 @@ cb_dispatch_status(DBusConnection *conn __UNUSED__, DBusDispatchStatus new_statu
   }
 }
 
-static int
+static Eina_Bool
 e_dbus_timeout_handler(void *data)
 {
   E_DBus_Timeout_Data *td;
@@ -238,12 +237,12 @@ e_dbus_timeout_handler(void *data)
   {
     DBG("timeout_handler (not enabled, ending)");
     td->handler = NULL;
-    return 0;
+    return ECORE_CALLBACK_CANCEL;
   }
 
   DBG("timeout handler!");
   dbus_timeout_handle(td->timeout);
-  return 1;
+  return ECORE_CALLBACK_RENEW;
 }
 
 static void
@@ -409,7 +408,7 @@ e_dbus_filter(DBusConnection *conn __UNUSED__, DBusMessage *message, void *user_
 
 int e_dbus_idler_active = 0;
 
-static int
+static Eina_Bool
 e_dbus_idler(void *data)
 {
   E_DBus_Connection *cd;
@@ -419,7 +418,7 @@ e_dbus_idler(void *data)
   {
     DBG("done dispatching!");
     cd->idler = NULL;
-    return 0;
+    return ECORE_CALLBACK_CANCEL;
   }
   e_dbus_idler_active++;
   dbus_connection_ref(cd->conn);
@@ -435,7 +434,7 @@ e_dbus_idler(void *data)
       e_dbus_connection_close(cd);
     } while (--close_connection);
   }
-  return 1;
+  return ECORE_CALLBACK_RENEW;
 }
 
 /**
@@ -502,7 +501,7 @@ e_dbus_connection_setup(DBusConnection *conn)
   if (!cd) return NULL;
 
   /* connection_setup */
-  dbus_connection_set_exit_on_disconnect(cd->conn, FALSE);
+  dbus_connection_set_exit_on_disconnect(cd->conn, EINA_FALSE);
   dbus_connection_allocate_data_slot(&connection_slot);
 
   dbus_connection_set_data(cd->conn, connection_slot, (void *)cd, e_dbus_connection_free);

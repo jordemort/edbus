@@ -10,7 +10,7 @@ _dbus_message_method_call(const char *method_name)
    DBusMessage *msg;
 
    msg = dbus_message_new_method_call
-     ("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+     (E_DBUS_FDO_BUS, E_DBUS_FDO_PATH, E_DBUS_FDO_INTERFACE,
       method_name);
    if (!msg)
      ERR("E-dbus Error: failed to create message for method call: %s",
@@ -65,6 +65,36 @@ _dbus_call__str(E_DBus_Connection *conn, const const char *method_name, const ch
     ERR("E-dbus Error: failed to call %s(\"%s\")", method_name, str);
   
   return ret;
+}
+
+/**
+ * Calls the Introspect method on a given bus and object path.
+ * @param conn The dbus connection to use
+ * @param bus The bus to call the method on
+ * @param object_path The path of the bus to call on
+ * @param cb_return The callback to call on reply from dbus
+ * @param data The data to associate with the callback
+ * @return A pending dbus call
+ */
+EAPI DBusPendingCall *
+e_dbus_introspect(E_DBus_Connection *conn, const char *bus, const char *object_path, E_DBus_Method_Return_Cb cb_return, const void *data)
+{
+   DBusPendingCall *ret;
+   DBusMessage *msg;
+
+  if (!conn)
+    {
+       ERR("E-dbus Error: no connection for use with introspection");
+       return NULL;
+    }
+
+   msg = dbus_message_new_method_call
+     (bus, object_path, "org.freedesktop.DBus.Introspectable", "Introspect");
+   if (!msg)
+     return NULL;
+   ret = e_dbus_message_send(conn, msg, cb_return, -1, (void *)data);
+   dbus_message_unref(msg);
+   return ret;
 }
 
 EAPI DBusPendingCall *

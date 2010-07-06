@@ -1,13 +1,14 @@
 #ifndef E_NOTIFY_H
 #define E_NOTIFY_H
 
-#include <Ecore_Data.h>
+#include <Eina.h>
 #include <Evas.h>
 #include <E_DBus.h>
 
 #ifdef EAPI
-#undef EAPI
+# undef EAPI
 #endif
+
 #ifdef _MSC_VER
 # ifdef BUILDING_DLL
 #  define EAPI __declspec(dllexport)
@@ -25,6 +26,12 @@
 #  define EAPI
 # endif
 #endif
+
+/**
+ * @defgroup ENotify_Group ENotify
+ *
+ * @{
+ */
 
 
 /* notifications */
@@ -184,5 +191,9 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+/**
+ * @}
+ */
 
 #endif

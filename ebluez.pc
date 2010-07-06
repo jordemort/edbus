@@ -1,0 +1,11 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: ebluez
+Description: bluetooth device manager (bluez)
+Requires.private: edbus
+Version: 0.5.0.49898
+Libs: -L${libdir} -lebluez
+Cflags: -I${includedir}
