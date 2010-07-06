@@ -19,7 +19,7 @@ Depends: ${misc:Depends}, libedbus-svn-06 (= ${binary:Version}), libdbus-1-dev,
 Description: D-Bus and HAL wrapper libraries for use with the EFL - Development files
  Wrappers around D-Bus to ease integrating D-Bus with EFL based applications.
  .
- This packages contains headers and static libraries for libedbus, libehal and
+ This package contains headers and static libraries for libedbus, libehal and
  libenotify
 
 Package: libedbus-svn-06
