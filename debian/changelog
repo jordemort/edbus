@@ -1,3 +1,9 @@
+edbus (0.5.0.49898-1) UNRELEASED; urgency=low
+
+  * New upstream snapshot
+
+ -- Albin Tonnerre <lutin@debian.org>  Tue, 06 Jul 2010 09:32:57 +0200
+
 edbus (0.5.0.063-1) unstable; urgency=low
 
   * New upstream snapshot
