@@ -1,0 +1,11 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: enotify
+Description: Notification convenience library
+Requires.private: evas edbus
+Version: 0.5.0.49898
+Libs: -L${libdir} -lenotify
+Cflags: -I${includedir}

@@ -9,6 +9,7 @@ typedef struct _E_Connman_Element_Pending E_Connman_Element_Pending;
 typedef struct _E_Connman_Element_Call_Data E_Connman_Element_Call_Data;
 typedef struct _E_Connman_Element_Property E_Connman_Element_Property;
 typedef struct _E_Connman_Element_Listener E_Connman_Element_Listener;
+typedef struct _E_Connman_Element_Dict_Entry E_Connman_Element_Dict_Entry;
 
 struct _E_Connman_Array
 {
@@ -50,6 +51,20 @@ struct _E_Connman_Element_Property
    } value;
 };
 
+struct _E_Connman_Element_Dict_Entry
+{
+   const char *name;
+   int type;
+   union {
+      bool boolean;
+      const char *str;
+      unsigned short u16;
+      unsigned int u32;
+      unsigned char byte;
+      const char *path;
+   } value;
+};
+
 struct _E_Connman_Element_Listener
 {
    EINA_INLIST;
@@ -60,7 +75,7 @@ struct _E_Connman_Element_Listener
 
 
 static void
-_e_connman_element_event_no_free(void *data, void *ev)
+_e_connman_element_event_no_free(void *data __UNUSED__, void *ev)
 {
    E_Connman_Element *element = ev;
    e_connman_element_unref(element);
@@ -116,22 +131,13 @@ void
 e_connman_element_listener_add(E_Connman_Element *element, void (*cb)(void *data, const E_Connman_Element *element), const void *data, void (*free_data)(void *data))
 {
    E_Connman_Element_Listener *l;
-
-   if (!element)
-     {
-	ERR("E-Dbus connman: safety check failed: element == NULL");
-	goto error;
-     }
-   if (!cb)
-     {
-	ERR("E-Dbus connman: safety check failed: cb == NULL");
-	goto error;
-     }
+   EINA_SAFETY_ON_FALSE_GOTO(element, error);
+   EINA_SAFETY_ON_FALSE_GOTO(cb, error);
 
    l = malloc(sizeof(*l));
    if (!l)
      {
-	ERR("E-Dbus connman: could not allocate E_Connman_Element_Listener");
+	ERR("could not allocate E_Connman_Element_Listener");
 	goto error;
      }
 
@@ -197,13 +203,13 @@ _e_connman_element_listeners_call_do(E_Connman_Element *element)
    e_connman_element_event_add(E_CONNMAN_EVENT_ELEMENT_UPDATED, element);
 }
 
-static int
+static Eina_Bool
 _e_connman_element_listeners_call_idler(void *data)
 {
    E_Connman_Element *element = data;
    _e_connman_element_listeners_call_do(element);
    element->_idler.changed = NULL;
-   return 0;
+   return ECORE_CALLBACK_CANCEL;
 }
 
 static void
@@ -220,7 +226,132 @@ _e_connman_element_listeners_call(E_Connman_Element *element)
  ***********************************************************************/
 
 static void
-_e_connman_element_array_free(E_Connman_Array *array, E_Connman_Array *new)
+_e_connman_element_dict_entry_free(E_Connman_Element_Dict_Entry *entry)
+{
+   switch (entry->type)
+     {
+      case DBUS_TYPE_BOOLEAN:
+      case DBUS_TYPE_BYTE:
+      case DBUS_TYPE_UINT16:
+      case DBUS_TYPE_UINT32:
+	 break;
+      case DBUS_TYPE_OBJECT_PATH:
+	 eina_stringshare_del(entry->value.path);
+	 break;
+      case DBUS_TYPE_STRING:
+	 eina_stringshare_del(entry->value.str);
+	 break;
+      default:
+	 ERR("don't know how to free dict entry '%s' of type %c (%d)",
+	     entry->name, entry->type, entry->type);
+     }
+
+   eina_stringshare_del(entry->name);
+   free(entry);
+}
+
+static E_Connman_Element_Dict_Entry *
+_e_connman_element_dict_entry_new(DBusMessageIter *itr)
+{
+   E_Connman_Element_Dict_Entry *entry;
+   DBusMessageIter e_itr, v_itr;
+   int t;
+   const char *key = NULL;
+   void *value = NULL;
+
+   dbus_message_iter_recurse(itr, &e_itr);
+
+   t = dbus_message_iter_get_arg_type(&e_itr);
+   if (!_dbus_iter_type_check(t, DBUS_TYPE_STRING))
+     {
+	ERR("invalid format for dict entry. first type not a string: %c (%d)",
+	    t, t);
+	return NULL;
+     }
+
+   dbus_message_iter_get_basic(&e_itr, &key);
+   if (!key || !key[0])
+     {
+	ERR("invalid format for dict entry. no key.");
+	return NULL;
+     }
+
+   dbus_message_iter_next(&e_itr);
+   t = dbus_message_iter_get_arg_type(&e_itr);
+   if (!_dbus_iter_type_check(t, DBUS_TYPE_VARIANT))
+     {
+	ERR("invalid format for dict entry '%s'. "
+	    "second type not a variant: %c (%d)",
+	    key, t, t);
+	return NULL;
+     }
+
+   dbus_message_iter_recurse(&e_itr, &v_itr);
+
+   t = dbus_message_iter_get_arg_type(&v_itr);
+   if ((t == DBUS_TYPE_INVALID) || (t == DBUS_TYPE_ARRAY))
+     {
+	ERR("invalid type for dict value for entry '%s': %c (%d)",
+	    key, t, t);
+	return NULL;
+     }
+
+   entry = calloc(1, sizeof(*entry));
+   if (!entry)
+     {
+	ERR("could not allocate memory for dict entry.");
+	return NULL;
+     }
+
+   dbus_message_iter_get_basic(&v_itr, &value);
+   switch (t)
+     {
+      case DBUS_TYPE_BOOLEAN:
+	 entry->value.boolean = (bool)(long)value;
+	 break;
+      case DBUS_TYPE_BYTE:
+	 entry->value.byte = (unsigned char)(long)value;
+	 break;
+      case DBUS_TYPE_UINT16:
+	 entry->value.u16 = (unsigned short)(long)value;
+	 break;
+      case DBUS_TYPE_UINT32:
+	 entry->value.u32 = (unsigned int)(long)value;
+	 break;
+      case DBUS_TYPE_STRING:
+	 entry->value.str = eina_stringshare_add(value);
+	 break;
+      case DBUS_TYPE_OBJECT_PATH:
+	 entry->value.path = eina_stringshare_add(value);
+	 break;
+      default:
+	 ERR("don't know how to create dict entry '%s' for of type %c (%d)",
+	     key, t, t);
+	 free(entry);
+	 return NULL;
+     }
+
+   entry->name = eina_stringshare_add(key);
+   entry->type = t;
+   return entry;
+}
+
+static E_Connman_Element_Dict_Entry *
+_e_connman_element_array_dict_find_stringshared(const E_Connman_Array *array, const char *key)
+{
+   E_Connman_Element_Dict_Entry *entry;
+   Eina_Array_Iterator iterator;
+   unsigned int i;
+
+   EINA_ARRAY_ITER_NEXT(array->array, i, entry, iterator)
+     if (entry->name == key)
+       return entry;
+
+   return NULL;
+}
+
+static void
+_e_connman_element_array_free(E_Connman_Array *array, E_Connman_Array *new __UNUSED__)
 {
    Eina_Array_Iterator iterator;
    unsigned int i;
@@ -231,6 +362,11 @@ _e_connman_element_array_free(E_Connman_Array *array, E_Connman_Array *new)
 
    switch (array->type)
      {
+      case DBUS_TYPE_BOOLEAN:
+      case DBUS_TYPE_BYTE:
+      case DBUS_TYPE_UINT16:
+      case DBUS_TYPE_UINT32:
+	 break;
       case DBUS_TYPE_OBJECT_PATH:
 	 EINA_ARRAY_ITER_NEXT(array->array, i, item, iterator)
 	   eina_stringshare_del(item);
@@ -239,7 +375,13 @@ _e_connman_element_array_free(E_Connman_Array *array, E_Connman_Array *new)
 	 EINA_ARRAY_ITER_NEXT(array->array, i, item, iterator)
 	   eina_stringshare_del(item);
 	 break;
+      case DBUS_TYPE_DICT_ENTRY:
+	 EINA_ARRAY_ITER_NEXT(array->array, i, item, iterator)
+	   _e_connman_element_dict_entry_free(item);
+	 break;
       default:
+	 ERR("don't know how to free array of values of type %c (%d)",
+	     array->type, array->type);
 	 break;
      }
    eina_array_free(array->array);
@@ -268,7 +410,7 @@ _e_connman_element_property_value_free(E_Connman_Element_Property *property)
 	 _e_connman_element_array_free(property->value.array, NULL);
 	 break;
       default:
-	 ERR("E-Dbus connman: don't know how to free value of property type %c (%d)",
+	 ERR("don't know how to free value of property type %c (%d)",
 	     property->type, property->type);
      }
 }
@@ -296,16 +438,20 @@ _e_connman_element_get_interface(const char *key)
 	 if (strcmp(tail, "etworks") == 0)
 	   interface = e_connman_iface_network;
 	 break;
-      case 'C':
-	 if (strcmp(tail, "onnections") == 0)
-	   interface = e_connman_iface_connection;
+      case 'S':
+	 if (strcmp(tail, "ervices") == 0)
+	   interface = e_connman_iface_service;
+	 break;
+      case 'T':
+	 if (strcmp(tail, "echnologies") == 0)
+	   interface = e_connman_iface_technology;
 	 break;
       default:
 	 break;
      }
 
    if (!interface)
-     ERR("E-Dbus connman: connman reported unknown interface: %s", key);
+     ERR("failed to find interface for property \"%s\"", key);
 
    return interface;
 }
@@ -321,20 +467,106 @@ _e_connman_element_item_register(const char *key, const char *item)
      return;
    element = e_connman_element_register(item, interface);
    if ((element) && (!e_connman_element_properties_sync(element)))
-     WRN("E-Dbus connman: could not get properties of %s", element->path);
+     WRN("could not get properties of %s", element->path);
 }
 
+/* Match 2 arrays to find which are new and which are old elements
+ * For new elements, register them under prop_name property
+ * For old elements, unregister them, sending proper DEL event
+ */
 static void
-_e_connman_element_objects_array_register(E_Connman_Array *array, const char *name)
+_e_connman_element_array_match(E_Connman_Array *old, E_Connman_Array *new, const char *prop_name)
 {
-   Eina_Array_Iterator iterator;
-   unsigned int i;
-   void *item;
+   Eina_List *deleted = NULL;
+   Eina_Array_Iterator iter_old, iter_new;
+   unsigned int i_old = 0, i_new = 0;
+   void *item_old, *item_new;
+   Eina_List *l;
+   void *data;
 
-   if (array->type != DBUS_TYPE_OBJECT_PATH)
+   if (!old)
      return;
-   EINA_ARRAY_ITER_NEXT(array->array, i, item, iterator)
-     _e_connman_element_item_register(name, item);
+   if (old->type != DBUS_TYPE_OBJECT_PATH)
+     return;
+
+   if ((!new) || (!new->array) || eina_array_count_get(new->array) == 0)
+     {
+	if ((!old) || (!old->array) || eina_array_count_get(old->array) == 0)
+	  return;
+	else
+	  {
+	     iter_old = old->array->data;
+	     goto out_remove_remaining;
+	  }
+     }
+
+   iter_new = new->array->data;
+   item_new = *iter_new;
+   EINA_ARRAY_ITER_NEXT(old->array, i_old, item_old, iter_old)
+     {
+	if (item_old == item_new)
+	  {
+	     i_new++;
+	     if (i_new >= eina_array_count_get(new->array))
+	       {
+		  i_old++;
+		  break;
+	       }
+
+	     iter_new++;
+	     item_new = *iter_new;
+	  }
+	else
+	  deleted = eina_list_append(deleted, item_old);
+     }
+
+   for(; i_new < eina_array_count_get(new->array); iter_new++, i_new++)
+     {
+	bool found = 0;
+	item_new = *iter_new;
+	if (!item_new)
+	  break;
+
+	EINA_LIST_FOREACH(deleted, l, data)
+	  {
+	     if (data == item_new)
+	       {
+		  deleted = eina_list_remove_list(deleted, l);
+		  found = 1;
+		  break;
+	       }
+	  }
+	if (!found)
+	  {
+	    _e_connman_element_item_register(prop_name, item_new);
+	    DBG("Add element %s\n", (const char *) item_new);
+	  }
+     }
+
+   /* everybody after i_old on old->array + everybody from deleted list
+      will be removed
+    */
+   EINA_LIST_FREE(deleted, data)
+     {
+	E_Connman_Element *e = e_connman_element_get(data);
+	if (e)
+	  e_connman_element_unregister(e);
+	DBG("Delete element %s\n", (const char *) data);
+     }
+
+out_remove_remaining:
+   for(; i_old < eina_array_count_get(old->array); iter_old++, i_old++)
+     {
+	E_Connman_Element *e;
+	item_old = *iter_old;
+	if (!item_old)
+	  break;
+
+	e = e_connman_element_get(item_old);
+	if (e)
+	  e_connman_element_unregister(e);
+	DBG("Delete element %s\n", (const char *) item_old);
+     }
 }
 
 static bool
@@ -348,7 +580,7 @@ _e_connman_element_property_update(E_Connman_Element_Property *property, int typ
    if (property->type != type)
      {
 	if (property->type)
-	  DBG("E-Dbus connman: property type changed from '%c' to '%c'",
+	  DBG("property type changed from '%c' to '%c'",
 	      property->type, type);
 	_e_connman_element_property_value_free(property);
 	memset(&property->value, 0, sizeof(property->value));
@@ -371,6 +603,7 @@ _e_connman_element_property_update(E_Connman_Element_Property *property, int typ
 	      property->value.byte = (unsigned char)(long)data;
 	      changed = 1;
 	   }
+	 break;
       case DBUS_TYPE_UINT16:
 	 if (changed || property->value.u16 != (unsigned short)(long)data)
 	   {
@@ -417,14 +650,14 @@ _e_connman_element_property_update(E_Connman_Element_Property *property, int typ
 	 if (!changed)
 	   if (property->value.array)
 	     {
+		_e_connman_element_array_match(property->value.array, data, property->name);
 		_e_connman_element_array_free(property->value.array, data);
-		_e_connman_element_objects_array_register(data, property->name);
 	     }
 	 property->value.array = data;
 	 changed = 1;
 	 break;
       default:
-	 ERR("E-Dbus connman: don't know how to update property type %c (%d)", type, type);
+	 ERR("don't know how to update property type %c (%d)", type, type);
      }
 
    return changed;
@@ -439,7 +672,7 @@ _e_connman_element_property_new(const char *name, int type, void *data)
    if (!property)
      {
 	eina_stringshare_del(name);
-	ERR("E-Dbus connman: could not allocate property: %s", strerror(errno));
+	ERR("could not allocate property: %s", strerror(errno));
 	return NULL;
      }
 
@@ -485,7 +718,7 @@ e_connman_element_bytes_array_get_stringshared(const E_Connman_Element *element,
    ret = malloc(*count * sizeof(unsigned char));
    if (!ret)
      {
-	ERR("E-Dbus connman: could not allocate return array of %d bytes: %s",
+	ERR("could not allocate return array of %d bytes: %s",
 	    *count, strerror(errno));
 	return NULL;
      }
@@ -500,7 +733,7 @@ e_connman_element_bytes_array_get_stringshared(const E_Connman_Element *element,
 }
 
 bool
-e_connman_element_objects_array_get_stringshared(const E_Connman_Element *element, const char *property, unsigned int *count, E_Connman_Element ***elements)
+e_connman_element_objects_array_get_stringshared(const E_Connman_Element *element, const char *property, unsigned int *count, E_Connman_Element ***p_elements)
 {
    E_Connman_Element **ret, **p;
    Eina_Array_Iterator iterator;
@@ -512,10 +745,10 @@ e_connman_element_objects_array_get_stringshared(const E_Connman_Element *elemen
    EINA_SAFETY_ON_NULL_RETURN_VAL(element, 0);
    EINA_SAFETY_ON_NULL_RETURN_VAL(property, 0);
    EINA_SAFETY_ON_NULL_RETURN_VAL(count, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(elements, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(p_elements, 0);
 
    *count = 0;
-   *elements = NULL;
+   *p_elements = NULL;
 
    if (!e_connman_element_property_get_stringshared
        (element, property, &type, &array))
@@ -523,7 +756,7 @@ e_connman_element_objects_array_get_stringshared(const E_Connman_Element *elemen
 
    if (type != DBUS_TYPE_ARRAY)
      {
-	ERR("E-Dbus connman: property %s is not an array!", property);
+	ERR("property %s is not an array!", property);
 	return 0;
      }
 
@@ -532,7 +765,7 @@ e_connman_element_objects_array_get_stringshared(const E_Connman_Element *elemen
 
    if (array->type != DBUS_TYPE_OBJECT_PATH)
      {
-	ERR("E-Dbus connman: property %s is not an array of object paths!", property);
+	ERR("property %s is not an array of object paths!", property);
 	return 0;
      }
 
@@ -540,7 +773,7 @@ e_connman_element_objects_array_get_stringshared(const E_Connman_Element *elemen
    ret = malloc(*count * sizeof(E_Connman_Element *));
    if (!ret)
      {
-	ERR("E-Dbus connman: could not allocate return array of %d elements: %s",
+	ERR("could not allocate return array of %d elements: %s",
 	    *count, strerror(errno));
 	*count = 0;
 	return 0;
@@ -556,11 +789,72 @@ e_connman_element_objects_array_get_stringshared(const E_Connman_Element *elemen
 	p++;
      }
    *count = p - ret;
-   *elements = ret;
+   *p_elements = ret;
    return 1;
 }
 
-void
+/* strings are just pointers (references), no strdup or stringshare_add/ref */
+bool
+e_connman_element_strings_array_get_stringshared(const E_Connman_Element *element, const char *property, unsigned int *count, const char ***strings)
+{
+   const char **ret, **p;
+   Eina_Array_Iterator iterator;
+   E_Connman_Array *array;
+   unsigned int i;
+   int type;
+   void *item;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(element, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(property, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(count, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(strings, 0);
+
+   *count = 0;
+   *strings = NULL;
+
+   if (!e_connman_element_property_get_stringshared
+       (element, property, &type, &array))
+     return 0;
+
+   if (type != DBUS_TYPE_ARRAY)
+     {
+	ERR("property %s is not an array!", property);
+	return 0;
+     }
+
+   if ((!array) || (!array->array) || (array->type == DBUS_TYPE_INVALID))
+     return 0;
+
+   if (array->type != DBUS_TYPE_STRING)
+     {
+	ERR("property %s is not an array of strings!", property);
+	return 0;
+     }
+
+   *count = eina_array_count_get(array->array);
+   ret = malloc(*count * sizeof(char *));
+   if (!ret)
+     {
+	ERR("could not allocate return array of %d strings: %s",
+	    *count, strerror(errno));
+	*count = 0;
+	return 0;
+     }
+   p = ret;
+
+   EINA_ARRAY_ITER_NEXT(array->array, i, item, iterator)
+     {
+	if (!item)
+	  continue;
+	*p = item;
+	p++;
+     }
+   *count = p - ret;
+   *strings = ret;
+   return 1;
+}
+
+static void
 _e_connman_element_array_print(FILE *fp, E_Connman_Array *array)
 {
    Eina_Array_Iterator iterator;
@@ -576,12 +870,56 @@ _e_connman_element_array_print(FILE *fp, E_Connman_Array *array)
 	 EINA_ARRAY_ITER_NEXT(array->array, i, item, iterator)
 	   fprintf(fp, "\"%s\", ", (const char *)item);
 	 break;
+      case DBUS_TYPE_STRING:
+	 EINA_ARRAY_ITER_NEXT(array->array, i, item, iterator)
+	   fprintf(fp, "\"%s\", ", (const char *)item);
+	 break;
       case DBUS_TYPE_BYTE:
 	 EINA_ARRAY_ITER_NEXT(array->array, i, item, iterator)
 	   fprintf(fp, "%#02hhx (\"%c\"), ", (unsigned char)(long)item,
 		   (unsigned char)(long)item);
 	 break;
-      case DBUS_TYPE_INVALID:
+      case DBUS_TYPE_UINT16:
+	 EINA_ARRAY_ITER_NEXT(array->array, i, item, iterator)
+	   fprintf(fp, "%#04hx (%hu), ", (unsigned short)(long)item,
+		   (unsigned short)(long)item);
+	 break;
+      case DBUS_TYPE_UINT32:
+	 EINA_ARRAY_ITER_NEXT(array->array, i, item, iterator)
+	   fprintf(fp, "%#08x (%u), ", (unsigned int)(long)item,
+		   (unsigned int)(long)item);
+	 break;
+      case DBUS_TYPE_DICT_ENTRY:
+	 fputs("{ ", fp);
+	 EINA_ARRAY_ITER_NEXT(array->array, i, item, iterator)
+	   {
+	      E_Connman_Element_Dict_Entry *entry = item;
+	      fprintf(fp, "%s: ", entry->name);
+	      switch (entry->type)
+		{
+		 case DBUS_TYPE_OBJECT_PATH:
+		    fprintf(fp, "\"%s\", ", entry->value.path);
+		    break;
+		 case DBUS_TYPE_STRING:
+		    fprintf(fp, "\"%s\", ", entry->value.str);
+		    break;
+		 case DBUS_TYPE_BYTE:
+		    fprintf(fp, "%#02hhx (\"%c\"), ",
+			    entry->value.byte, entry->value.byte);
+		    break;
+		 case DBUS_TYPE_UINT16:
+		    fprintf(fp, "%#04hx (%hu), ",
+			    entry->value.u16, entry->value.u16);
+		    break;
+		 case DBUS_TYPE_UINT32:
+		    fprintf(fp, "%#08x (%u), ",
+			    entry->value.u32, entry->value.u32);
+		    break;
+		 default:
+		    fprintf(fp, "<UNKNOWN TYPE '%c'>", entry->type);
+		}
+	   }
+	 fputs("}", fp);
 	 break;
       default:
 	 fprintf(fp, "<UNKNOWN ARRAY TYPE '%c'>", array->type);
@@ -651,7 +989,7 @@ e_connman_element_new(const char *path, const char *interface)
    element = calloc(1, sizeof(*element));
    if (!element)
      {
-	ERR("E-Dbus connman: could not allocate element: %s",	strerror(errno));
+	ERR("could not allocate element: %s",	strerror(errno));
 	return NULL;
      }
 
@@ -692,13 +1030,19 @@ e_connman_element_free(E_Connman_Element *element)
 
    e_connman_element_pending_cancel_and_free(&element->_pending.properties_get);
    e_connman_element_pending_cancel_and_free(&element->_pending.property_set);
-   e_connman_element_pending_cancel_and_free(&element->_pending.network_create);
-   e_connman_element_pending_cancel_and_free(&element->_pending.network_remove);
-   e_connman_element_pending_cancel_and_free(&element->_pending.network_connect);
-   e_connman_element_pending_cancel_and_free(&element->_pending.network_disconnect);
    e_connman_element_pending_cancel_and_free(&element->_pending.agent_register);
    e_connman_element_pending_cancel_and_free(&element->_pending.agent_unregister);
+   e_connman_element_pending_cancel_and_free(&element->_pending.request_scan);
+   e_connman_element_pending_cancel_and_free(&element->_pending.technology_enable);
+   e_connman_element_pending_cancel_and_free(&element->_pending.technology_disable);
+   e_connman_element_pending_cancel_and_free(&element->_pending.profile_remove);
    e_connman_element_pending_cancel_and_free(&element->_pending.device_propose_scan);
+   e_connman_element_pending_cancel_and_free(&element->_pending.service_connect);
+   e_connman_element_pending_cancel_and_free(&element->_pending.service_disconnect);
+   e_connman_element_pending_cancel_and_free(&element->_pending.service_remove);
+   e_connman_element_pending_cancel_and_free(&element->_pending.service_move_before);
+   e_connman_element_pending_cancel_and_free(&element->_pending.service_move_after);
+   e_connman_element_pending_cancel_and_free(&element->_pending.service_clear_property);
 
    e_connman_element_extra_properties_free(element);
    eina_stringshare_del(element->interface);
@@ -731,7 +1075,7 @@ e_connman_element_unref(E_Connman_Element *element)
    if (i == 0)
      e_connman_element_free(element);
    else if (i < 0)
-     ERR("E-Dbus connman: element %p references %d < 0", element, i);
+     ERR("element %p references %d < 0", element, i);
    return i;
 }
 
@@ -757,7 +1101,7 @@ e_connman_element_message_send(E_Connman_Element *element, const char *method_na
    data = malloc(sizeof(*data));
    if (!data)
      {
-	ERR("E-Dbus connman: could not alloc e_connman_element_call_data: %s",
+	ERR("could not alloc e_connman_element_call_data: %s",
 	    strerror(errno));
 	dbus_message_unref(msg);
 	return 0;
@@ -766,7 +1110,7 @@ e_connman_element_message_send(E_Connman_Element *element, const char *method_na
    p = malloc(sizeof(*p));
    if (!p)
      {
-	ERR("E-Dbus connman: could not alloc E_Connman_Element_Pending: %s",
+	ERR("could not alloc E_Connman_Element_Pending: %s",
 	    strerror(errno));
 	free(data);
 	dbus_message_unref(msg);
@@ -791,7 +1135,7 @@ e_connman_element_message_send(E_Connman_Element *element, const char *method_na
      }
    else
      {
-	ERR("E-Dbus connman: failed to call %s (obj=%s, path=%s, iface=%s)",
+	ERR("failed to call %s (obj=%s, path=%s, iface=%s)",
 	    method_name, e_connman_system_bus_name_get(),
 	    element->path, element->interface);
 	free(data);
@@ -835,7 +1179,7 @@ _e_connman_element_property_value_add(E_Connman_Element *element, const char *na
    p = _e_connman_element_property_new(name, type, value);
    if (!p)
      {
-	ERR("E-Dbus connman: could not create property %s (%c)", name, type);
+	ERR("could not create property %s (%c)", name, type);
 	return 0;
      }
 
@@ -852,25 +1196,31 @@ _e_connman_element_iter_get_array(DBusMessageIter *itr, const char *key)
    array = malloc(sizeof(E_Connman_Array));
    if (!array)
      {
-	ERR("E-Dbus connman: could not create new e_connman array.");
+	ERR("could not create new e_connman array.");
 	return NULL;
      }
    array->array = eina_array_new(16);
    if (!(array->array))
      {
-	ERR("E-Dbus connman: could not create new eina array.");
+	ERR("could not create new eina array.");
 	free(array);
 	return NULL;
      }
 
    dbus_message_iter_recurse(itr, &e_itr);
    array->type = dbus_message_iter_get_arg_type(&e_itr);
+   if (array->type == DBUS_TYPE_INVALID)
+     {
+	DBG("array %s is of type 'invalid' (empty?)", key);
+	eina_array_free(array->array);
+	free(array);
+	return NULL;
+     }
+
    do
      {
 	switch (array->type)
 	  {
-	   case DBUS_TYPE_INVALID:
-	      break;
 	   case DBUS_TYPE_OBJECT_PATH:
 	     {
 		const char *path;
@@ -881,6 +1231,15 @@ _e_connman_element_iter_get_array(DBusMessageIter *itr, const char *key)
 		_e_connman_element_item_register(key, path);
 	     }
 	     break;
+	   case DBUS_TYPE_STRING:
+	     {
+		const char *str;
+
+		dbus_message_iter_get_basic(&e_itr, &str);
+		str = eina_stringshare_add(str);
+		eina_array_push(array->array, str);
+	     }
+	     break;
 	   case DBUS_TYPE_BYTE:
 	     {
 		unsigned char byte;
@@ -888,9 +1247,20 @@ _e_connman_element_iter_get_array(DBusMessageIter *itr, const char *key)
 		eina_array_push(array->array, (void *)(long)byte);
 	     }
 	     break;
+	   case DBUS_TYPE_DICT_ENTRY:
+	     {
+		E_Connman_Element_Dict_Entry *entry;
+		entry = _e_connman_element_dict_entry_new(&e_itr);
+		if (entry)
+		  eina_array_push(array->array, entry);
+	     }
+	     break;
 	   default:
-	      ERR("E-Dbus connman: don't know how to get property type %c (%d)",
-		  array->type, array->type);
+	      ERR("don't know how to build array '%s' of type %c (%d)",
+		  key, array->type, array->type);
+	      eina_array_free(array->array);
+	      free(array);
+	      return NULL;
 	  }
      }
    while (dbus_message_iter_next(&e_itr));
@@ -904,7 +1274,7 @@ _e_connman_element_get_properties_callback(void *user_data, DBusMessage *msg, DB
    DBusMessageIter itr, s_itr;
    int t, changed;
 
-   DBG("E-Dbus connman: get_properties msg=%p", msg);
+   DBG("get_properties msg=%p", msg);
 
    if (!_dbus_callback_check_and_init(msg, &itr, err))
      return;
@@ -919,7 +1289,7 @@ _e_connman_element_get_properties_callback(void *user_data, DBusMessage *msg, DB
      {
 	DBusMessageIter e_itr, v_itr;
 	const char *key;
-	void *value;
+	void *value = NULL;
 	int r;
 
 	t = dbus_message_iter_get_arg_type(&s_itr);
@@ -942,14 +1312,19 @@ _e_connman_element_get_properties_callback(void *user_data, DBusMessage *msg, DB
 	t = dbus_message_iter_get_arg_type(&v_itr);
 	if (t == DBUS_TYPE_ARRAY)
 	  value = _e_connman_element_iter_get_array(&v_itr, key);
-	else if (t != DBUS_TYPE_INVALID)
+	else if (t != DBUS_TYPE_INVALID) {
 	  dbus_message_iter_get_basic(&v_itr, &value);
+	} else {
+	   ERR("property has invalid type %s", key);
+	   continue;
+	}
+
 	r = _e_connman_element_property_value_add(element, key, t, value);
 	if (r < 0)
-	  ERR("E-Dbus connman: failed to add property value %s (%c)", key, t);
+	  ERR("failed to add property value %s (%c)", key, t);
 	else if (r == 1)
 	  {
-	     INF("E-Dbus connman: property value changed %s (%c)", key, t);
+	     INF("property value changed %s (%c)", key, t);
 	     changed = 1;
 	  }
      }
@@ -1001,6 +1376,83 @@ e_connman_element_properties_sync(E_Connman_Element *element)
 }
 
 /**
+ * Call method SetProperty(prop, {key: value}) at the given element on server.
+ *
+ * This is a server call, not local, so it may fail and in that case
+ * no property is updated locally. If the value was set the event
+ * E_CONNMAN_EVENT_ELEMENT_UPDATED will be added to main loop.
+ *
+ * @param element to call method on server.
+ * @param prop property name.
+ * @param key dict key name.
+ * @param type DBus type to use for value.
+ * @param value pointer to value, just like regular DBus, see
+ *        dbus_message_iter_append_basic().
+ * @param cb function to call when server replies or some error happens.
+ * @param data data to give to cb when it is called.
+ *
+ * @return 1 on success, 0 otherwise.
+ */
+bool
+e_connman_element_property_dict_set_full(E_Connman_Element *element, const char *prop, const char *key, int type, const void *value, E_DBus_Method_Return_Cb cb, const void *data)
+{
+   const char name[] = "SetProperty";
+   DBusMessage *msg;
+   DBusMessageIter itr, variant, dict, entry;
+   char typestr[32];
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(element, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(prop, 0);
+
+   msg = dbus_message_new_method_call
+     (e_connman_system_bus_name_get(), element->path, element->interface, name);
+
+   if (!msg)
+     return 0;
+
+   dbus_message_iter_init_append(msg, &itr);
+   dbus_message_iter_append_basic(&itr, DBUS_TYPE_STRING, &prop);
+
+   if ((size_t)snprintf(typestr, sizeof(typestr),
+			(DBUS_TYPE_ARRAY_AS_STRING
+			 DBUS_DICT_ENTRY_BEGIN_CHAR_AS_STRING
+			 DBUS_TYPE_STRING_AS_STRING
+			 "%c"
+			 DBUS_DICT_ENTRY_END_CHAR_AS_STRING),
+			type) >= sizeof(typestr))
+     {
+	ERR("sizeof(typestr) is too small!");
+	return 0;
+     }
+
+   dbus_message_iter_open_container(&itr, DBUS_TYPE_VARIANT, typestr, &variant);
+
+   snprintf(typestr, sizeof(typestr),
+	    (DBUS_DICT_ENTRY_BEGIN_CHAR_AS_STRING
+	     DBUS_TYPE_STRING_AS_STRING
+	     "%c"
+	     DBUS_DICT_ENTRY_END_CHAR_AS_STRING),
+	    type);
+
+   dbus_message_iter_open_container(&variant, DBUS_TYPE_ARRAY, typestr, &dict);
+   dbus_message_iter_open_container(&dict, DBUS_TYPE_DICT_ENTRY, NULL, &entry);
+
+   dbus_message_iter_append_basic(&entry, DBUS_TYPE_STRING, &key);
+
+   if ((type == DBUS_TYPE_STRING) || (type == DBUS_TYPE_OBJECT_PATH))
+     dbus_message_iter_append_basic(&entry, type, &value);
+   else
+     dbus_message_iter_append_basic(&entry, type, value);
+
+   dbus_message_iter_close_container(&dict, &entry);
+   dbus_message_iter_close_container(&variant, &dict);
+   dbus_message_iter_close_container(&itr, &variant);
+
+   return e_connman_element_message_send
+     (element, name, NULL, msg, &element->_pending.property_set, cb, data);
+}
+
+/**
  * Call method SetProperty(prop, value) at the given element on server.
  *
  * This is a server call, not local, so it may fail and in that case
@@ -1042,6 +1494,11 @@ e_connman_element_property_set_full(E_Connman_Element *element, const char *prop
    dbus_message_iter_open_container(&itr, DBUS_TYPE_VARIANT, typestr, &v);
    if ((type == DBUS_TYPE_STRING) || (type == DBUS_TYPE_OBJECT_PATH))
      dbus_message_iter_append_basic(&v, type, &value);
+   else if (type == DBUS_TYPE_BOOLEAN)
+     {
+	unsigned int b = *(char *)value;
+	dbus_message_iter_append_basic(&v, type, &b);
+     }
    else
      dbus_message_iter_append_basic(&v, type, value);
    dbus_message_iter_close_container(&itr, &v);
@@ -1098,6 +1555,31 @@ e_connman_element_call_with_path(E_Connman_Element *element, const char *method_
      (element, method_name, cb, msg, pending, user_cb, user_data);
 }
 
+bool
+e_connman_element_call_with_string(E_Connman_Element *element, const char *method_name, const char *string, E_DBus_Method_Return_Cb cb, Eina_Inlist **pending, E_DBus_Method_Return_Cb user_cb, const void *user_data)
+{
+   DBusMessageIter itr;
+   DBusMessage *msg;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(element, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(method_name, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(string, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(pending, 0);
+
+   msg = dbus_message_new_method_call
+     (e_connman_system_bus_name_get(), element->path, element->interface,
+      method_name);
+
+   if (!msg)
+     return 0;
+
+   dbus_message_iter_init_append(msg, &itr);
+   dbus_message_iter_append_basic(&itr, DBUS_TYPE_STRING, &string);
+
+   return e_connman_element_message_send
+     (element, method_name, cb, msg, pending, user_cb, user_data);
+}
+
 /**
  * Get property type.
  *
@@ -1128,7 +1610,7 @@ e_connman_element_property_type_get_stringshared(const E_Connman_Element *elemen
 	  }
      }
 
-   WRN("E-Dbus connman: element %s (%p) has no property with name \"%s\".",
+   WRN("element %s (%p) has no property with name \"%s\".",
        element->path, element, name);
    return 0;
 }
@@ -1185,12 +1667,105 @@ e_connman_element_list_properties(const E_Connman_Element *element, bool (*cb)(v
 	      value = &p->value.u32;
 	      break;
 	   default:
-	      ERR("E-Dbus connman: unsupported type %c", p->type);
+	      ERR("unsupported type %c", p->type);
 	  }
 
 	if (!cb((void *)data, element, p->name, p->type, value))
 	  return;
      }
+}
+
+/**
+ * Get dict value given its key inside a dict property.
+ *
+ * This will look into properties for one of type dict that contains
+ * the given key, to find the property.  If no property is found then
+ * 0 is returned.
+ *
+ * If zero is returned, then this call failed and parameter-returned
+ * values shall be considered invalid.
+ *
+ * @param element which element to get the property
+ * @param dict_name property name, must be previously stringshared
+ * @param key key inside dict, must be previously stringshared
+ * @param type if provided it will contain the value type.
+ * @param value where to store the property value, must be a pointer to the
+ *        exact type, (bool *) for booleans, (char **) for strings, and so on.
+ *
+ * @return 1 on success, 0 otherwise.
+ */
+bool
+e_connman_element_property_dict_get_stringshared(const E_Connman_Element *element, const char *dict_name, const char *key, int *type, void *value)
+{
+   const E_Connman_Element_Property *p;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(element, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(dict_name, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(key, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(value, 0);
+
+   EINA_INLIST_FOREACH(element->props, p)
+     {
+	E_Connman_Element_Dict_Entry *entry;
+	E_Connman_Array *array;
+
+	if (p->name != dict_name)
+	  continue;
+	if (p->type != DBUS_TYPE_ARRAY)
+	  {
+	     WRN("element %s (%p) has property \"%s\" is not an array: %c (%d)",
+		 element->path, element, dict_name, p->type, p->type);
+	     return 0;
+	  }
+	array = p->value.array;
+	if ((!array) || (array->type != DBUS_TYPE_DICT_ENTRY))
+	  {
+	     int t = array ? array->type : DBUS_TYPE_INVALID;
+	     WRN("element %s (%p) has property \"%s\" is not a dict: %c (%d)",
+		 element->path, element, dict_name, t, t);
+	     return 0;
+	  }
+	entry = _e_connman_element_array_dict_find_stringshared(array, key);
+	if (!entry)
+	  {
+	     WRN("element %s (%p) has no dict property with name \"%s\" with "
+		 "key \"%s\".",
+		 element->path, element, dict_name, key);
+	     return 0;
+	  }
+
+	if (type) *type = entry->type;
+
+	switch (entry->type)
+	  {
+	   case DBUS_TYPE_BOOLEAN:
+	      *(bool *)value = entry->value.boolean;
+	      return 1;
+	   case DBUS_TYPE_BYTE:
+	      *(unsigned char *)value = entry->value.byte;
+	      return 1;
+	   case DBUS_TYPE_UINT16:
+	      *(unsigned short *)value = entry->value.u16;
+	      return 1;
+	   case DBUS_TYPE_UINT32:
+	      *(unsigned int *)value = entry->value.u32;
+	      return 1;
+	   case DBUS_TYPE_STRING:
+	      *(const char **)value = entry->value.str;
+	      return 1;
+	   case DBUS_TYPE_OBJECT_PATH:
+	      *(const char **)value = entry->value.path;
+	      return 1;
+	   default:
+	      ERR("don't know how to get property %s, key %s type %c (%d)",
+		  dict_name, key, entry->type, entry->type);
+	      return 0;
+	  }
+     }
+
+   WRN("element %s (%p) has no property with name \"%s\".",
+       element->path, element, dict_name);
+   return 0;
 }
 
 /**
@@ -1250,13 +1825,13 @@ e_connman_element_property_get_stringshared(const E_Connman_Element *element, co
 	      *(E_Connman_Array **)value = p->value.array;
 	      return 1;
 	   default:
-	      ERR("E-Dbus connman: don't know how to get property type %c (%d)",
+	      ERR("don't know how to get property type %c (%d)",
 		  p->type, p->type);
 	      return 0;
 	  }
      }
 
-   WRN("E-Dbus connman: element %s (%p) has no property with name \"%s\".",
+   WRN("element %s (%p) has no property with name \"%s\".",
        element->path, element, name);
    return 0;
 }
@@ -1297,7 +1872,7 @@ struct e_connman_elements_for_each_data
 };
 
 Eina_Bool
-_e_connman_elements_for_each(Eina_Hash *hash, const char *key, void *data, void *fdata)
+_e_connman_elements_for_each(Eina_Hash *hash __UNUSED__, const char *key, void *data, void *fdata)
 {
    struct e_connman_elements_for_each_data *each_data = fdata;
 
@@ -1336,7 +1911,7 @@ _e_connman_elements_get_allocate(unsigned int *count, E_Connman_Element ***p_ele
    *p_elements = malloc(*count * sizeof(E_Connman_Element *));
    if (!*p_elements)
      {
-	ERR("E-Dbus connman: could not allocate return array of %d elements: %s",
+	ERR("could not allocate return array of %d elements: %s",
 	    *count, strerror(errno));
 	*count = 0;
 	return 0;
@@ -1345,7 +1920,7 @@ _e_connman_elements_get_allocate(unsigned int *count, E_Connman_Element ***p_ele
 }
 
 Eina_Bool
-_e_connman_elements_get_all(Eina_Hash *hash, const char *key, void *data, void *fdata)
+_e_connman_elements_get_all(Eina_Hash *hash __UNUSED__, const char *key __UNUSED__, void *data, void *fdata)
 {
    E_Connman_Element *element = data;
    E_Connman_Element ***p_ret = fdata;
@@ -1394,7 +1969,7 @@ struct e_connman_elements_get_all_str_data
 };
 
 Eina_Bool
-_e_connman_elements_get_all_type(Eina_Hash *hash, const char *key, void *e, void *user_data)
+_e_connman_elements_get_all_type(Eina_Hash *hash __UNUSED__, const char *key __UNUSED__, void *e, void *user_data)
 {
    struct e_connman_elements_get_all_str_data *data = user_data;
    E_Connman_Element *element = e;
@@ -1472,23 +2047,29 @@ _e_connman_element_property_changed_callback(void *data, DBusMessage *msg)
    E_Connman_Element *element = (E_Connman_Element *)data;
    DBusMessageIter itr, v_itr;
    int t, r, changed = 0;
-   const char *name;
-   void *value;
+   const char *name = NULL;
+   void *value = NULL;
 
-   DBG("E-Dbus connman: Property changed in element %s", element->path);
+   DBG("Property changed in element %s", element->path);
 
    if (!_dbus_callback_check_and_init(msg, &itr, NULL))
      return;
 
    t = dbus_message_iter_get_arg_type(&itr);
    if (!_dbus_iter_type_check(t, DBUS_TYPE_STRING))
-     ERR("E-Dbus connman: missing name in property changed signal");
+     {
+	ERR("missing name in property changed signal");
+	return;
+     }
    dbus_message_iter_get_basic(&itr, &name);
 
    dbus_message_iter_next(&itr);
    t = dbus_message_iter_get_arg_type(&itr);
    if (!_dbus_iter_type_check(t, DBUS_TYPE_VARIANT))
-     ERR("E-Dbus connman: missing value in property changed signal");
+     {
+	ERR("missing value in property changed signal");
+	return;
+     }
    dbus_message_iter_recurse(&itr, &v_itr);
    t = dbus_message_iter_get_arg_type(&v_itr);
 
@@ -1496,12 +2077,18 @@ _e_connman_element_property_changed_callback(void *data, DBusMessage *msg)
      value = _e_connman_element_iter_get_array(&v_itr, name);
    else if (t != DBUS_TYPE_INVALID)
      dbus_message_iter_get_basic(&v_itr, &value);
+   else
+     {
+	ERR("property has invalid type %s", name);
+	return;
+     }
+
    r = _e_connman_element_property_value_add(element, name, t, value);
    if (r < 0)
-     ERR("E-Dbus connman: failed to add property value %s (%c)", name, t);
+     ERR("failed to add property value %s (%c)", name, t);
    else if (r == 1)
      {
-	INF("E-Dbus connman: property value changed %s (%c)", name, t);
+	INF("property value changed %s (%c)", name, t);
 	changed = 1;
      }
    if (changed)
@@ -1539,7 +2126,7 @@ e_connman_element_register(const char *path, const char *interface)
 
    if (!eina_hash_add(elements, element->path, element))
      {
-	ERR("E-Dbus connman: could not add element %s to hash, delete it.", path);
+	ERR("could not add element %s to hash, delete it.", path);
 	e_connman_element_free(element);
 	return NULL;
      }
@@ -1556,7 +2143,7 @@ e_connman_element_register(const char *path, const char *interface)
 }
 
 static void
-_e_connman_element_event_unregister_and_free(void *data, void *ev)
+_e_connman_element_event_unregister_and_free(void *data __UNUSED__, void *ev)
 {
    E_Connman_Element *element = ev;
    e_connman_element_unref(element);
@@ -1592,8 +2179,6 @@ e_connman_element_unregister(E_Connman_Element *element)
 
    if (elements)
      eina_hash_del_by_key(elements, element->path);
-
-   _e_connman_element_unregister_internal(element);
 }
 
 /**
@@ -1664,15 +2249,22 @@ e_connman_element_is_profile(const E_Connman_Element *element)
 }
 
 bool
-e_connman_element_is_connection(const E_Connman_Element *element)
-{
-   EINA_SAFETY_ON_NULL_RETURN_VAL(element, 0);
-   return _e_connman_element_is(element, e_connman_iface_connection);
-}
-
-bool
 e_connman_element_is_network(const E_Connman_Element *element)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(element, 0);
    return _e_connman_element_is(element, e_connman_iface_network);
+}
+
+bool
+e_connman_element_is_service(const E_Connman_Element *element)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(element, 0);
+   return _e_connman_element_is(element, e_connman_iface_service);
+}
+
+bool
+e_connman_element_is_technology(const E_Connman_Element *element)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(element, 0);
+   return _e_connman_element_is(element, e_connman_iface_technology);
 }

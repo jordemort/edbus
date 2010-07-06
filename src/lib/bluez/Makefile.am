@@ -1,0 +1,27 @@
+MAINTAINERCLEANFILES = Makefile.in
+
+AM_CPPFLAGS = \
+-I $(top_srcdir)/src/lib/dbus \
+@EDBUS_CFLAGS@
+
+if BUILD_EBLUEZ
+
+lib_LTLIBRARIES = libebluez.la
+include_HEADERS = E_Bluez.h
+
+libebluez_la_SOURCES = \
+e_bluez.c \
+e_bluez_element.c \
+e_bluez_manager.c \
+e_bluez_adapter.c \
+e_bluez_device.c \
+e_bluez_devicefound.c
+
+libebluez_la_LIBADD = \
+$(top_builddir)/src/lib/dbus/libedbus.la
+
+libebluez_la_LDFLAGS = -version-info @version_info@ @release_info@
+
+endif
+
+EXTRA_DIST = e_bluez_private.h

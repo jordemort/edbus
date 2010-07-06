@@ -1,0 +1,11 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: econnman
+Description: network connection manager (connman)
+Requires.private: edbus
+Version: 0.5.0.49898
+Libs: -L${libdir} -leconnman
+Cflags: -I${includedir}
