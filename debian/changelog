@@ -1,8 +1,12 @@
-edbus (0.5.0.49898-1) UNRELEASED; urgency=low
+edbus (0.5.0.49898-1) unstable; urgency=low
 
   * New upstream snapshot
+  * Bump Standards-Version, no change required
+  * Remove Xavier Oswald from uploaders, he is no longer active
+  * Fix typo in package description
+  * Add the bluez and ukit astraction libraries
 
- -- Albin Tonnerre <lutin@debian.org>  Tue, 06 Jul 2010 09:32:57 +0200
+ -- Albin Tonnerre <lutin@debian.org>  Thu, 22 Jul 2010 21:24:54 +0200
 
 edbus (0.5.0.063-1) unstable; urgency=low
 
