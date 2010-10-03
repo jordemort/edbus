@@ -36,7 +36,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = src/lib/connman
-DIST_COMMON = $(am__include_HEADERS_DIST) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__includes_HEADERS_DIST) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_attribute.m4 \
@@ -72,7 +72,7 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includesdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 @BUILD_ECONNMAN_TRUE@libeconnman_la_DEPENDENCIES =  \
 @BUILD_ECONNMAN_TRUE@	$(top_builddir)/src/lib/dbus/libedbus.la
@@ -121,8 +121,8 @@ am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
 SOURCES = $(libeconnman_la_SOURCES)
 DIST_SOURCES = $(am__libeconnman_la_SOURCES_DIST)
-am__include_HEADERS_DIST = E_Connman.h
-HEADERS = $(include_HEADERS)
+am__includes_HEADERS_DIST = E_Connman.h
+HEADERS = $(includes_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -196,6 +196,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+VMAJ = @VMAJ@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -245,6 +246,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
 release_info = @release_info@
+requirement_dbus = @requirement_dbus@
 requirement_ebluez = @requirement_ebluez@
 requirement_econnman = @requirement_econnman@
 requirement_edbus = @requirement_edbus@
@@ -267,7 +269,8 @@ AM_CPPFLAGS = \
 @EDBUS_CFLAGS@
 
 @BUILD_ECONNMAN_TRUE@lib_LTLIBRARIES = libeconnman.la
-@BUILD_ECONNMAN_TRUE@include_HEADERS = E_Connman.h
+@BUILD_ECONNMAN_TRUE@includes_HEADERS = E_Connman.h
+@BUILD_ECONNMAN_TRUE@includesdir = $(includedir)/e_dbus-@VMAJ@
 @BUILD_ECONNMAN_TRUE@libeconnman_la_SOURCES = \
 @BUILD_ECONNMAN_TRUE@e_connman.c \
 @BUILD_ECONNMAN_TRUE@e_connman_device.c \
@@ -395,26 +398,26 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-includeHEADERS: $(include_HEADERS)
+install-includesHEADERS: $(includes_HEADERS)
 	@$(NORMAL_INSTALL)
-	test -z "$(includedir)" || $(MKDIR_P) "$(DESTDIR)$(includedir)"
-	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
+	test -z "$(includesdir)" || $(MKDIR_P) "$(DESTDIR)$(includesdir)"
+	@list='$(includes_HEADERS)'; test -n "$(includesdir)" || list=; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(includedir)'"; \
-	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(includedir)" || exit $$?; \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(includesdir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(includesdir)" || exit $$?; \
 	done
 
-uninstall-includeHEADERS:
+uninstall-includesHEADERS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
+	@list='$(includes_HEADERS)'; test -n "$(includesdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	test -n "$$files" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(includedir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(includedir)" && rm -f $$files
+	echo " ( cd '$(DESTDIR)$(includesdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(includesdir)" && rm -f $$files
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -502,7 +505,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includesdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -554,7 +557,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-includeHEADERS
+install-data-am: install-includesHEADERS
 
 install-dvi: install-dvi-am
 
@@ -600,7 +603,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
+uninstall-am: uninstall-includesHEADERS uninstall-libLTLIBRARIES
 
 .MAKE: install-am install-strip
 
@@ -610,13 +613,13 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-includeHEADERS install-info \
+	install-html-am install-includesHEADERS install-info \
 	install-info-am install-libLTLIBRARIES install-man install-pdf \
 	install-pdf-am install-ps install-ps-am install-strip \
 	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-includeHEADERS \
+	tags uninstall uninstall-am uninstall-includesHEADERS \
 	uninstall-libLTLIBRARIES
 
 

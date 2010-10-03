@@ -5,7 +5,8 @@ includedir=${prefix}/include
 
 Name: edbus
 Description: DBus convenience library
-Requires.private: ecore eina-0 dbus-1
-Version: 0.5.0.49898
+Requires: dbus-1 >= 0.62
+Requires.private: ecore >= 1.0.0 eina >= 1.0.0 dbus-1 >= 0.62
+Version: 1.0.0.beta
 Libs: -L${libdir} -ledbus
-Cflags: -I${includedir}
+Cflags: -I${includedir}/e_dbus-1

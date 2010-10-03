@@ -5,7 +5,7 @@ includedir=${prefix}/include
 
 Name: eofono
 Description: oFono D-Bus wrappers
-Requires.private: edbus
-Version: 0.5.0.49898
+Requires.private: edbus >= 1.0.0
+Version: 1.0.0.beta
 Libs: -L${libdir} -leofono
-Cflags: -I${includedir}
+Cflags: -I${includedir}/e_dbus-1

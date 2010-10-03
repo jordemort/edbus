@@ -2046,7 +2046,7 @@ _on_cmd_service_ipv4_configure_dhcp(__UNUSED__ char *cmd, char *args)
 static Eina_Bool
 _on_cmd_service_ipv4_configure_manual(__UNUSED__ char *cmd, char *args)
 {
-   char *path, *next_args, *address, *netmask = NULL;
+   char *path, *next_args, *address, *netmask = NULL, *gateway = NULL;
    E_Connman_Element *e;
 
    if (!args)
@@ -2065,17 +2065,21 @@ _on_cmd_service_ipv4_configure_manual(__UNUSED__ char *cmd, char *args)
    address = next_args;
    next_args = _tok(next_args);
    if (next_args)
+      netmask = next_args;
+
+   next_args = _tok(next_args);
+   if (next_args)
      {
-	netmask = next_args;
+	gateway = next_args;
 	_tok(next_args);
      }
 
    e = e_connman_service_get(path);
    if (e_connman_service_ipv4_configure_manual
-       (e, address, netmask,
+       (e, address, netmask, gateway,
 	_method_success_check, "service_ipv4_configure_manual"))
-     printf(":::Service %s IPv4 Configuration set to Manual (%s/%s)\n",
-	    path, address, netmask);
+     printf(":::Service %s IPv4 Configuration set to Manual (%s/%s) gw %s\n",
+	    path, address, netmask, gateway);
    else
      fputs("ERROR: can't set service ipv4_configuration manual\n", stderr);
    return ECORE_CALLBACK_RENEW;
@@ -2424,21 +2428,21 @@ _on_input(__UNUSED__ void *data, Ecore_Fd_Handler *fd_handler)
 	if (args)
 	  {
 	     printf("Commands with '%s' in the name:\n", args);
-	     for (itr = maps; itr->cmd != NULL; itr++)
+	     for (itr = maps; itr->cmd; itr++)
 	       if (strstr(itr->cmd, args))
 		 printf("\t%s\n", itr->cmd);
 	  }
 	else
 	  {
 	     fputs("Commands:\n", stdout);
-	     for (itr = maps; itr->cmd != NULL; itr++)
+	     for (itr = maps; itr->cmd; itr++)
 	       printf("\t%s\n", itr->cmd);
 	  }
 	fputc('\n', stdout);
 	return ECORE_CALLBACK_RENEW;
      }
 
-   for (itr = maps; itr->cmd != NULL; itr++)
+   for (itr = maps; itr->cmd; itr++)
      if (strcmp(itr->cmd, cmd) == 0)
        return itr->cb(cmd, args);
 

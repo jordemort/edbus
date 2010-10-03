@@ -5,7 +5,7 @@ includedir=${prefix}/include
 
 Name: enotify
 Description: Notification convenience library
-Requires.private: evas edbus
-Version: 0.5.0.49898
+Requires.private: evas >= 1.0.0 edbus >= 1.0.0
+Version: 1.0.0.beta
 Libs: -L${libdir} -lenotify
-Cflags: -I${includedir}
+Cflags: -I${includedir}/e_dbus-1

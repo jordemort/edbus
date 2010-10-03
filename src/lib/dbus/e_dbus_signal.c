@@ -80,7 +80,7 @@ cb_name_owner(void *data, DBusMessage *msg, DBusError *err)
 static int
 _match_append(char *buf, int size, int *used, const char *keyword, int keyword_size, const char *value, int value_size)
 {
-   if(value == NULL)
+   if(!value)
 	return 1;
 
    if ((int) (*used + keyword_size + value_size + sizeof(",=''")) >= size)
@@ -195,12 +195,15 @@ e_dbus_signal_handler_add(E_DBus_Connection *conn, const char *sender, const cha
        conn->signal_dispatcher = cb_signal_dispatcher;
     }
 
-  /* if we have a sender, and it is not a unique name, we need to know the unique name to match since signals will have the name owner as ther sender. */
+  /* if we have a sender, and it is not a unique name, we need to know the
+   * unique name to match since signals will have the name owner as their
+   * sender.
+   */
   if (sender && sender[0] != ':')
     {
        struct cb_name_owner_data *data_cb;
 
-       data_cb = malloc(sizeof(*data));
+       data_cb = malloc(sizeof(*data_cb));
        if (!data_cb)
 	 {
 	    e_dbus_signal_handler_free(sh);
