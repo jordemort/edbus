@@ -127,6 +127,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+VMAJ = @VMAJ@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -176,6 +177,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
 release_info = @release_info@
+requirement_dbus = @requirement_dbus@
 requirement_ebluez = @requirement_ebluez@
 requirement_econnman = @requirement_econnman@
 requirement_edbus = @requirement_edbus@
@@ -193,6 +195,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 version_info = @version_info@
 MAINTAINERCLEANFILES = Makefile.in
+PACKAGE_DOCNAME = $(PACKAGE_TARNAME)-$(PACKAGE_VERSION)-doc
 EXTRA_DIST = Doxyfile $(wildcard images/*.*) e.css head.html foot.html
 all: all-am
 
@@ -300,6 +303,7 @@ maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
 	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
+@EFL_BUILD_DOC_FALSE@clean-local:
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-local mostlyclean-am
@@ -383,16 +387,24 @@ uninstall-am:
 
 .PHONY: doc
 
+@EFL_BUILD_DOC_TRUE@doc-clean:
+@EFL_BUILD_DOC_TRUE@	rm -rf html/ latex/ $(PACKAGE_DOCNAME).tar*
+
 @EFL_BUILD_DOC_TRUE@doc: all
-@EFL_BUILD_DOC_TRUE@	rm -rf html/ latex/ man/
 @EFL_BUILD_DOC_TRUE@	$(efl_doxygen)
 @EFL_BUILD_DOC_TRUE@	cp images/* html/
+@EFL_BUILD_DOC_TRUE@	rm -rf $(PACKAGE_DOCNAME).tar*
+@EFL_BUILD_DOC_TRUE@	mkdir -p $(PACKAGE_DOCNAME)/doc
+@EFL_BUILD_DOC_TRUE@	cp -R html/ latex/ $(PACKAGE_DOCNAME)/doc
+@EFL_BUILD_DOC_TRUE@	tar cf $(PACKAGE_DOCNAME).tar $(PACKAGE_DOCNAME)/
+@EFL_BUILD_DOC_TRUE@	bzip2 -9 $(PACKAGE_DOCNAME).tar
+@EFL_BUILD_DOC_TRUE@	rm -rf $(PACKAGE_DOCNAME)/
+@EFL_BUILD_DOC_TRUE@	mv $(PACKAGE_DOCNAME).tar.bz2 $(top_srcdir)
+
+@EFL_BUILD_DOC_TRUE@clean-local: doc-clean
 
 @EFL_BUILD_DOC_FALSE@doc:
 @EFL_BUILD_DOC_FALSE@	@echo "Documentation not built. Run ./configure --help"
-
-clean-local:
-	@rm -rf html/ latex/ man/
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

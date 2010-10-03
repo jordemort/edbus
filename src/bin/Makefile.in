@@ -67,7 +67,7 @@ am__e_notify_send_SOURCES_DIST = notify-send.c
 @BUILD_ENOTIFY_TRUE@am_e_notify_send_OBJECTS =  \
 @BUILD_ENOTIFY_TRUE@	e_notify_send-notify-send.$(OBJEXT)
 e_notify_send_OBJECTS = $(am_e_notify_send_OBJECTS)
-@BUILD_ENOTIFY_TRUE@e_notify_send_DEPENDENCIES = $(top_builddir)/src/lib/notification/libenotify.la
+@BUILD_ENOTIFY_TRUE@e_notify_send_DEPENDENCIES = $(ENOTIFY_LIBS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
@@ -89,12 +89,13 @@ am__e_dbus_notification_daemon_SOURCES_DIST = notification_daemon.c
 @BUILD_ENOTIFY_TRUE@am_e_dbus_notification_daemon_OBJECTS = e_dbus_notification_daemon-notification_daemon.$(OBJEXT)
 e_dbus_notification_daemon_OBJECTS =  \
 	$(am_e_dbus_notification_daemon_OBJECTS)
-@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_DEPENDENCIES = $(top_builddir)/src/lib/notification/libenotify.la
+@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_DEPENDENCIES =  \
+@BUILD_ENOTIFY_TRUE@	$(ENOTIFY_LIBS)
 am__e_dbus_notify_SOURCES_DIST = notify.c
 @BUILD_ENOTIFY_TRUE@am_e_dbus_notify_OBJECTS =  \
 @BUILD_ENOTIFY_TRUE@	e_dbus_notify-notify.$(OBJEXT)
 e_dbus_notify_OBJECTS = $(am_e_dbus_notify_OBJECTS)
-@BUILD_ENOTIFY_TRUE@e_dbus_notify_DEPENDENCIES = $(top_builddir)/src/lib/notification/libenotify.la
+@BUILD_ENOTIFY_TRUE@e_dbus_notify_DEPENDENCIES = $(ENOTIFY_LIBS)
 am__e_dbus_ofono_test_SOURCES_DIST = e_dbus_ofono_test.c
 @BUILD_EOFONO_TRUE@am_e_dbus_ofono_test_OBJECTS = e_dbus_ofono_test-e_dbus_ofono_test.$(OBJEXT)
 e_dbus_ofono_test_OBJECTS = $(am_e_dbus_ofono_test_OBJECTS)
@@ -228,6 +229,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+VMAJ = @VMAJ@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -277,6 +279,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
 release_info = @release_info@
+requirement_dbus = @requirement_dbus@
 requirement_ebluez = @requirement_ebluez@
 requirement_econnman = @requirement_econnman@
 requirement_edbus = @requirement_edbus@
@@ -329,21 +332,17 @@ e_dbus_test_client_LDADD = $(top_builddir)/src/lib/dbus/libedbus.la
 @BUILD_ECONNMAN_TRUE@e_dbus_connman_test_api_SOURCES = e_dbus_connman_test_api.c
 @BUILD_ECONNMAN_TRUE@e_dbus_connman_test_api_CPPFLAGS = $(EDBUS_CPPFLAGS)
 @BUILD_ECONNMAN_TRUE@e_dbus_connman_test_api_LDADD = $(top_builddir)/src/lib/connman/libeconnman.la
-@BUILD_ENOTIFY_TRUE@e_dbus_notify_SOURCES = \
-@BUILD_ENOTIFY_TRUE@	notify.c
-
-@BUILD_ENOTIFY_TRUE@e_dbus_notify_CPPFLAGS = $(EDBUS_CPPFLAGS)
-@BUILD_ENOTIFY_TRUE@e_dbus_notify_LDADD = $(top_builddir)/src/lib/notification/libenotify.la
-@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_SOURCES = \
-@BUILD_ENOTIFY_TRUE@	notification_daemon.c
-
-@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_CPPFLAGS = $(EDBUS_CPPFLAGS)
-@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_LDADD = $(top_builddir)/src/lib/notification/libenotify.la
-@BUILD_ENOTIFY_TRUE@e_notify_send_SOURCES = \
-@BUILD_ENOTIFY_TRUE@	notify-send.c
-
-@BUILD_ENOTIFY_TRUE@e_notify_send_CPPFLAGS = $(EDBUS_CPPFLAGS)
-@BUILD_ENOTIFY_TRUE@e_notify_send_LDADD = $(top_builddir)/src/lib/notification/libenotify.la
+@BUILD_ENOTIFY_TRUE@ENOTIFY_CPPFLAGS = $(EDBUS_CPPFLAGS) $(EVAS_CFLAGS)
+@BUILD_ENOTIFY_TRUE@ENOTIFY_LIBS = $(top_builddir)/src/lib/notification/libenotify.la
+@BUILD_ENOTIFY_TRUE@e_dbus_notify_SOURCES = notify.c
+@BUILD_ENOTIFY_TRUE@e_dbus_notify_CPPFLAGS = $(ENOTIFY_CPPFLAGS)
+@BUILD_ENOTIFY_TRUE@e_dbus_notify_LDADD = $(ENOTIFY_LIBS)
+@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_SOURCES = notification_daemon.c
+@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_CPPFLAGS = $(ENOTIFY_CPPFLAGS)
+@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_LDADD = $(ENOTIFY_LIBS)
+@BUILD_ENOTIFY_TRUE@e_notify_send_SOURCES = notify-send.c
+@BUILD_ENOTIFY_TRUE@e_notify_send_CPPFLAGS = $(ENOTIFY_CPPFLAGS)
+@BUILD_ENOTIFY_TRUE@e_notify_send_LDADD = $(ENOTIFY_LIBS)
 @BUILD_EOFONO_TRUE@e_dbus_ofono_test_SOURCES = e_dbus_ofono_test.c
 @BUILD_EOFONO_TRUE@e_dbus_ofono_test_CPPFLAGS = $(EDBUS_CPPFLAGS)
 @BUILD_EOFONO_TRUE@e_dbus_ofono_test_LDADD = $(top_builddir)/src/lib/ofono/libeofono.la

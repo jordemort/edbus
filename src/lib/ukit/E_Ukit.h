@@ -4,28 +4,6 @@
 #include <Eina.h>
 #include <E_DBus.h>
 
-#ifdef EAPI
-# undef EAPI
-#endif
-
-#ifdef _MSC_VER
-# ifdef BUILDING_DLL
-#  define EAPI __declspec(dllexport)
-# else
-#  define EAPI __declspec(dllimport)
-# endif
-#else
-# ifdef __GNUC__
-#  if __GNUC__ >= 4
-#   define EAPI __attribute__ ((visibility("default")))
-#  else
-#   define EAPI
-#  endif
-# else
-#  define EAPI
-# endif
-#endif
-
 /**
  * @defgroup EUkit_Group EUkit
  *
@@ -158,6 +136,11 @@ extern "C" {
    EAPI DBusPendingCall *e_upower_get_property(E_DBus_Connection *conn, const char *udi, const char *property, E_DBus_Callback_Func cb_func, void *data);
    EAPI DBusPendingCall *e_upower_get_all_properties(E_DBus_Connection *conn, const char *udi, E_DBus_Callback_Func cb_func, void *data);
    EAPI DBusPendingCall *e_upower_get_all_devices(E_DBus_Connection *conn, E_DBus_Callback_Func cb_func, void *data);
+
+   EAPI DBusPendingCall * e_upower_suspend_allowed(E_DBus_Connection *conn, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall * e_upower_suspend(E_DBus_Connection *conn, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall * e_upower_hibernate(E_DBus_Connection *conn, E_DBus_Callback_Func cb_func, void *data);
+   EAPI DBusPendingCall * e_upower_hibernate_allowed(E_DBus_Connection *conn, E_DBus_Callback_Func cb_func, void *data);
 
 /* utility functions */
    EAPI void                e_ukit_property_free(E_Ukit_Property *prop);
