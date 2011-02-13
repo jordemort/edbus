@@ -1,5 +1,10 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+
+#ifndef EFL_CONFIG_H__
+#define EFL_CONFIG_H__
+
+
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
    */
@@ -104,3 +109,7 @@
 
 /* Macro declaring a function argument to be unused */
 #undef __UNUSED__
+
+
+#endif /* EFL_CONFIG_H__ */
+

@@ -36,10 +36,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = src/lib/notification
-DIST_COMMON = $(am__includes_HEADERS_DIST) $(srcdir)/Makefile.am \
+DIST_COMMON = $(includes_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_attribute.m4 \
+	$(top_srcdir)/m4/efl_binary.m4 \
 	$(top_srcdir)/m4/efl_compiler_flag.m4 \
 	$(top_srcdir)/m4/efl_doxygen.m4 $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -74,12 +75,9 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includesdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-@BUILD_ENOTIFY_TRUE@libenotify_la_DEPENDENCIES =  \
-@BUILD_ENOTIFY_TRUE@	$(top_builddir)/src/lib/dbus/libedbus.la
-am__libenotify_la_SOURCES_DIST = notification.c marshal.c client.c \
-	daemon.c
-@BUILD_ENOTIFY_TRUE@am_libenotify_la_OBJECTS = notification.lo \
-@BUILD_ENOTIFY_TRUE@	marshal.lo client.lo daemon.lo
+libenotify_la_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la
+am_libenotify_la_OBJECTS = notification.lo marshal.lo client.lo \
+	daemon.lo
 libenotify_la_OBJECTS = $(am_libenotify_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -87,7 +85,6 @@ am__v_lt_0 = --silent
 libenotify_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libenotify_la_LDFLAGS) $(LDFLAGS) -o $@
-@BUILD_ENOTIFY_TRUE@am_libenotify_la_rpath = -rpath $(libdir)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -115,8 +112,7 @@ AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
 SOURCES = $(libenotify_la_SOURCES)
-DIST_SOURCES = $(am__libenotify_la_SOURCES_DIST)
-am__includes_HEADERS_DIST = E_Notify.h E_Notification_Daemon.h
+DIST_SOURCES = $(libenotify_la_SOURCES)
 HEADERS = $(includes_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -146,8 +142,35 @@ DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EDBUS_BLUEZ_TEST_CFLAGS = @EDBUS_BLUEZ_TEST_CFLAGS@
+EDBUS_BLUEZ_TEST_LIBS = @EDBUS_BLUEZ_TEST_LIBS@
+EDBUS_BLUEZ_TEST_PRG = @EDBUS_BLUEZ_TEST_PRG@
 EDBUS_CFLAGS = @EDBUS_CFLAGS@
+EDBUS_CONNMAN_TEST_CFLAGS = @EDBUS_CONNMAN_TEST_CFLAGS@
+EDBUS_CONNMAN_TEST_LIBS = @EDBUS_CONNMAN_TEST_LIBS@
+EDBUS_CONNMAN_TEST_PRG = @EDBUS_CONNMAN_TEST_PRG@
 EDBUS_LIBS = @EDBUS_LIBS@
+EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS = @EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS@
+EDBUS_NOTIFICATION_DAEMON_TEST_LIBS = @EDBUS_NOTIFICATION_DAEMON_TEST_LIBS@
+EDBUS_NOTIFICATION_DAEMON_TEST_PRG = @EDBUS_NOTIFICATION_DAEMON_TEST_PRG@
+EDBUS_NOTIFY_SEND_CFLAGS = @EDBUS_NOTIFY_SEND_CFLAGS@
+EDBUS_NOTIFY_SEND_LIBS = @EDBUS_NOTIFY_SEND_LIBS@
+EDBUS_NOTIFY_SEND_PRG = @EDBUS_NOTIFY_SEND_PRG@
+EDBUS_NOTIFY_TEST_CFLAGS = @EDBUS_NOTIFY_TEST_CFLAGS@
+EDBUS_NOTIFY_TEST_LIBS = @EDBUS_NOTIFY_TEST_LIBS@
+EDBUS_NOTIFY_TEST_PRG = @EDBUS_NOTIFY_TEST_PRG@
+EDBUS_OFONO_TEST_CFLAGS = @EDBUS_OFONO_TEST_CFLAGS@
+EDBUS_OFONO_TEST_LIBS = @EDBUS_OFONO_TEST_LIBS@
+EDBUS_OFONO_TEST_PRG = @EDBUS_OFONO_TEST_PRG@
+EDBUS_TEST_CFLAGS = @EDBUS_TEST_CFLAGS@
+EDBUS_TEST_CLIENT_CFLAGS = @EDBUS_TEST_CLIENT_CFLAGS@
+EDBUS_TEST_CLIENT_LIBS = @EDBUS_TEST_CLIENT_LIBS@
+EDBUS_TEST_CLIENT_PRG = @EDBUS_TEST_CLIENT_PRG@
+EDBUS_TEST_LIBS = @EDBUS_TEST_LIBS@
+EDBUS_TEST_PRG = @EDBUS_TEST_PRG@
+EDBUS_UKIT_TEST_CFLAGS = @EDBUS_UKIT_TEST_CFLAGS@
+EDBUS_UKIT_TEST_LIBS = @EDBUS_UKIT_TEST_LIBS@
+EDBUS_UKIT_TEST_PRG = @EDBUS_UKIT_TEST_PRG@
 EFL_EDBUS_BUILD = @EFL_EDBUS_BUILD@
 EGREP = @EGREP@
 EVAS_CFLAGS = @EVAS_CFLAGS@
@@ -264,20 +287,20 @@ AM_CPPFLAGS = \
 @EDBUS_CFLAGS@ \
 @EVAS_CFLAGS@
 
-@BUILD_ENOTIFY_TRUE@lib_LTLIBRARIES = libenotify.la
-@BUILD_ENOTIFY_TRUE@includes_HEADERS = E_Notify.h E_Notification_Daemon.h
-@BUILD_ENOTIFY_TRUE@includesdir = $(includedir)/e_dbus-@VMAJ@
-@BUILD_ENOTIFY_TRUE@libenotify_la_SOURCES = \
-@BUILD_ENOTIFY_TRUE@notification.c \
-@BUILD_ENOTIFY_TRUE@marshal.c \
-@BUILD_ENOTIFY_TRUE@client.c \
-@BUILD_ENOTIFY_TRUE@daemon.c
+lib_LTLIBRARIES = libenotify.la
+includes_HEADERS = E_Notify.h E_Notification_Daemon.h
+includesdir = $(includedir)/e_dbus-@VMAJ@
+libenotify_la_SOURCES = \
+notification.c \
+marshal.c \
+client.c \
+daemon.c
 
-@BUILD_ENOTIFY_TRUE@libenotify_la_LIBADD = \
-@BUILD_ENOTIFY_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
-@BUILD_ENOTIFY_TRUE@@EVAS_LIBS@
+libenotify_la_LIBADD = \
+$(top_builddir)/src/lib/dbus/libedbus.la \
+@EVAS_LIBS@
 
-@BUILD_ENOTIFY_TRUE@libenotify_la_LDFLAGS = -version-info @version_info@ @release_info@
+libenotify_la_LDFLAGS = -version-info @version_info@ @release_info@
 EXTRA_DIST = e_notify_private.h
 all: all-am
 
@@ -345,7 +368,7 @@ clean-libLTLIBRARIES:
 	  rm -f "$${dir}/so_locations"; \
 	done
 libenotify.la: $(libenotify_la_OBJECTS) $(libenotify_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libenotify_la_LINK) $(am_libenotify_la_rpath) $(libenotify_la_OBJECTS) $(libenotify_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(libenotify_la_LINK) -rpath $(libdir) $(libenotify_la_OBJECTS) $(libenotify_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

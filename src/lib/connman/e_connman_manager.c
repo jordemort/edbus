@@ -21,19 +21,19 @@ e_connman_manager_get(void)
  * @param cb function to call when server replies or some error happens.
  * @param data data to give to cb when it is called.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_agent_register(const char *object_path, E_DBus_Method_Return_Cb cb, const void *data)
 {
    const char name[] = "RegisterAgent";
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(object_path, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(object_path, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_call_with_path
              (element, name, object_path, NULL,
@@ -50,19 +50,19 @@ e_connman_manager_agent_register(const char *object_path, E_DBus_Method_Return_C
  * @param cb function to call when server replies or some error happens.
  * @param data data to give to cb when it is called.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_agent_unregister(const char *object_path, E_DBus_Method_Return_Cb cb, const void *data)
 {
    const char name[] = "UnregisterAgent";
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(object_path, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(object_path, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_call_with_path
              (element, name, object_path, NULL,
@@ -72,13 +72,13 @@ e_connman_manager_agent_unregister(const char *object_path, E_DBus_Method_Return
 /**
  * Get property "State" value.
  *
- * If this property isn't found then 0 is returned.
- * If zero is returned, then this call failed and parameter-returned
+ * If this property isn't found then @c EINA_FALSE is returned.
+ * If @c EINA_FALSE is returned, then this call failed and parameter-returned
  * values shall be considered invalid.
  *
  * The global connection state of a system. Possible
  * values are "online" if at least one connection exists
- * and "offline" if no device is connected.
+ * and "offline" if no service is connected.
  *
  * In certain situations the state might change to
  * the value "connected". This can only be seen if
@@ -89,18 +89,18 @@ e_connman_manager_agent_unregister(const char *object_path, E_DBus_Method_Return
  *        copied and references will be valid until element changes,
  *        so copy it if you want to use it later.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_state_get(const char **state)
 {
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(state, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(state, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_property_get_stringshared
              (element, e_connman_prop_state, NULL, state);
@@ -109,37 +109,35 @@ e_connman_manager_state_get(const char **state)
 /**
  * Get property "OfflineMode" value.
  *
- * If this property isn't found then 0 is returned.
- * If zero is returned, then this call failed and parameter-returned
+ * If this property isn't found then @c EINA_FALSE is returned.
+ * If @c EINA_FALSE is returned, then this call failed and parameter-returned
  * values shall be considered invalid.
  *
- * The offline mode indicates the global setting for
- * switching all radios on or off. Changing offline mode
- * to true results in powering down all devices. When
- * leaving offline mode the individual policy of each
- * device decides to switch the radio back on or not.
+ * The offline mode indicates the global setting for switching all radios on or
+ * off. Changing offline mode to true results in powering down all devices that
+ * use radio technology. When leaving offline mode the individual policy of each
+ * technology decides to switch the radio back on or not.
  *
- * During offline mode, it is still possible to switch
- * certain technologies manually back on. For example
- * the limited usage of WiFi or Bluetooth devices might
- * be allowed in some situations.
+ * During offline mode, it is still possible to switch certain technologies
+ * manually back on. For example the limited usage of WiFi or Bluetooth
+ * technologies might be allowed in some situations.
  *
  * @param offline where to store the property value, must be a pointer
- *        to booleans (bool *).
+ *        to Eina_Bool (Eina_Bool *).
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  * @see e_connman_manager_offline_mode_set()
  */
-bool
-e_connman_manager_offline_mode_get(bool *offline)
+Eina_Bool
+e_connman_manager_offline_mode_get(Eina_Bool *offline)
 {
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(offline, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(offline, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_property_get_stringshared
              (element, e_connman_prop_offline_mode, NULL, offline);
@@ -152,30 +150,28 @@ e_connman_manager_offline_mode_get(bool *offline)
  * no property is updated locally. If the value was set the event
  * E_CONNMAN_EVENT_ELEMENT_UPDATED will be added to main loop.
  *
- * The offline mode indicates the global setting for
- * switching all radios on or off. Changing offline mode
- * to true results in powering down all devices. When
- * leaving offline mode the individual policy of each
- * device decides to switch the radio back on or not.
+ * The offline mode indicates the global setting for switching all radios on or
+ * off. Changing offline mode to true results in powering down all devices that
+ * use radio technology. When leaving offline mode the individual policy of each
+ * technology decides to switch the radio back on or not.
  *
- * During offline mode, it is still possible to switch
- * certain technologies manually back on. For example
- * the limited usage of WiFi or Bluetooth devices might
- * be allowed in some situations.
+ * During offline mode, it is still possible to switch certain technologies
+ * manually back on. For example the limited usage of WiFi or Bluetooth
+ * technologies might be allowed in some situations.
  *
  * @param offline value to set.
  * @param cb function to call when server replies or some error happens.
  * @param data data to give to cb when it is called.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  * @see e_connman_manager_offline_mode_get()
  */
-bool
-e_connman_manager_offline_mode_set(bool offline, E_DBus_Method_Return_Cb cb, const void *data)
+Eina_Bool
+e_connman_manager_offline_mode_set(Eina_Bool offline, E_DBus_Method_Return_Cb cb, const void *data)
 {
    E_Connman_Element *element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_property_set_full
              (element, e_connman_prop_offline_mode, DBUS_TYPE_BOOLEAN,
@@ -187,23 +183,23 @@ e_connman_manager_offline_mode_set(bool offline, E_DBus_Method_Return_Cb cb, con
  *
  * @param count return the number of elements in array.
  * @param p_elements array with all elements, these are not referenced
- *        and in no particular order, just set if return is 1.  The
+ *        and in no particular order, just set if return is @c EINA_TRUE.  The
  *        array itself is allocated using malloc() and should be freed
  *        after usage is done.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_profiles_get(unsigned int *count, E_Connman_Element ***p_elements)
 {
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(count, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(p_elements, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(count, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(p_elements, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_objects_array_get_stringshared
              (element, e_connman_prop_profiles, count, p_elements);
@@ -228,23 +224,23 @@ e_connman_manager_profiles_get(unsigned int *count, E_Connman_Element ***p_eleme
  *
  * @param count return the number of elements in array.
  * @param p_elements array with all elements, these are not referenced
- *        and in no particular order, just set if return is 1.  The
+ *        and in no particular order, just set if return is @c EINA_TRUE.  The
  *        array itself is allocated using malloc() and should be freed
  *        after usage is done.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_services_get(unsigned int *count, E_Connman_Element ***p_elements)
 {
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(count, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(p_elements, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(count, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(p_elements, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_objects_array_get_stringshared
              (element, e_connman_prop_services, count, p_elements);
@@ -255,23 +251,23 @@ e_connman_manager_services_get(unsigned int *count, E_Connman_Element ***p_eleme
  *
  * @param count return the number of elements in array.
  * @param p_elements array with all elements, these are not referenced
- *        and in no particular order, just set if return is 1.  The
+ *        and in no particular order, just set if return is @c EINA_TRUE.  The
  *        array itself is allocated using malloc() and should be freed
  *        after usage is done.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_technologies_get(unsigned int *count, E_Connman_Element ***p_elements)
 {
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(count, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(p_elements, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(count, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(p_elements, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_objects_array_get_stringshared
              (element, e_connman_prop_technologies, count, p_elements);
@@ -280,8 +276,8 @@ e_connman_manager_technologies_get(unsigned int *count, E_Connman_Element ***p_e
 /**
  * Request to trigger a scan for given technology.
  *
- * Call method RequestScan(type) on server in order to
- * find new services and networks for such technology type.
+ * Call method RequestScan(type) on server in order to find new services for
+ * such technology type.
  *
  * The empty string for type means all technolgies.
  *
@@ -289,9 +285,9 @@ e_connman_manager_technologies_get(unsigned int *count, E_Connman_Element ***p_e
  * @param cb function to call when server replies or some error happens.
  * @param data data to give to cb when it is called.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_request_scan(const char *type, E_DBus_Method_Return_Cb cb, const void *data)
 {
    const char name[] = "RequestScan";
@@ -302,7 +298,7 @@ e_connman_manager_request_scan(const char *type, E_DBus_Method_Return_Cb cb, con
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_call_with_string
              (element, name, type, NULL,
@@ -318,19 +314,19 @@ e_connman_manager_request_scan(const char *type, E_DBus_Method_Return_Cb cb, con
  * @param cb function to call when server replies or some error happens.
  * @param data data to give to cb when it is called.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_technology_enable(const char *type, E_DBus_Method_Return_Cb cb, const void *data)
 {
    const char name[] = "EnableTechnology";
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(type, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(type, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_call_with_string
              (element, name, type, NULL,
@@ -346,19 +342,19 @@ e_connman_manager_technology_enable(const char *type, E_DBus_Method_Return_Cb cb
  * @param cb function to call when server replies or some error happens.
  * @param data data to give to cb when it is called.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_technology_disable(const char *type, E_DBus_Method_Return_Cb cb, const void *data)
 {
    const char name[] = "DisableTechnology";
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(type, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(type, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_call_with_string
              (element, name, type, NULL,
@@ -368,8 +364,8 @@ e_connman_manager_technology_disable(const char *type, E_DBus_Method_Return_Cb c
 /**
  * Get property "DefaultTechnology" value.
  *
- * If this property isn't found then 0 is returned.
- * If zero is returned, then this call failed and parameter-returned
+ * If this property isn't found then @c EINA_FALSE is returned.
+ * If @c EINA_FALSE is returned, then this call failed and parameter-returned
  * values shall be considered invalid.
  *
  * The current connected technology which holds the default route.
@@ -379,18 +375,18 @@ e_connman_manager_technology_disable(const char *type, E_DBus_Method_Return_Cb c
  *        copied and references will be valid until element changes,
  *        so copy it if you want to use it later.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_technology_default_get(const char **type)
 {
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(type, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(type, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_property_get_stringshared
              (element, e_connman_prop_technology_default, NULL, type);
@@ -411,23 +407,23 @@ e_connman_manager_technology_default_get(const char **type)
  * @param cb function to call when server replies or some error happens.
  * @param data data to give to cb when it is called.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_profile_remove(const E_Connman_Element *profile, E_DBus_Method_Return_Cb cb, const void *data)
 {
    E_Connman_Element *element;
    const char name[] = "RemoveProfile";
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(profile, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(profile->path, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(profile, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(profile->path, EINA_FALSE);
 
    if (!e_connman_element_is_profile(profile))
-      return 0;
+      return EINA_FALSE;
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_call_with_path
              (element, name, profile->path, NULL,
@@ -437,34 +433,34 @@ e_connman_manager_profile_remove(const E_Connman_Element *profile, E_DBus_Method
 /**
  * Get property "ActiveProfile" value.
  *
- * If this property isn't found then 0 is returned.
- * If zero is returned, then this call failed and parameter-returned
+ * If this property isn't found then @c EINA_FALSE is returned.
+ * If @c EINA_FALSE is returned, then this call failed and parameter-returned
  * values shall be considered invalid.
  *
- * @param element where to store the element, just changed if return is 1
+ * @param element where to store the element, just changed if return is @c EINA_TRUE
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  *
  * @see e_connman_manager_profile_active_set()
  */
-bool
+Eina_Bool
 e_connman_manager_profile_active_get(E_Connman_Element **profile)
 {
    E_Connman_Element *element;
    char *profile_path;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(profile, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(profile, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    if (!e_connman_element_property_get_stringshared
           (element, e_connman_prop_profile_active, NULL, &profile_path))
-      return 0;
+      return EINA_FALSE;
 
    *profile = e_connman_element_get(profile_path);
-   return 1;
+   return EINA_TRUE;
 }
 
 /**
@@ -479,23 +475,23 @@ e_connman_manager_profile_active_get(E_Connman_Element **profile)
  * @param cb function to call when server replies or some error happens.
  * @param data data to give to cb when it is called.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  * @see e_connman_manager_profile_active_get()
  */
-bool
+Eina_Bool
 e_connman_manager_profile_active_set(const E_Connman_Element *profile, E_DBus_Method_Return_Cb cb, const void *data)
 {
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(profile, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(profile->path, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(profile, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(profile->path, EINA_FALSE);
 
    if (!e_connman_element_is_profile(profile))
-      return 0;
+      return EINA_FALSE;
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_property_set_full
              (element, e_connman_prop_profile_active, DBUS_TYPE_OBJECT_PATH,
@@ -512,21 +508,21 @@ e_connman_manager_profile_active_set(const E_Connman_Element *profile, E_DBus_Me
  *        eina_stringshare_ref() if he wants to save memory and cpu to
  *        get an extra reference. The array itself is allocated using
  *        malloc() and should be freed after usage is done. This
- *        pointer is just set if return is 1.
+ *        pointer is just set if return is @c EINA_TRUE.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_technologies_available_get(unsigned int *count, const char ***p_strings)
 {
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(count, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(p_strings, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(count, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(p_strings, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_strings_array_get_stringshared
              (element, e_connman_prop_technologies_available, count, p_strings);
@@ -542,21 +538,21 @@ e_connman_manager_technologies_available_get(unsigned int *count, const char ***
  *        eina_stringshare_ref() if he wants to save memory and cpu to
  *        get an extra reference. The array itself is allocated using
  *        malloc() and should be freed after usage is done. This
- *        pointer is just set if return is 1.
+ *        pointer is just set if return is @c EINA_TRUE.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_technologies_enabled_get(unsigned int *count, const char ***p_strings)
 {
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(count, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(p_strings, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(count, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(p_strings, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_strings_array_get_stringshared
              (element, e_connman_prop_technologies_enabled, count, p_strings);
@@ -572,21 +568,21 @@ e_connman_manager_technologies_enabled_get(unsigned int *count, const char ***p_
  *        eina_stringshare_ref() if he wants to save memory and cpu to
  *        get an extra reference. The array itself is allocated using
  *        malloc() and should be freed after usage is done. This
- *        pointer is just set if return is 1.
+ *        pointer is just set if return is @c EINA_TRUE.
  *
- * @return 1 on success, 0 otherwise.
+ * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
-bool
+Eina_Bool
 e_connman_manager_technologies_connected_get(unsigned int *count, const char ***p_strings)
 {
    E_Connman_Element *element;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(count, 0);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(p_strings, 0);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(count, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(p_strings, EINA_FALSE);
 
    element = e_connman_manager_get();
    if (!element)
-      return 0;
+      return EINA_FALSE;
 
    return e_connman_element_strings_array_get_stringshared
              (element, e_connman_prop_technologies_connected, count, p_strings);

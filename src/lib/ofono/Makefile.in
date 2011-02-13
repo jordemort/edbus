@@ -36,10 +36,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = src/lib/ofono
-DIST_COMMON = $(am__includes_HEADERS_DIST) $(srcdir)/Makefile.am \
+DIST_COMMON = $(includes_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_attribute.m4 \
+	$(top_srcdir)/m4/efl_binary.m4 \
 	$(top_srcdir)/m4/efl_compiler_flag.m4 \
 	$(top_srcdir)/m4/efl_doxygen.m4 $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -74,15 +75,10 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includesdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-@BUILD_EOFONO_TRUE@libeofono_la_DEPENDENCIES =  \
-@BUILD_EOFONO_TRUE@	$(top_builddir)/src/lib/dbus/libedbus.la
-am__libeofono_la_SOURCES_DIST = e_ofono.c e_ofono_element.c \
-	e_ofono_manager.c e_ofono_modem.c e_ofono_network_reg.c \
-	e_ofono_sms.c
-@BUILD_EOFONO_TRUE@am_libeofono_la_OBJECTS = e_ofono.lo \
-@BUILD_EOFONO_TRUE@	e_ofono_element.lo e_ofono_manager.lo \
-@BUILD_EOFONO_TRUE@	e_ofono_modem.lo e_ofono_network_reg.lo \
-@BUILD_EOFONO_TRUE@	e_ofono_sms.lo
+libeofono_la_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la
+am_libeofono_la_OBJECTS = e_ofono.lo e_ofono_element.lo \
+	e_ofono_manager.lo e_ofono_modem.lo e_ofono_network_reg.lo \
+	e_ofono_sms.lo
 libeofono_la_OBJECTS = $(am_libeofono_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -90,7 +86,6 @@ am__v_lt_0 = --silent
 libeofono_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libeofono_la_LDFLAGS) $(LDFLAGS) -o $@
-@BUILD_EOFONO_TRUE@am_libeofono_la_rpath = -rpath $(libdir)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -118,8 +113,7 @@ AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
 SOURCES = $(libeofono_la_SOURCES)
-DIST_SOURCES = $(am__libeofono_la_SOURCES_DIST)
-am__includes_HEADERS_DIST = E_Ofono.h
+DIST_SOURCES = $(libeofono_la_SOURCES)
 HEADERS = $(includes_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -149,8 +143,35 @@ DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EDBUS_BLUEZ_TEST_CFLAGS = @EDBUS_BLUEZ_TEST_CFLAGS@
+EDBUS_BLUEZ_TEST_LIBS = @EDBUS_BLUEZ_TEST_LIBS@
+EDBUS_BLUEZ_TEST_PRG = @EDBUS_BLUEZ_TEST_PRG@
 EDBUS_CFLAGS = @EDBUS_CFLAGS@
+EDBUS_CONNMAN_TEST_CFLAGS = @EDBUS_CONNMAN_TEST_CFLAGS@
+EDBUS_CONNMAN_TEST_LIBS = @EDBUS_CONNMAN_TEST_LIBS@
+EDBUS_CONNMAN_TEST_PRG = @EDBUS_CONNMAN_TEST_PRG@
 EDBUS_LIBS = @EDBUS_LIBS@
+EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS = @EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS@
+EDBUS_NOTIFICATION_DAEMON_TEST_LIBS = @EDBUS_NOTIFICATION_DAEMON_TEST_LIBS@
+EDBUS_NOTIFICATION_DAEMON_TEST_PRG = @EDBUS_NOTIFICATION_DAEMON_TEST_PRG@
+EDBUS_NOTIFY_SEND_CFLAGS = @EDBUS_NOTIFY_SEND_CFLAGS@
+EDBUS_NOTIFY_SEND_LIBS = @EDBUS_NOTIFY_SEND_LIBS@
+EDBUS_NOTIFY_SEND_PRG = @EDBUS_NOTIFY_SEND_PRG@
+EDBUS_NOTIFY_TEST_CFLAGS = @EDBUS_NOTIFY_TEST_CFLAGS@
+EDBUS_NOTIFY_TEST_LIBS = @EDBUS_NOTIFY_TEST_LIBS@
+EDBUS_NOTIFY_TEST_PRG = @EDBUS_NOTIFY_TEST_PRG@
+EDBUS_OFONO_TEST_CFLAGS = @EDBUS_OFONO_TEST_CFLAGS@
+EDBUS_OFONO_TEST_LIBS = @EDBUS_OFONO_TEST_LIBS@
+EDBUS_OFONO_TEST_PRG = @EDBUS_OFONO_TEST_PRG@
+EDBUS_TEST_CFLAGS = @EDBUS_TEST_CFLAGS@
+EDBUS_TEST_CLIENT_CFLAGS = @EDBUS_TEST_CLIENT_CFLAGS@
+EDBUS_TEST_CLIENT_LIBS = @EDBUS_TEST_CLIENT_LIBS@
+EDBUS_TEST_CLIENT_PRG = @EDBUS_TEST_CLIENT_PRG@
+EDBUS_TEST_LIBS = @EDBUS_TEST_LIBS@
+EDBUS_TEST_PRG = @EDBUS_TEST_PRG@
+EDBUS_UKIT_TEST_CFLAGS = @EDBUS_UKIT_TEST_CFLAGS@
+EDBUS_UKIT_TEST_LIBS = @EDBUS_UKIT_TEST_LIBS@
+EDBUS_UKIT_TEST_PRG = @EDBUS_UKIT_TEST_PRG@
 EFL_EDBUS_BUILD = @EFL_EDBUS_BUILD@
 EGREP = @EGREP@
 EVAS_CFLAGS = @EVAS_CFLAGS@
@@ -266,21 +287,21 @@ AM_CPPFLAGS = \
 -I $(top_srcdir)/src/lib/dbus \
 @EDBUS_CFLAGS@
 
-@BUILD_EOFONO_TRUE@lib_LTLIBRARIES = libeofono.la
-@BUILD_EOFONO_TRUE@includes_HEADERS = E_Ofono.h
-@BUILD_EOFONO_TRUE@includesdir = $(includedir)/e_dbus-@VMAJ@
-@BUILD_EOFONO_TRUE@libeofono_la_SOURCES = \
-@BUILD_EOFONO_TRUE@e_ofono.c \
-@BUILD_EOFONO_TRUE@e_ofono_element.c \
-@BUILD_EOFONO_TRUE@e_ofono_manager.c \
-@BUILD_EOFONO_TRUE@e_ofono_modem.c \
-@BUILD_EOFONO_TRUE@e_ofono_network_reg.c \
-@BUILD_EOFONO_TRUE@e_ofono_sms.c
+lib_LTLIBRARIES = libeofono.la
+includes_HEADERS = E_Ofono.h
+includesdir = $(includedir)/e_dbus-@VMAJ@
+libeofono_la_SOURCES = \
+e_ofono.c \
+e_ofono_element.c \
+e_ofono_manager.c \
+e_ofono_modem.c \
+e_ofono_network_reg.c \
+e_ofono_sms.c
 
-@BUILD_EOFONO_TRUE@libeofono_la_LIBADD = \
-@BUILD_EOFONO_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la
+libeofono_la_LIBADD = \
+$(top_builddir)/src/lib/dbus/libedbus.la
 
-@BUILD_EOFONO_TRUE@libeofono_la_LDFLAGS = -version-info @version_info@ @release_info@
+libeofono_la_LDFLAGS = -version-info @version_info@ @release_info@
 EXTRA_DIST = e_ofono_private.h
 all: all-am
 
@@ -348,7 +369,7 @@ clean-libLTLIBRARIES:
 	  rm -f "$${dir}/so_locations"; \
 	done
 libeofono.la: $(libeofono_la_OBJECTS) $(libeofono_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libeofono_la_LINK) $(am_libeofono_la_rpath) $(libeofono_la_OBJECTS) $(libeofono_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(libeofono_la_LINK) -rpath $(libdir) $(libeofono_la_OBJECTS) $(libeofono_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
