@@ -35,12 +35,24 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
-	$(am__EXEEXT_4) $(am__EXEEXT_5) $(am__EXEEXT_6)
-noinst_PROGRAMS = $(am__EXEEXT_7)
+	$(am__EXEEXT_4) $(am__EXEEXT_5) $(am__EXEEXT_6) \
+	$(am__EXEEXT_7) $(am__EXEEXT_8) $(am__EXEEXT_9)
+@BUILD_EDBUS_TEST_TRUE@am__append_1 = e_dbus_test
+@BUILD_EDBUS_TEST_CLIENT_TRUE@am__append_2 = e_dbus_test_client
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@am__append_3 = e_dbus_bluez_test
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@am__append_4 = e_dbus_connman_test
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@am__append_5 = e_dbus_notification_daemon
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@am__append_6 = e-notify-send
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@am__append_7 = e_dbus_notify
+@BUILD_EDBUS_OFONO_TEST_TRUE@am__append_8 = e_dbus_ofono_test
+@BUILD_EDBUS_UKIT_TEST_TRUE@am__append_9 = e_dbus_ukit_test
+noinst_PROGRAMS = $(am__EXEEXT_10)
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@am__append_10 = e_dbus_connman_test_api
 subdir = src/bin
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_attribute.m4 \
+	$(top_srcdir)/m4/efl_binary.m4 \
 	$(top_srcdir)/m4/efl_compiler_flag.m4 \
 	$(top_srcdir)/m4/efl_doxygen.m4 $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -52,69 +64,80 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__EXEEXT_1 = e_dbus_test$(EXEEXT) e_dbus_test_client$(EXEEXT)
-@BUILD_ENOTIFY_TRUE@am__EXEEXT_2 = e_dbus_notify$(EXEEXT) \
-@BUILD_ENOTIFY_TRUE@	e_dbus_notification_daemon$(EXEEXT) \
-@BUILD_ENOTIFY_TRUE@	e-notify-send$(EXEEXT)
-@BUILD_ECONNMAN_TRUE@am__EXEEXT_3 = e_dbus_connman_test$(EXEEXT)
-@BUILD_EBLUEZ_TRUE@am__EXEEXT_4 = e_dbus_bluez_test$(EXEEXT)
-@BUILD_EOFONO_TRUE@am__EXEEXT_5 = e_dbus_ofono_test$(EXEEXT)
-@BUILD_EUKIT_TRUE@am__EXEEXT_6 = e_dbus_ukit_test$(EXEEXT)
+@BUILD_EDBUS_TEST_TRUE@am__EXEEXT_1 = e_dbus_test$(EXEEXT)
+@BUILD_EDBUS_TEST_CLIENT_TRUE@am__EXEEXT_2 =  \
+@BUILD_EDBUS_TEST_CLIENT_TRUE@	e_dbus_test_client$(EXEEXT)
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@am__EXEEXT_3 =  \
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@	e_dbus_bluez_test$(EXEEXT)
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@am__EXEEXT_4 =  \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@	e_dbus_connman_test$(EXEEXT)
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@am__EXEEXT_5 = e_dbus_notification_daemon$(EXEEXT)
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@am__EXEEXT_6 = e-notify-send$(EXEEXT)
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@am__EXEEXT_7 = e_dbus_notify$(EXEEXT)
+@BUILD_EDBUS_OFONO_TEST_TRUE@am__EXEEXT_8 =  \
+@BUILD_EDBUS_OFONO_TEST_TRUE@	e_dbus_ofono_test$(EXEEXT)
+@BUILD_EDBUS_UKIT_TEST_TRUE@am__EXEEXT_9 = e_dbus_ukit_test$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(bindir)"
-@BUILD_ECONNMAN_TRUE@am__EXEEXT_7 = e_dbus_connman_test_api$(EXEEXT)
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@am__EXEEXT_10 = e_dbus_connman_test_api$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am__e_notify_send_SOURCES_DIST = notify-send.c
-@BUILD_ENOTIFY_TRUE@am_e_notify_send_OBJECTS =  \
-@BUILD_ENOTIFY_TRUE@	e_notify_send-notify-send.$(OBJEXT)
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@am_e_notify_send_OBJECTS = e_notify_send-notify-send.$(OBJEXT)
 e_notify_send_OBJECTS = $(am_e_notify_send_OBJECTS)
-@BUILD_ENOTIFY_TRUE@e_notify_send_DEPENDENCIES = $(ENOTIFY_LIBS)
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@e_notify_send_DEPENDENCIES =  \
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@	$(ENOTIFY_LIBS) \
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@	$(top_builddir)/src/lib/dbus/libedbus.la
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
 am__e_dbus_bluez_test_SOURCES_DIST = e_dbus_bluez_test.c
-@BUILD_EBLUEZ_TRUE@am_e_dbus_bluez_test_OBJECTS = e_dbus_bluez_test-e_dbus_bluez_test.$(OBJEXT)
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@am_e_dbus_bluez_test_OBJECTS = e_dbus_bluez_test-e_dbus_bluez_test.$(OBJEXT)
 e_dbus_bluez_test_OBJECTS = $(am_e_dbus_bluez_test_OBJECTS)
-@BUILD_EBLUEZ_TRUE@e_dbus_bluez_test_DEPENDENCIES =  \
-@BUILD_EBLUEZ_TRUE@	$(top_builddir)/src/lib/bluez/libebluez.la
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@e_dbus_bluez_test_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@	$(top_builddir)/src/lib/bluez/libebluez.la
 am__e_dbus_connman_test_SOURCES_DIST = e_dbus_connman_test.c
-@BUILD_ECONNMAN_TRUE@am_e_dbus_connman_test_OBJECTS = e_dbus_connman_test-e_dbus_connman_test.$(OBJEXT)
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@am_e_dbus_connman_test_OBJECTS = e_dbus_connman_test-e_dbus_connman_test.$(OBJEXT)
 e_dbus_connman_test_OBJECTS = $(am_e_dbus_connman_test_OBJECTS)
-@BUILD_ECONNMAN_TRUE@e_dbus_connman_test_DEPENDENCIES = $(top_builddir)/src/lib/connman/libeconnman.la
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@	$(top_builddir)/src/lib/connman/libeconnman.la
 am__e_dbus_connman_test_api_SOURCES_DIST = e_dbus_connman_test_api.c
-@BUILD_ECONNMAN_TRUE@am_e_dbus_connman_test_api_OBJECTS = e_dbus_connman_test_api-e_dbus_connman_test_api.$(OBJEXT)
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@am_e_dbus_connman_test_api_OBJECTS = e_dbus_connman_test_api-e_dbus_connman_test_api.$(OBJEXT)
 e_dbus_connman_test_api_OBJECTS =  \
 	$(am_e_dbus_connman_test_api_OBJECTS)
-@BUILD_ECONNMAN_TRUE@e_dbus_connman_test_api_DEPENDENCIES = $(top_builddir)/src/lib/connman/libeconnman.la
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_api_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@	$(top_builddir)/src/lib/connman/libeconnman.la
 am__e_dbus_notification_daemon_SOURCES_DIST = notification_daemon.c
-@BUILD_ENOTIFY_TRUE@am_e_dbus_notification_daemon_OBJECTS = e_dbus_notification_daemon-notification_daemon.$(OBJEXT)
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@am_e_dbus_notification_daemon_OBJECTS = e_dbus_notification_daemon-notification_daemon.$(OBJEXT)
 e_dbus_notification_daemon_OBJECTS =  \
 	$(am_e_dbus_notification_daemon_OBJECTS)
-@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_DEPENDENCIES =  \
-@BUILD_ENOTIFY_TRUE@	$(ENOTIFY_LIBS)
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@e_dbus_notification_daemon_DEPENDENCIES =  \
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@	$(ENOTIFY_LIBS) \
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@	$(top_builddir)/src/lib/dbus/libedbus.la
 am__e_dbus_notify_SOURCES_DIST = notify.c
-@BUILD_ENOTIFY_TRUE@am_e_dbus_notify_OBJECTS =  \
-@BUILD_ENOTIFY_TRUE@	e_dbus_notify-notify.$(OBJEXT)
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@am_e_dbus_notify_OBJECTS =  \
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@	e_dbus_notify-notify.$(OBJEXT)
 e_dbus_notify_OBJECTS = $(am_e_dbus_notify_OBJECTS)
-@BUILD_ENOTIFY_TRUE@e_dbus_notify_DEPENDENCIES = $(ENOTIFY_LIBS)
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@e_dbus_notify_DEPENDENCIES =  \
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@	$(ENOTIFY_LIBS) \
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@	$(top_builddir)/src/lib/dbus/libedbus.la
 am__e_dbus_ofono_test_SOURCES_DIST = e_dbus_ofono_test.c
-@BUILD_EOFONO_TRUE@am_e_dbus_ofono_test_OBJECTS = e_dbus_ofono_test-e_dbus_ofono_test.$(OBJEXT)
+@BUILD_EDBUS_OFONO_TEST_TRUE@am_e_dbus_ofono_test_OBJECTS = e_dbus_ofono_test-e_dbus_ofono_test.$(OBJEXT)
 e_dbus_ofono_test_OBJECTS = $(am_e_dbus_ofono_test_OBJECTS)
-@BUILD_EOFONO_TRUE@e_dbus_ofono_test_DEPENDENCIES =  \
-@BUILD_EOFONO_TRUE@	$(top_builddir)/src/lib/ofono/libeofono.la
-am_e_dbus_test_OBJECTS = e_dbus_test-test.$(OBJEXT)
+@BUILD_EDBUS_OFONO_TEST_TRUE@e_dbus_ofono_test_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_OFONO_TEST_TRUE@	$(top_builddir)/src/lib/ofono/libeofono.la
+am__e_dbus_test_SOURCES_DIST = test.c
+@BUILD_EDBUS_TEST_TRUE@am_e_dbus_test_OBJECTS =  \
+@BUILD_EDBUS_TEST_TRUE@	e_dbus_test-test.$(OBJEXT)
 e_dbus_test_OBJECTS = $(am_e_dbus_test_OBJECTS)
-e_dbus_test_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la
-am_e_dbus_test_client_OBJECTS =  \
-	e_dbus_test_client-test_client.$(OBJEXT)
+@BUILD_EDBUS_TEST_TRUE@e_dbus_test_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la
+am__e_dbus_test_client_SOURCES_DIST = test_client.c
+@BUILD_EDBUS_TEST_CLIENT_TRUE@am_e_dbus_test_client_OBJECTS = e_dbus_test_client-test_client.$(OBJEXT)
 e_dbus_test_client_OBJECTS = $(am_e_dbus_test_client_OBJECTS)
-e_dbus_test_client_DEPENDENCIES =  \
-	$(top_builddir)/src/lib/dbus/libedbus.la
+@BUILD_EDBUS_TEST_CLIENT_TRUE@e_dbus_test_client_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la
 am__e_dbus_ukit_test_SOURCES_DIST = e_dbus_ukit_test.c
-@BUILD_EUKIT_TRUE@am_e_dbus_ukit_test_OBJECTS =  \
-@BUILD_EUKIT_TRUE@	e_dbus_ukit_test-e_dbus_ukit_test.$(OBJEXT)
+@BUILD_EDBUS_UKIT_TEST_TRUE@am_e_dbus_ukit_test_OBJECTS = e_dbus_ukit_test-e_dbus_ukit_test.$(OBJEXT)
 e_dbus_ukit_test_OBJECTS = $(am_e_dbus_ukit_test_OBJECTS)
-@BUILD_EUKIT_TRUE@e_dbus_ukit_test_DEPENDENCIES =  \
-@BUILD_EUKIT_TRUE@	$(top_builddir)/src/lib/ukit/libeukit.la
+@BUILD_EDBUS_UKIT_TEST_TRUE@e_dbus_ukit_test_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_UKIT_TEST_TRUE@	$(top_builddir)/src/lib/ukit/libeukit.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -153,8 +176,9 @@ DIST_SOURCES = $(am__e_notify_send_SOURCES_DIST) \
 	$(am__e_dbus_connman_test_api_SOURCES_DIST) \
 	$(am__e_dbus_notification_daemon_SOURCES_DIST) \
 	$(am__e_dbus_notify_SOURCES_DIST) \
-	$(am__e_dbus_ofono_test_SOURCES_DIST) $(e_dbus_test_SOURCES) \
-	$(e_dbus_test_client_SOURCES) \
+	$(am__e_dbus_ofono_test_SOURCES_DIST) \
+	$(am__e_dbus_test_SOURCES_DIST) \
+	$(am__e_dbus_test_client_SOURCES_DIST) \
 	$(am__e_dbus_ukit_test_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
@@ -184,8 +208,35 @@ DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EDBUS_BLUEZ_TEST_CFLAGS = @EDBUS_BLUEZ_TEST_CFLAGS@
+EDBUS_BLUEZ_TEST_LIBS = @EDBUS_BLUEZ_TEST_LIBS@
+EDBUS_BLUEZ_TEST_PRG = @EDBUS_BLUEZ_TEST_PRG@
 EDBUS_CFLAGS = @EDBUS_CFLAGS@
+EDBUS_CONNMAN_TEST_CFLAGS = @EDBUS_CONNMAN_TEST_CFLAGS@
+EDBUS_CONNMAN_TEST_LIBS = @EDBUS_CONNMAN_TEST_LIBS@
+EDBUS_CONNMAN_TEST_PRG = @EDBUS_CONNMAN_TEST_PRG@
 EDBUS_LIBS = @EDBUS_LIBS@
+EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS = @EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS@
+EDBUS_NOTIFICATION_DAEMON_TEST_LIBS = @EDBUS_NOTIFICATION_DAEMON_TEST_LIBS@
+EDBUS_NOTIFICATION_DAEMON_TEST_PRG = @EDBUS_NOTIFICATION_DAEMON_TEST_PRG@
+EDBUS_NOTIFY_SEND_CFLAGS = @EDBUS_NOTIFY_SEND_CFLAGS@
+EDBUS_NOTIFY_SEND_LIBS = @EDBUS_NOTIFY_SEND_LIBS@
+EDBUS_NOTIFY_SEND_PRG = @EDBUS_NOTIFY_SEND_PRG@
+EDBUS_NOTIFY_TEST_CFLAGS = @EDBUS_NOTIFY_TEST_CFLAGS@
+EDBUS_NOTIFY_TEST_LIBS = @EDBUS_NOTIFY_TEST_LIBS@
+EDBUS_NOTIFY_TEST_PRG = @EDBUS_NOTIFY_TEST_PRG@
+EDBUS_OFONO_TEST_CFLAGS = @EDBUS_OFONO_TEST_CFLAGS@
+EDBUS_OFONO_TEST_LIBS = @EDBUS_OFONO_TEST_LIBS@
+EDBUS_OFONO_TEST_PRG = @EDBUS_OFONO_TEST_PRG@
+EDBUS_TEST_CFLAGS = @EDBUS_TEST_CFLAGS@
+EDBUS_TEST_CLIENT_CFLAGS = @EDBUS_TEST_CLIENT_CFLAGS@
+EDBUS_TEST_CLIENT_LIBS = @EDBUS_TEST_CLIENT_LIBS@
+EDBUS_TEST_CLIENT_PRG = @EDBUS_TEST_CLIENT_PRG@
+EDBUS_TEST_LIBS = @EDBUS_TEST_LIBS@
+EDBUS_TEST_PRG = @EDBUS_TEST_PRG@
+EDBUS_UKIT_TEST_CFLAGS = @EDBUS_UKIT_TEST_CFLAGS@
+EDBUS_UKIT_TEST_LIBS = @EDBUS_UKIT_TEST_LIBS@
+EDBUS_UKIT_TEST_PRG = @EDBUS_UKIT_TEST_PRG@
 EFL_EDBUS_BUILD = @EFL_EDBUS_BUILD@
 EGREP = @EGREP@
 EVAS_CFLAGS = @EVAS_CFLAGS@
@@ -306,49 +357,113 @@ EDBUS_CPPFLAGS = \
 -I$(top_srcdir)/src/lib/ukit \
 @EDBUS_CFLAGS@
 
-EDBUS_PROG = e_dbus_test e_dbus_test_client
-@BUILD_ENOTIFY_TRUE@ENOTIFY_PROG = e_dbus_notify e_dbus_notification_daemon e-notify-send
-@BUILD_ECONNMAN_TRUE@ECONNMAN_PROG = e_dbus_connman_test
-@BUILD_ECONNMAN_TRUE@ECONNMAN_PROG_NOINST = e_dbus_connman_test_api
-@BUILD_EBLUEZ_TRUE@EBLUEZ_PROG = e_dbus_bluez_test
-@BUILD_EOFONO_TRUE@EOFONO_PROG = e_dbus_ofono_test
-@BUILD_EUKIT_TRUE@EUKIT_PROG = e_dbus_ukit_test
-e_dbus_test_SOURCES = \
-test.c
+@BUILD_EDBUS_TEST_TRUE@e_dbus_test_SOURCES = test.c
+@BUILD_EDBUS_TEST_TRUE@e_dbus_test_CPPFLAGS = \
+@BUILD_EDBUS_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_TEST_TRUE@@EDBUS_TEST_CFLAGS@
 
-e_dbus_test_CPPFLAGS = $(EDBUS_CPPFLAGS)
-e_dbus_test_LDADD = $(top_builddir)/src/lib/dbus/libedbus.la
-e_dbus_test_client_SOURCES = \
-test_client.c
+@BUILD_EDBUS_TEST_TRUE@e_dbus_test_LDADD = \
+@BUILD_EDBUS_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_TEST_TRUE@@EDBUS_TEST_LIBS@
 
-e_dbus_test_client_CPPFLAGS = $(EDBUS_CPPFLAGS)
-e_dbus_test_client_LDADD = $(top_builddir)/src/lib/dbus/libedbus.la
-@BUILD_EBLUEZ_TRUE@e_dbus_bluez_test_SOURCES = e_dbus_bluez_test.c
-@BUILD_EBLUEZ_TRUE@e_dbus_bluez_test_CPPFLAGS = $(EDBUS_CPPFLAGS)
-@BUILD_EBLUEZ_TRUE@e_dbus_bluez_test_LDADD = $(top_builddir)/src/lib/bluez/libebluez.la
-@BUILD_ECONNMAN_TRUE@e_dbus_connman_test_SOURCES = e_dbus_connman_test.c
-@BUILD_ECONNMAN_TRUE@e_dbus_connman_test_CPPFLAGS = $(EDBUS_CPPFLAGS)
-@BUILD_ECONNMAN_TRUE@e_dbus_connman_test_LDADD = $(top_builddir)/src/lib/connman/libeconnman.la
-@BUILD_ECONNMAN_TRUE@e_dbus_connman_test_api_SOURCES = e_dbus_connman_test_api.c
-@BUILD_ECONNMAN_TRUE@e_dbus_connman_test_api_CPPFLAGS = $(EDBUS_CPPFLAGS)
-@BUILD_ECONNMAN_TRUE@e_dbus_connman_test_api_LDADD = $(top_builddir)/src/lib/connman/libeconnman.la
-@BUILD_ENOTIFY_TRUE@ENOTIFY_CPPFLAGS = $(EDBUS_CPPFLAGS) $(EVAS_CFLAGS)
-@BUILD_ENOTIFY_TRUE@ENOTIFY_LIBS = $(top_builddir)/src/lib/notification/libenotify.la
-@BUILD_ENOTIFY_TRUE@e_dbus_notify_SOURCES = notify.c
-@BUILD_ENOTIFY_TRUE@e_dbus_notify_CPPFLAGS = $(ENOTIFY_CPPFLAGS)
-@BUILD_ENOTIFY_TRUE@e_dbus_notify_LDADD = $(ENOTIFY_LIBS)
-@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_SOURCES = notification_daemon.c
-@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_CPPFLAGS = $(ENOTIFY_CPPFLAGS)
-@BUILD_ENOTIFY_TRUE@e_dbus_notification_daemon_LDADD = $(ENOTIFY_LIBS)
-@BUILD_ENOTIFY_TRUE@e_notify_send_SOURCES = notify-send.c
-@BUILD_ENOTIFY_TRUE@e_notify_send_CPPFLAGS = $(ENOTIFY_CPPFLAGS)
-@BUILD_ENOTIFY_TRUE@e_notify_send_LDADD = $(ENOTIFY_LIBS)
-@BUILD_EOFONO_TRUE@e_dbus_ofono_test_SOURCES = e_dbus_ofono_test.c
-@BUILD_EOFONO_TRUE@e_dbus_ofono_test_CPPFLAGS = $(EDBUS_CPPFLAGS)
-@BUILD_EOFONO_TRUE@e_dbus_ofono_test_LDADD = $(top_builddir)/src/lib/ofono/libeofono.la
-@BUILD_EUKIT_TRUE@e_dbus_ukit_test_SOURCES = e_dbus_ukit_test.c
-@BUILD_EUKIT_TRUE@e_dbus_ukit_test_CPPFLAGS = $(EDBUS_CPPFLAGS)
-@BUILD_EUKIT_TRUE@e_dbus_ukit_test_LDADD = $(top_builddir)/src/lib/ukit/libeukit.la
+@BUILD_EDBUS_TEST_CLIENT_TRUE@e_dbus_test_client_SOURCES = test_client.c
+@BUILD_EDBUS_TEST_CLIENT_TRUE@e_dbus_test_client_CPPFLAGS = \
+@BUILD_EDBUS_TEST_CLIENT_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_TEST_CLIENT_TRUE@@EDBUS_TEST_CLIENT_CFLAGS@
+
+@BUILD_EDBUS_TEST_CLIENT_TRUE@e_dbus_test_client_LDADD = \
+@BUILD_EDBUS_TEST_CLIENT_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_TEST_CLIENT_TRUE@@EDBUS_TEST_CLIENT_LIBS@
+
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@e_dbus_bluez_test_SOURCES = e_dbus_bluez_test.c
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@e_dbus_bluez_test_CPPFLAGS = \
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@-I$(top_srcdir)/src/lib/bluez \
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@@EDBUS_BLUEZ_TEST_CFLAGS@
+
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@e_dbus_bluez_test_LDADD = \
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@$(top_builddir)/src/lib/bluez/libebluez.la \
+@BUILD_EDBUS_BLUEZ_TEST_TRUE@@EDBUS_BLUEZ_TEST_LIBS@
+
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_SOURCES = e_dbus_connman_test.c
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_CPPFLAGS = \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@-I$(top_srcdir)/src/lib/connman \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@@EDBUS_CONNMAN_TEST_CFLAGS@
+
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_LDADD = \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@$(top_builddir)/src/lib/connman/libeconnman.la \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@@EDBUS_CONNMAN_TEST_LIBS@
+
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_api_SOURCES = e_dbus_connman_test_api.c
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_api_CPPFLAGS = \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@-I$(top_srcdir)/src/lib/connman \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@@EDBUS_CONNMAN_TEST_CFLAGS@
+
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_api_LDADD = \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@$(top_builddir)/src/lib/connman/libeconnman.la \
+@BUILD_EDBUS_CONNMAN_TEST_TRUE@@EDBUS_CONNMAN_TEST_LIBS@
+
+ENOTIFY_LIBS = $(top_builddir)/src/lib/notification/libenotify.la
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@e_dbus_notification_daemon_SOURCES = notification_daemon.c
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@e_dbus_notification_daemon_CPPFLAGS = \
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@-I$(top_srcdir)/src/lib/notification \
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@@EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS@
+
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@e_dbus_notification_daemon_LDADD = \
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@$(ENOTIFY_LIBS) \
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@@EDBUS_NOTIFICATION_DAEMON_TEST_LIBS@
+
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@e_notify_send_SOURCES = notify-send.c
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@e_notify_send_CPPFLAGS = \
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@-I$(top_srcdir)/src/lib/notification \
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@@EDBUS_NOTIFY_SEND_CFLAGS@
+
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@e_notify_send_LDADD = \
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@$(ENOTIFY_LIBS) \
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_NOTIFY_SEND_TRUE@@EDBUS_NOTIFY_SEND_LIBS@
+
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@e_dbus_notify_SOURCES = notify.c
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@e_dbus_notify_CPPFLAGS = \
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@-I$(top_srcdir)/src/lib/notification \
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@@EDBUS_NOTIFY_TEST_CFLAGS@
+
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@e_dbus_notify_LDADD = \
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@$(ENOTIFY_LIBS) \
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@@EDBUS_NOTIFY_TEST_LIBS@
+
+@BUILD_EDBUS_OFONO_TEST_TRUE@e_dbus_ofono_test_SOURCES = e_dbus_ofono_test.c
+@BUILD_EDBUS_OFONO_TEST_TRUE@e_dbus_ofono_test_CPPFLAGS = \
+@BUILD_EDBUS_OFONO_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_OFONO_TEST_TRUE@-I$(top_srcdir)/src/lib/ofono \
+@BUILD_EDBUS_OFONO_TEST_TRUE@@EDBUS_OFONO_TEST_CFLAGS@
+
+@BUILD_EDBUS_OFONO_TEST_TRUE@e_dbus_ofono_test_LDADD = \
+@BUILD_EDBUS_OFONO_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_OFONO_TEST_TRUE@$(top_builddir)/src/lib/ofono/libeofono.la \
+@BUILD_EDBUS_OFONO_TEST_TRUE@@EDBUS_OFONO_TEST_LIBS@
+
+@BUILD_EDBUS_UKIT_TEST_TRUE@e_dbus_ukit_test_SOURCES = e_dbus_ukit_test.c
+@BUILD_EDBUS_UKIT_TEST_TRUE@e_dbus_ukit_test_CPPFLAGS = \
+@BUILD_EDBUS_UKIT_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_UKIT_TEST_TRUE@-I$(top_srcdir)/src/lib/ukit \
+@BUILD_EDBUS_UKIT_TEST_TRUE@@EDBUS_UKIT_TEST_CFLAGS@
+
+@BUILD_EDBUS_UKIT_TEST_TRUE@e_dbus_ukit_test_LDADD = \
+@BUILD_EDBUS_UKIT_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_UKIT_TEST_TRUE@$(top_builddir)/src/lib/ukit/libeukit.la \
+@BUILD_EDBUS_UKIT_TEST_TRUE@@EDBUS_UKIT_TEST_LIBS@
+
 all: all-am
 
 .SUFFIXES:

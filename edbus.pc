@@ -7,6 +7,6 @@ Name: edbus
 Description: DBus convenience library
 Requires: dbus-1 >= 0.62
 Requires.private: ecore >= 1.0.0 eina >= 1.0.0 dbus-1 >= 0.62
-Version: 1.0.0.beta
+Version: 1.0.0
 Libs: -L${libdir} -ledbus
 Cflags: -I${includedir}/e_dbus-1

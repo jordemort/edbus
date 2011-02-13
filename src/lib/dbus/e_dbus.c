@@ -112,7 +112,7 @@ e_dbus_handler_data_free(void *data)
   DBG("e_dbus_handler_data_free");
   if (hd->fd_handler)
   {
-    hd->cd->fd_handlers = eina_list_remove(hd->cd->fd_handlers, hd->cd->fd_handlers);
+    hd->cd->fd_handlers = eina_list_remove(hd->cd->fd_handlers, hd->fd_handler);
     ecore_main_fd_handler_del(hd->fd_handler);
   }
   free(hd);
@@ -340,7 +340,7 @@ cb_watch_del(DBusWatch *watch, void *data __UNUSED__)
 
   if (hd->fd_handler) 
   {
-    hd->cd->fd_handlers = eina_list_remove(hd->cd->fd_handlers, hd->cd->fd_handlers);
+    hd->cd->fd_handlers = eina_list_remove(hd->cd->fd_handlers, hd->fd_handler);
     ecore_main_fd_handler_del(hd->fd_handler);
     hd->fd_handler = NULL;
   }
@@ -604,17 +604,26 @@ e_dbus_init(void)
   
   if (!eina_init())
     {
-      fprintf(stderr,"E-dbus: Enable to initialize the eina module");
+      fprintf(stderr,"E-dbus: Enable to initialize eina\n");
       return --_edbus_init_count;
     }
 
   _e_dbus_log_dom = eina_log_domain_register("e_dbus", E_DBUS_COLOR_DEFAULT);
   if (_e_dbus_log_dom < 0)
     {
-      EINA_LOG_ERR("Enable to create a 'e_dbus' log domain");
+      EINA_LOG_ERR("Unable to create an 'e_dbus' log domain");
       eina_shutdown();
       return --_edbus_init_count;
     }
+  if (!ecore_init())
+    {
+      ERR("E-dbus: Unable to initialize ecore");
+      eina_log_domain_unregister(_e_dbus_log_dom);
+      _e_dbus_log_dom = -1;
+      eina_shutdown();
+      return --_edbus_init_count;
+    }
+
 
   E_DBUS_EVENT_SIGNAL = ecore_event_type_new();
   e_dbus_object_init();
@@ -632,6 +641,7 @@ e_dbus_shutdown(void)
     return _edbus_init_count;
 
   e_dbus_object_shutdown();
+  ecore_shutdown();
   eina_log_domain_unregister(_e_dbus_log_dom);
   _e_dbus_log_dom = -1;
   eina_shutdown();
