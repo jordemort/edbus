@@ -139,6 +139,8 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DBUS_VERSION_CFLAGS = @DBUS_VERSION_CFLAGS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -152,9 +154,9 @@ EDBUS_BLUEZ_TEST_CFLAGS = @EDBUS_BLUEZ_TEST_CFLAGS@
 EDBUS_BLUEZ_TEST_LIBS = @EDBUS_BLUEZ_TEST_LIBS@
 EDBUS_BLUEZ_TEST_PRG = @EDBUS_BLUEZ_TEST_PRG@
 EDBUS_CFLAGS = @EDBUS_CFLAGS@
-EDBUS_CONNMAN_TEST_CFLAGS = @EDBUS_CONNMAN_TEST_CFLAGS@
-EDBUS_CONNMAN_TEST_LIBS = @EDBUS_CONNMAN_TEST_LIBS@
-EDBUS_CONNMAN_TEST_PRG = @EDBUS_CONNMAN_TEST_PRG@
+EDBUS_CONNMAN0_7X_TEST_CFLAGS = @EDBUS_CONNMAN0_7X_TEST_CFLAGS@
+EDBUS_CONNMAN0_7X_TEST_LIBS = @EDBUS_CONNMAN0_7X_TEST_LIBS@
+EDBUS_CONNMAN0_7X_TEST_PRG = @EDBUS_CONNMAN0_7X_TEST_PRG@
 EDBUS_LIBS = @EDBUS_LIBS@
 EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS = @EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS@
 EDBUS_NOTIFICATION_DAEMON_TEST_LIBS = @EDBUS_NOTIFICATION_DAEMON_TEST_LIBS@
@@ -214,6 +216,8 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -241,6 +245,8 @@ build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
+dbus_cflags = @dbus_cflags@
+dbus_libs = @dbus_libs@
 docdir = @docdir@
 dvidir = @dvidir@
 efl_doxygen = @efl_doxygen@
@@ -272,7 +278,7 @@ psdir = @psdir@
 release_info = @release_info@
 requirement_dbus = @requirement_dbus@
 requirement_ebluez = @requirement_ebluez@
-requirement_econnman = @requirement_econnman@
+requirement_econnman0_7x = @requirement_econnman0_7x@
 requirement_edbus = @requirement_edbus@
 requirement_ehal = @requirement_ehal@
 requirement_enotify = @requirement_enotify@
@@ -303,7 +309,7 @@ AM_CPPFLAGS = \
 @BUILD_EUKIT_TRUE@e_ukit_private_util.c
 
 @BUILD_EUKIT_TRUE@libeukit_la_LIBADD = \
-@BUILD_EUKIT_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la
+@BUILD_EUKIT_TRUE@@EDBUS_LIBS@ $(top_builddir)/src/lib/dbus/libedbus.la
 
 @BUILD_EUKIT_TRUE@libeukit_la_LDFLAGS = -version-info @version_info@ @release_info@
 EXTRA_DIST = e_ukit_private.h

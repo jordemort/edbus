@@ -2,6 +2,7 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "e_dbus_private.h"
@@ -134,9 +135,15 @@ cb_properties_get(E_DBus_Object *obj, DBusMessage *msg)
   {
     reply = dbus_message_new_method_return(msg);
     dbus_message_iter_init_append(msg, &iter);
-    dbus_message_iter_open_container(&iter, DBUS_TYPE_VARIANT, e_dbus_basic_type_as_string(type), &sub);
-    dbus_message_iter_append_basic(&sub, type, &value);
-    dbus_message_iter_close_container(&iter, &sub);
+    if (dbus_message_iter_open_container(&iter, DBUS_TYPE_VARIANT, e_dbus_basic_type_as_string(type), &sub))
+    {
+      dbus_message_iter_append_basic(&sub, type, &value);
+      dbus_message_iter_close_container(&iter, &sub);
+    }
+    else
+    {
+      ERR("dbus_message_iter_open_container() failed");
+    }
     return reply;
   }
   else
@@ -206,18 +213,13 @@ e_dbus_object_shutdown(void)
   properties_interface = NULL;
 }
 
-/**
- * Add a dbus object.
- *
- * @param conn the connection on with the object should listen
- * @param object_path a unique string identifying an object (e.g. org/enlightenment/WindowManager
- * @param data custom data to set on the object (retrievable via
- *             e_dbus_object_data_get())
- */
 EAPI E_DBus_Object *
 e_dbus_object_add(E_DBus_Connection *conn, const char *object_path, void *data)
 {
   E_DBus_Object *obj;
+
+  EINA_SAFETY_ON_NULL_RETURN_VAL(conn, NULL);
+  EINA_SAFETY_ON_NULL_RETURN_VAL(object_path, NULL);
 
   obj = calloc(1, sizeof(E_DBus_Object));
   if (!obj) return NULL;
@@ -239,11 +241,6 @@ e_dbus_object_add(E_DBus_Connection *conn, const char *object_path, void *data)
   return obj;
 }
 
-/**
- * Free a dbus object
- *
- * @param obj the object to free
- */
 EAPI void
 e_dbus_object_free(E_DBus_Object *obj)
 {
@@ -264,62 +261,36 @@ e_dbus_object_free(E_DBus_Object *obj)
   free(obj);
 }
 
-/**
- * @brief Fetch the data pointer for a dbus object
- * @param obj the dbus object
- */
 EAPI void *
 e_dbus_object_data_get(E_DBus_Object *obj)
 {
   return obj->data;
 }
 
-/**
- * @brief Get the dbus connection of a dbus object
- * @param obj the dbus object
- */
 EAPI E_DBus_Connection *
 e_dbus_object_conn_get(E_DBus_Object *obj)
 {
   return obj->conn;
 }
 
-/**
- * @brief Get the path of a dbus object
- * @param obj the dbus object
- */
 EAPI const char *
 e_dbus_object_path_get(E_DBus_Object *obj)
 {
   return obj->path;
 }
 
-/**
- * @brief Get the interfaces of a dbus object
- * @param obj the dbus object
- */
 EAPI const Eina_List *
 e_dbus_object_interfaces_get(E_DBus_Object *obj)
 {
   return obj->interfaces;
 }
 
-/**
- * @brief Sets the callback to fetch properties from an object
- * @param obj the object
- * @param func the callback
- */
 EAPI void
 e_dbus_object_property_get_cb_set(E_DBus_Object *obj, E_DBus_Object_Property_Get_Cb func)
 {
   obj->cb_property_get = func;
 }
 
-/**
- * @brief Sets the callback to set properties on an object
- * @param obj the object
- * @param func the callback
- */
 EAPI void
 e_dbus_object_property_set_cb_set(E_DBus_Object *obj, E_DBus_Object_Property_Set_Cb func)
 {
@@ -329,6 +300,9 @@ e_dbus_object_property_set_cb_set(E_DBus_Object *obj, E_DBus_Object_Property_Set
 EAPI void
 e_dbus_object_interface_attach(E_DBus_Object *obj, E_DBus_Interface *iface)
 {
+  EINA_SAFETY_ON_NULL_RETURN(obj);
+  EINA_SAFETY_ON_NULL_RETURN(iface);
+
   e_dbus_interface_ref(iface);
   obj->interfaces = eina_list_append(obj->interfaces, iface);
   obj->introspection_dirty = 1;
@@ -379,18 +353,6 @@ e_dbus_interface_free(E_DBus_Interface *iface)
 }
 
 
-/**
- * Add a method to an object
- *
- * @param iface the E_DBus_Interface to which this method belongs
- * @param member the name of the method
- * @param signature  an optional message signature. if provided, then messages
- *                   with invalid signatures will be automatically rejected 
- *                   (an Error response will be sent) and introspection data
- *                   will be available.
- *
- * @return 1 if successful, 0 if failed (e.g. no memory)
- */
 EAPI int
 e_dbus_interface_method_add(E_DBus_Interface *iface, const char *member, const char *signature, const char *reply_signature, E_DBus_Method_Cb func)
 {
@@ -404,15 +366,6 @@ e_dbus_interface_method_add(E_DBus_Interface *iface, const char *member, const c
   return 1;
 }
 
-/**
- * Add a signal to an object
- *
- * @param iface the E_DBus_Interface to which this signal belongs
- * @param name  the name of the signal
- * @param signature  an optional message signature.
- *
- * @return 1 if successful, 0 if failed (e.g. no memory)
- */
 EAPI int
 e_dbus_interface_signal_add(E_DBus_Interface *iface, const char *name, const char *signature)
 {

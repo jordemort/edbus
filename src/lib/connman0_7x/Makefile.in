@@ -35,7 +35,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = src/lib/connman
+subdir = src/lib/connman0_7x
 DIST_COMMON = $(includes_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -75,19 +75,19 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includesdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libeconnman_la_DEPENDENCIES =  \
+libeconnman0_7x_la_DEPENDENCIES =  \
 	$(top_builddir)/src/lib/dbus/libedbus.la
-am_libeconnman_la_OBJECTS = e_connman.lo e_connman_element.lo \
+am_libeconnman0_7x_la_OBJECTS = e_connman.lo e_connman_element.lo \
 	e_connman_manager.lo e_connman_profile.lo e_connman_service.lo \
 	e_connman_technology.lo
-libeconnman_la_OBJECTS = $(am_libeconnman_la_OBJECTS)
+libeconnman0_7x_la_OBJECTS = $(am_libeconnman0_7x_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
-libeconnman_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+libeconnman0_7x_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(libeconnman_la_LDFLAGS) $(LDFLAGS) -o \
-	$@
+	$(AM_CFLAGS) $(CFLAGS) $(libeconnman0_7x_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -114,8 +114,8 @@ am__v_CCLD_0 = @echo "  CCLD  " $@;
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(libeconnman_la_SOURCES)
-DIST_SOURCES = $(libeconnman_la_SOURCES)
+SOURCES = $(libeconnman0_7x_la_SOURCES)
+DIST_SOURCES = $(libeconnman0_7x_la_SOURCES)
 HEADERS = $(includes_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -136,6 +136,8 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DBUS_VERSION_CFLAGS = @DBUS_VERSION_CFLAGS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -149,9 +151,9 @@ EDBUS_BLUEZ_TEST_CFLAGS = @EDBUS_BLUEZ_TEST_CFLAGS@
 EDBUS_BLUEZ_TEST_LIBS = @EDBUS_BLUEZ_TEST_LIBS@
 EDBUS_BLUEZ_TEST_PRG = @EDBUS_BLUEZ_TEST_PRG@
 EDBUS_CFLAGS = @EDBUS_CFLAGS@
-EDBUS_CONNMAN_TEST_CFLAGS = @EDBUS_CONNMAN_TEST_CFLAGS@
-EDBUS_CONNMAN_TEST_LIBS = @EDBUS_CONNMAN_TEST_LIBS@
-EDBUS_CONNMAN_TEST_PRG = @EDBUS_CONNMAN_TEST_PRG@
+EDBUS_CONNMAN0_7X_TEST_CFLAGS = @EDBUS_CONNMAN0_7X_TEST_CFLAGS@
+EDBUS_CONNMAN0_7X_TEST_LIBS = @EDBUS_CONNMAN0_7X_TEST_LIBS@
+EDBUS_CONNMAN0_7X_TEST_PRG = @EDBUS_CONNMAN0_7X_TEST_PRG@
 EDBUS_LIBS = @EDBUS_LIBS@
 EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS = @EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS@
 EDBUS_NOTIFICATION_DAEMON_TEST_LIBS = @EDBUS_NOTIFICATION_DAEMON_TEST_LIBS@
@@ -211,6 +213,8 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -238,6 +242,8 @@ build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
+dbus_cflags = @dbus_cflags@
+dbus_libs = @dbus_libs@
 docdir = @docdir@
 dvidir = @dvidir@
 efl_doxygen = @efl_doxygen@
@@ -269,7 +275,7 @@ psdir = @psdir@
 release_info = @release_info@
 requirement_dbus = @requirement_dbus@
 requirement_ebluez = @requirement_ebluez@
-requirement_econnman = @requirement_econnman@
+requirement_econnman0_7x = @requirement_econnman0_7x@
 requirement_edbus = @requirement_edbus@
 requirement_ehal = @requirement_ehal@
 requirement_enotify = @requirement_enotify@
@@ -289,10 +295,10 @@ AM_CPPFLAGS = \
 -I $(top_srcdir)/src/lib/dbus \
 @EDBUS_CFLAGS@
 
-lib_LTLIBRARIES = libeconnman.la
+lib_LTLIBRARIES = libeconnman0_7x.la
 includes_HEADERS = E_Connman.h
-includesdir = $(includedir)/e_dbus-@VMAJ@
-libeconnman_la_SOURCES = \
+includesdir = $(includedir)/e_dbus-@VMAJ@/connman0_7x
+libeconnman0_7x_la_SOURCES = \
 e_connman.c \
 e_connman_element.c \
 e_connman_manager.c \
@@ -300,10 +306,10 @@ e_connman_profile.c \
 e_connman_service.c \
 e_connman_technology.c
 
-libeconnman_la_LIBADD = \
-$(top_builddir)/src/lib/dbus/libedbus.la
+libeconnman0_7x_la_LIBADD = \
+@EDBUS_LIBS@ $(top_builddir)/src/lib/dbus/libedbus.la
 
-libeconnman_la_LDFLAGS = -version-info @version_info@ @release_info@
+libeconnman0_7x_la_LDFLAGS = -version-info @version_info@ @release_info@
 EXTRA_DIST = e_connman_private.h
 all: all-am
 
@@ -318,9 +324,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/lib/connman/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/lib/connman0_7x/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu src/lib/connman/Makefile
+	  $(AUTOMAKE) --gnu src/lib/connman0_7x/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -370,8 +376,8 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libeconnman.la: $(libeconnman_la_OBJECTS) $(libeconnman_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libeconnman_la_LINK) -rpath $(libdir) $(libeconnman_la_OBJECTS) $(libeconnman_la_LIBADD) $(LIBS)
+libeconnman0_7x.la: $(libeconnman0_7x_la_OBJECTS) $(libeconnman0_7x_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libeconnman0_7x_la_LINK) -rpath $(libdir) $(libeconnman0_7x_la_OBJECTS) $(libeconnman0_7x_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

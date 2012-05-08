@@ -1,4 +1,5 @@
 #include "e_ofono_private.h"
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
@@ -502,7 +503,7 @@ _e_ofono_element_array_match(E_Ofono_Array *old, E_Ofono_Array *new, const char 
    Eina_List *deleted = NULL;
    Eina_Array_Iterator iter_old, iter_new;
    unsigned int i_old = 0, i_new = 0;
-   void *item_old, *item_new;
+   void *item_old = NULL, *item_new;
    Eina_List *l;
    void *data;
    Eina_Bool interfaces = EINA_FALSE;
@@ -517,9 +518,9 @@ _e_ofono_element_array_match(E_Ofono_Array *old, E_Ofono_Array *new, const char 
    /* is this a list of interfaces? */
    interfaces = !strcmp(prop_name, "Interfaces");
 
-   if ((!new) || (!new->array) || eina_array_count_get(new->array) == 0)
+   if ((!new) || (!new->array) || eina_array_count(new->array) == 0)
      {
-        if ((!old) || (!old->array) || eina_array_count_get(old->array) == 0)
+        if ((!old) || (!old->array) || eina_array_count(old->array) == 0)
           {
              return;
           }
@@ -537,7 +538,7 @@ _e_ofono_element_array_match(E_Ofono_Array *old, E_Ofono_Array *new, const char 
       if (item_old == item_new)
         {
            i_new++;
-           if (i_new >= eina_array_count_get(new->array))
+           if (i_new >= eina_array_count(new->array))
              {
                 i_old++;
                 break;
@@ -552,7 +553,7 @@ _e_ofono_element_array_match(E_Ofono_Array *old, E_Ofono_Array *new, const char 
         }
    }
 
-   for(; i_new < eina_array_count_get(new->array); iter_new++, i_new++)
+   for(; i_new < eina_array_count(new->array); iter_new++, i_new++)
      {
         Eina_Bool found = EINA_FALSE;
         item_new = *iter_new;
@@ -602,7 +603,7 @@ _e_ofono_element_array_match(E_Ofono_Array *old, E_Ofono_Array *new, const char 
    }
 
 out_remove_remaining:
-   for(; i_old < eina_array_count_get(old->array); iter_old++, i_old++)
+   for(; i_old < eina_array_count(old->array); iter_old++, i_old++)
      {
         E_Ofono_Element *e;
         item_old = *iter_old;
@@ -790,7 +791,7 @@ e_ofono_element_bytes_array_get_stringshared(const E_Ofono_Element *element, con
    if ((!array) || (!(array->array)))
       return NULL;
 
-   *count = eina_array_count_get(array->array);
+   *count = eina_array_count(array->array);
    ret = malloc(*count * sizeof(unsigned char));
    if (!ret)
      {
@@ -846,7 +847,7 @@ e_ofono_element_objects_array_get_stringshared(const E_Ofono_Element *element, c
         return EINA_FALSE;
      }
 
-   *count = eina_array_count_get(array->array);
+   *count = eina_array_count(array->array);
    ret = malloc(*count * sizeof(E_Ofono_Element *));
    if (!ret)
      {
@@ -910,7 +911,7 @@ e_ofono_element_strings_array_get_stringshared(const E_Ofono_Element *element, c
         return EINA_FALSE;
      }
 
-   *count = eina_array_count_get(array->array);
+   *count = eina_array_count(array->array);
    ret = malloc(*count * sizeof(char *));
    if (!ret)
      {
@@ -1546,28 +1547,44 @@ e_ofono_element_property_dict_set_full(E_Ofono_Element *element, const char *pro
         return EINA_FALSE;
      }
 
-   dbus_message_iter_open_container(&itr, DBUS_TYPE_VARIANT, typestr, &variant);
-
-   snprintf(typestr, sizeof(typestr),
-            (DBUS_DICT_ENTRY_BEGIN_CHAR_AS_STRING
-             DBUS_TYPE_STRING_AS_STRING
-             "%c"
-             DBUS_DICT_ENTRY_END_CHAR_AS_STRING),
-            type);
-
-   dbus_message_iter_open_container(&variant, DBUS_TYPE_ARRAY, typestr, &dict);
-   dbus_message_iter_open_container(&dict, DBUS_TYPE_DICT_ENTRY, NULL, &entry);
-
-   dbus_message_iter_append_basic(&entry, DBUS_TYPE_STRING, &key);
-
-   if ((type == DBUS_TYPE_STRING) || (type == DBUS_TYPE_OBJECT_PATH))
-      dbus_message_iter_append_basic(&entry, type, &value);
+   if (dbus_message_iter_open_container(&itr, DBUS_TYPE_VARIANT, typestr, &variant))
+     {
+        snprintf(typestr, sizeof(typestr),
+                 (DBUS_DICT_ENTRY_BEGIN_CHAR_AS_STRING
+                     DBUS_TYPE_STRING_AS_STRING
+                     "%c"
+                     DBUS_DICT_ENTRY_END_CHAR_AS_STRING),
+                 type);
+        
+        if (dbus_message_iter_open_container(&variant, DBUS_TYPE_ARRAY, typestr, &dict))
+          {
+             if (dbus_message_iter_open_container(&dict, DBUS_TYPE_DICT_ENTRY, NULL, &entry))
+               {
+                  dbus_message_iter_append_basic(&entry, DBUS_TYPE_STRING, &key);
+                  
+                  if ((type == DBUS_TYPE_STRING) || (type == DBUS_TYPE_OBJECT_PATH))
+                    dbus_message_iter_append_basic(&entry, type, &value);
+                  else
+                    dbus_message_iter_append_basic(&entry, type, value);
+                  
+                  dbus_message_iter_close_container(&dict, &entry);
+               }
+             else
+               {
+                  ERR("dbus_message_iter_open_container() failed");
+               }
+             dbus_message_iter_close_container(&variant, &dict);
+          }
+        else
+          {
+             ERR("dbus_message_iter_open_container() failed");
+          }
+        dbus_message_iter_close_container(&itr, &variant);
+     }
    else
-      dbus_message_iter_append_basic(&entry, type, value);
-
-   dbus_message_iter_close_container(&dict, &entry);
-   dbus_message_iter_close_container(&variant, &dict);
-   dbus_message_iter_close_container(&itr, &variant);
+     {
+        ERR("dbus_message_iter_open_container() failed");
+     }
 
    return e_ofono_element_message_send
              (element, name, NULL, NULL, msg,

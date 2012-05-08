@@ -2,7 +2,8 @@
 #include "config.h"
 #endif
 
-#include "E_Connman.h"
+#define E_CONNMAN_I_KNOW_THIS_API_IS_SUBJECT_TO_CHANGE 1
+#include "connman0_7x/E_Connman.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -26,6 +27,28 @@ _test_string_get(E_Connman_Element *element, const char *name, Eina_Bool (*func)
    if (ret)
      INF("SUCCESS: testing string get %s of element %s: %s",
 	 name, element->path, value);
+   else
+     WRN("FAILURE: testing string get %s of element %s",
+	 name, element->path);
+
+   return ret;
+}
+
+static Eina_Bool
+_test_string_array_get(E_Connman_Element *element, const char *name, Eina_Bool (*func)(const E_Connman_Element *element, unsigned int *count, const char ***value))
+{
+   const char **value;
+   unsigned int count;
+   Eina_Bool ret;
+
+   INF("BEGIN: testing string array get %s of element %s...",
+       name, element->path);
+   ret = func(element, &count, &value);
+   if (ret)
+     {
+	INF("SUCCESS: testing string array get %s of element %s: %p[%u]",
+	    name, element->path, value, count);
+     }
    else
      WRN("FAILURE: testing string get %s of element %s",
 	 name, element->path);
@@ -93,16 +116,17 @@ _test_uchar_array_get(E_Connman_Element *element, const char *name, Eina_Bool (*
    unsigned int count;
    Eina_Bool ret;
 
-   INF("BEGIN: testing ushort get %s of element %s...", name, element->path);
+   INF("BEGIN: testing uchar array get %s of element %s...",
+       name, element->path);
    ret = func(element, &count, &value);
    if (ret)
      {
-	INF("SUCCESS: testing ushort get %s of element %s: %p",
-	    name, element->path, value);
+	INF("SUCCESS: testing uchar array get %s of element %s: %p[%u]",
+	    name, element->path, value, count);
 	free(value);
      }
    else
-     WRN("FAILURE: testing ushort get %s of element %s",
+     WRN("FAILURE: testing uchar array get %s of element %s",
 	 name, element->path);
 
    return ret;
@@ -242,6 +266,7 @@ struct test_desc
    const char *name;
    enum {
      TEST_DESC_TYPE_STRING_GET,
+     TEST_DESC_TYPE_STRING_ARRAY_GET,
      TEST_DESC_TYPE_BOOL_GET,
      TEST_DESC_TYPE_UCHAR_GET,
      TEST_DESC_TYPE_USHORT_GET,
@@ -257,6 +282,7 @@ struct test_desc
    } type;
    union {
       Eina_Bool (*string_get)(const E_Connman_Element *element, const char **value);
+      Eina_Bool (*string_array_get)(const E_Connman_Element *element, unsigned int *count, const char ***value);
       Eina_Bool (*bool_get)(const E_Connman_Element *element, Eina_Bool *value);
       Eina_Bool (*uchar_get)(const E_Connman_Element *element, unsigned char *value);
       Eina_Bool (*ushort_get)(const E_Connman_Element *element, unsigned short*value);
@@ -275,6 +301,8 @@ struct test_desc
 
 #define TEST_DESC_STRING_GET(_func, may_fail)				\
   {#_func, TEST_DESC_TYPE_STRING_GET, .func.string_get=_func, may_fail}
+#define TEST_DESC_STRING_ARRAY_GET(_func, may_fail)				\
+  {#_func, TEST_DESC_TYPE_STRING_ARRAY_GET, .func.string_array_get=_func, may_fail}
 #define TEST_DESC_BOOL_GET(_func, may_fail)				\
   {#_func, TEST_DESC_TYPE_BOOL_GET, .func.bool_get=_func, may_fail}
 #define TEST_DESC_UCHAR_GET(_func, may_fail)				\
@@ -314,6 +342,10 @@ _test_element(E_Connman_Element *element, const struct test_desc *test_descs)
 	  {
 	   case TEST_DESC_TYPE_STRING_GET:
 	      r = _test_string_get(element, itr->name, itr->func.string_get);
+	      break;
+	   case TEST_DESC_TYPE_STRING_ARRAY_GET:
+	      r = _test_string_array_get
+		(element, itr->name, itr->func.string_array_get);
 	      break;
 	   case TEST_DESC_TYPE_BOOL_GET:
 	      r = _test_bool_get(element, itr->name, itr->func.bool_get);
@@ -419,8 +451,7 @@ static const struct test_desc test_desc_service[] = {
   TEST_DESC_STRING_GET(e_connman_service_error_get, 1),
   TEST_DESC_STRING_GET(e_connman_service_name_get, 0),
   TEST_DESC_STRING_GET(e_connman_service_type_get, 0),
-  TEST_DESC_STRING_GET(e_connman_service_mode_get, 1),
-  TEST_DESC_STRING_GET(e_connman_service_security_get, 1),
+  TEST_DESC_STRING_ARRAY_GET(e_connman_service_security_get, 1),
   TEST_DESC_STRING_GET(e_connman_service_passphrase_get, 1),
   //TEST_DESC_STRING_SET(e_connman_service_passphrase_set, 1),
   TEST_DESC_BOOL_GET(e_connman_service_passphrase_required_get, 1),
@@ -429,11 +460,6 @@ static const struct test_desc test_desc_service[] = {
   TEST_DESC_BOOL_GET(e_connman_service_immutable_get, 0),
   TEST_DESC_BOOL_GET(e_connman_service_auto_connect_get, 0),
   //TEST_DESC_BOOL_SET(e_connman_service_auto_connect_set, 1),
-  TEST_DESC_BOOL_GET(e_connman_service_setup_required_get, 1),
-  TEST_DESC_STRING_GET(e_connman_service_apn_get, 1),
-  //TEST_DESC_STRING_SET(e_connman_service_apn_set, 1),
-  TEST_DESC_STRING_GET(e_connman_service_mcc_get, 1),
-  TEST_DESC_STRING_GET(e_connman_service_mnc_get, 1),
   TEST_DESC_BOOL_GET(e_connman_service_roaming_get, 1),
   TEST_DESC_STRING_GET(e_connman_service_ipv4_method_get, 1),
   TEST_DESC_STRING_GET(e_connman_service_ipv4_address_get, 1),
@@ -446,7 +472,6 @@ static const struct test_desc test_desc_service[] = {
   TEST_DESC_STRING_GET(e_connman_service_ethernet_method_get, 1),
   TEST_DESC_STRING_GET(e_connman_service_ethernet_address_get, 1),
   TEST_DESC_USHORT_GET(e_connman_service_ethernet_mtu_get, 1),
-  TEST_DESC_STRING_GET(e_connman_service_ethernet_netmask_get, 1),
   TEST_DESC_SENTINEL
 };
 

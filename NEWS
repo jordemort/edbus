@@ -1,0 +1,38 @@
+E_dbus 1.2.0
+
+Changes since E_dbus 1.1.0:
+---------------------------
+
+Fixes:
+
+   * enotify:
+    - use of dbus_message_iter_open_container prevent crash on image send.
+
+Improvements:
+
+   * eukit:
+    - Correctly handle the dbus type 'object path', it is a string after all.
+   * enotify:
+    - use eina_log better in enotify-daemon.
+
+Changes since E_dbus 1.0.0:
+---------------------------
+
+Additions:
+
+    * e_notification_action_id_get
+    * e_notification_action_name_get
+    * e_notification_image_init
+    * e_connman: sync api with connman-0.7x
+
+Fixes:
+
+    * DSO linking issues fixed
+    * crash on e-notify-send with invalid session bus set
+    * when app has no idle time, e_dbus's idlers dont process anything
+    * error when trying to add duplicate fd handler for dbus fd
+
+Improvements:
+
+    * notification protocol 1.2 support
+    * e_connman supports connman-0.7x api, warns that it is unstable.
