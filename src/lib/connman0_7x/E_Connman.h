@@ -11,8 +11,19 @@
 /**
  * @defgroup EConnman_Group EConnman
  *
+ * Currently supporting upstream API version 0.75 and later.
+ *
+ * @note this API is subject to changed based on upstream connman changes,
+ *       then it is required to acknowledge this by defining:
+ *       @code
+ *       #define E_CONNMAN_I_KNOW_THIS_API_IS_SUBJECT_TO_CHANGE 1
+ *       @endcode
+ *
  * @{
  */
+#ifndef E_CONNMAN_I_KNOW_THIS_API_IS_SUBJECT_TO_CHANGE
+#error "E_Connman.h is an unstable API linked to upstream connman project"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -127,8 +138,7 @@ EAPI Eina_Bool              e_connman_service_state_get(const E_Connman_Element 
 EAPI Eina_Bool              e_connman_service_error_get(const E_Connman_Element *service, const char **error) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_service_name_get(const E_Connman_Element *service, const char **name) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_service_type_get(const E_Connman_Element *service, const char **type) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
-EAPI Eina_Bool              e_connman_service_mode_get(const E_Connman_Element *service, const char **mode) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
-EAPI Eina_Bool              e_connman_service_security_get(const E_Connman_Element *service, const char **security) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_security_get(const E_Connman_Element *service, unsigned int *count, const char ***security) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 
 EAPI Eina_Bool              e_connman_service_passphrase_get(const E_Connman_Element *service, const char **passphrase) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_service_passphrase_set(E_Connman_Element *service, const char *passphrase, E_DBus_Method_Return_Cb cb, const void *data) EINA_ARG_NONNULL(1) EINA_WARN_UNUSED_RESULT;
@@ -141,15 +151,14 @@ EAPI Eina_Bool              e_connman_service_immutable_get(const E_Connman_Elem
 EAPI Eina_Bool              e_connman_service_auto_connect_get(const E_Connman_Element *service, Eina_Bool *auto_connect) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_service_auto_connect_set(E_Connman_Element *service, Eina_Bool auto_connect, E_DBus_Method_Return_Cb cb, const void *data) EINA_ARG_NONNULL(1) EINA_WARN_UNUSED_RESULT;
 
-EAPI Eina_Bool              e_connman_service_setup_required_get(const E_Connman_Element *service, Eina_Bool *setup_required) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_service_passphrase_required_get(const E_Connman_Element *service, Eina_Bool *passphrase_required) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_login_required_get(const E_Connman_Element *service, Eina_Bool *login_required) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 
-EAPI Eina_Bool              e_connman_service_apn_get(const E_Connman_Element *service, const char **apn) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
-EAPI Eina_Bool              e_connman_service_apn_set(E_Connman_Element *service, const char *apn, E_DBus_Method_Return_Cb cb, const void *data) EINA_ARG_NONNULL(1) EINA_WARN_UNUSED_RESULT;
-
-EAPI Eina_Bool              e_connman_service_mcc_get(const E_Connman_Element *service, const char **mcc) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
-EAPI Eina_Bool              e_connman_service_mnc_get(const E_Connman_Element *service, const char **mnc) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_service_roaming_get(const E_Connman_Element *service, Eina_Bool *roaming) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_nameservers_get(const E_Connman_Element *service, unsigned int *count, const char ***nameserver) EINA_ARG_NONNULL(1, 2, 3) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_nameservers_configuration_get(const E_Connman_Element *service, unsigned int *count, const char ***nameservers) EINA_ARG_NONNULL(1, 2, 3) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_nameservers_configuration_set(E_Connman_Element *service, unsigned int count, const char **nameservers, E_DBus_Method_Return_Cb cb, const void *data)  EINA_ARG_NONNULL(1, 2, 3, 4, 5) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_domains_get(const E_Connman_Element *service, unsigned int *count, const char ***domains) EINA_ARG_NONNULL(1, 2, 3) EINA_WARN_UNUSED_RESULT;
 
 EAPI Eina_Bool              e_connman_service_ipv4_method_get(const E_Connman_Element *service, const char **method) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_service_ipv4_address_get(const E_Connman_Element *service, const char **address) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
@@ -161,10 +170,22 @@ EAPI Eina_Bool              e_connman_service_ipv4_configuration_address_get(con
 EAPI Eina_Bool              e_connman_service_ipv4_configuration_gateway_get(const E_Connman_Element *service, const char **gateway) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_service_ipv4_configuration_netmask_get(const E_Connman_Element *service, const char **netmask) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 
+EAPI Eina_Bool              e_connman_service_proxy_method_get(const E_Connman_Element *service, const char **method) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_proxy_url_get(const E_Connman_Element *service, const char **url) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_proxy_servers_get(const E_Connman_Element *service, unsigned int *count, const char ***servers) EINA_ARG_NONNULL(1, 2, 3) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_proxy_excludes_get(const E_Connman_Element *service, unsigned int *count, const char ***excludes) EINA_ARG_NONNULL(1, 2, 3) EINA_WARN_UNUSED_RESULT;
+
+EAPI Eina_Bool              e_connman_service_proxy_configuration_method_get(const E_Connman_Element *service, const char **method) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_proxy_configuration_url_get(const E_Connman_Element *service, const char **url) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_proxy_configuration_servers_get(const E_Connman_Element *service, unsigned int *count, const char ***servers) EINA_ARG_NONNULL(1, 2, 3) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_proxy_configuration_excludes_get(const E_Connman_Element *service, unsigned int *count, const char ***excludes) EINA_ARG_NONNULL(1, 2, 3) EINA_WARN_UNUSED_RESULT;
+
 EAPI Eina_Bool              e_connman_service_ethernet_method_get(const E_Connman_Element *service, const char **method) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_ethernet_interface_get(const E_Connman_Element *service, const char **iface) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_service_ethernet_address_get(const E_Connman_Element *service, const char **address) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_service_ethernet_mtu_get(const E_Connman_Element *service, unsigned short *mtu) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
-EAPI Eina_Bool              e_connman_service_ethernet_netmask_get(const E_Connman_Element *service, const char **netmask) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_ethernet_speed_get(const E_Connman_Element *service, unsigned short *speed) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_service_ethernet_duplex_get(const E_Connman_Element *service, const char **duplex) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 
 /* Methods to configure IPv4 service */
 EAPI Eina_Bool              e_connman_service_ipv4_configure_dhcp(E_Connman_Element *service, E_DBus_Method_Return_Cb cb, const void *data) EINA_ARG_NONNULL(1) EINA_WARN_UNUSED_RESULT;
@@ -176,9 +197,6 @@ EAPI E_Connman_Element *    e_connman_technology_get(const char *path) EINA_ARG_
 EAPI Eina_Bool              e_connman_technology_state_get(const E_Connman_Element *technology, const char **state) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_technology_name_get(const E_Connman_Element *technology, const char **state) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_technology_type_get(const E_Connman_Element *technology, const char **state) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
-
-// TODO: ethernet_speed_get (not in connman yet)
-// TODO: ethernet_duplex_get (not in connman yet)
 
 /* Low-Level API:
  *
@@ -205,11 +223,15 @@ EAPI void                   e_connman_element_properties_list(const E_Connman_El
 
 EAPI Eina_Bool              e_connman_element_property_set(E_Connman_Element *element, const char *prop, int type, const void *value) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_element_property_set_full(E_Connman_Element *element, const char *prop, int type, const void *value, E_DBus_Method_Return_Cb cb, const void *data) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_element_property_array_set_full(E_Connman_Element *element, const char *prop, int type, unsigned int count, const void * const *values, E_DBus_Method_Return_Cb cb, const void *data) EINA_ARG_NONNULL(1, 2) EINA_WARN_UNUSED_RESULT;
+
 EAPI Eina_Bool              e_connman_element_property_dict_set_full(E_Connman_Element *element, const char *prop, const char *key, int type, const void *value, E_DBus_Method_Return_Cb cb, const void *data) EINA_ARG_NONNULL(1, 2, 3) EINA_WARN_UNUSED_RESULT;
 
 EAPI Eina_Bool              e_connman_element_property_type_get_stringshared(const E_Connman_Element *element, const char *name, int *type) EINA_ARG_NONNULL(1, 2, 3) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_element_property_type_get(const E_Connman_Element *element, const char *name, int *type) EINA_ARG_NONNULL(1, 2, 3) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_element_property_dict_get_stringshared(const E_Connman_Element *element, const char *dict_name, const char *key_name, int *type, void *value) EINA_ARG_NONNULL(1, 2, 4) EINA_WARN_UNUSED_RESULT;
+EAPI Eina_Bool              e_connman_element_property_dict_strings_array_get_stringshared(const E_Connman_Element *element, const char *dict_name, const char *key, unsigned int *count, const char ***strings) EINA_ARG_NONNULL(1, 2, 3, 4) EINA_WARN_UNUSED_RESULT;
+
 EAPI Eina_Bool              e_connman_element_property_get_stringshared(const E_Connman_Element *element, const char *name, int *type, void *value) EINA_ARG_NONNULL(1, 2, 4) EINA_WARN_UNUSED_RESULT;
 EAPI Eina_Bool              e_connman_element_property_get(const E_Connman_Element *element, const char *name, int *type, void *value) EINA_ARG_NONNULL(1, 2, 4) EINA_WARN_UNUSED_RESULT;
 

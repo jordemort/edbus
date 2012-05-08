@@ -61,9 +61,9 @@ void
 daemon_note_show(Daemon_Data *d, E_Notification *n)
 {
   e_notification_ref(n);
-  d->open_notes = eina_list_append(d->open_notes, n); 
+  d->open_notes = eina_list_append(d->open_notes, n);
   e_notification_ref(n);
-  d->history = eina_list_append(d->history, n); 
+  d->history = eina_list_append(d->history, n);
 
   // adjust history
   if ((int) eina_list_count(d->history) > d->max_history_length)
@@ -86,7 +86,7 @@ daemon_note_show(Daemon_Data *d, E_Notification *n)
     ecore_timer_add(timeout == -1 ? d->default_timeout : (float)timeout / 1000, cb_note_close_timer, td);
   }
 
-  printf("Received notification from %s:\n%s\n%s\n\n", 
+  printf("Received notification from %s:\n%s\n%s\n\n",
     e_notification_app_name_get(n),
     e_notification_summary_get(n), e_notification_body_get(n)
   );
@@ -117,15 +117,15 @@ daemon_note_history_find(Daemon_Data *d, int id)
 
 
 int
-cb_notify(E_Notification_Daemon *daemon, E_Notification *n)
+cb_notify(E_Notification_Daemon *ndaemon, E_Notification *n)
 {
   Daemon_Data *dd;
   unsigned int replaces_id;
   unsigned int new_id;
 
-  dd = e_notification_daemon_data_get(daemon);
+  dd = e_notification_daemon_data_get(ndaemon);
   replaces_id = e_notification_replaces_id_get(n);
-  if (replaces_id) 
+  if (replaces_id)
   {
     // close old one flagged as replaced
   }
@@ -139,11 +139,11 @@ cb_notify(E_Notification_Daemon *daemon, E_Notification *n)
 }
 
 void
-cb_close_notification(E_Notification_Daemon *daemon, unsigned int notification_id)
+cb_close_notification(E_Notification_Daemon *ndaemon, unsigned int notification_id)
 {
   Daemon_Data *dd;
   E_Notification *n;
-  dd = e_notification_daemon_data_get(daemon);
+  dd = e_notification_daemon_data_get(ndaemon);
   n = daemon_note_open_find(dd, notification_id);
   if (n)
     daemon_note_close(dd, n, E_NOTIFICATION_CLOSED_REQUESTED);

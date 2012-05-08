@@ -2,6 +2,9 @@
 #include "config.h"
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "e_dbus_private.h"
 
 typedef struct E_DBus_Pending_Call_Data E_DBus_Pending_Call_Data;
@@ -56,15 +59,6 @@ cb_pending(DBusPendingCall *pending, void *user_data)
 }
 
 
-/**
- * @brief Send a DBus message with callbacks
- * @param conn The DBus connection
- * @param msg  The message to send
- * @param cb_return A callback function for returns (only used if @a msg is a method-call)
- * @param timeout   A timeout in milliseconds, after which a synthetic error will be generated
- * @param data custom data to pass in to the callback
- * @return a DBusPendingCall that can be used to cancel the current call
- */
 EAPI DBusPendingCall *
 e_dbus_message_send(E_DBus_Connection *conn, DBusMessage *msg, E_DBus_Method_Return_Cb cb_return, int timeout, void *data)
 {

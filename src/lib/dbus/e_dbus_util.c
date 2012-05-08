@@ -2,14 +2,10 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
+
 #include "e_dbus_private.h"
 
-/**
- * @internal
- * @brief Create a callback structure
- * @param cb_func the callback function
- * @param user_data data to pass to the callback
- */
 EAPI E_DBus_Callback *
 e_dbus_callback_new(E_DBus_Callback_Func cb_func, E_DBus_Unmarshal_Func unmarshal_func, E_DBus_Free_Func free_func, void *user_data)
 {
@@ -26,11 +22,6 @@ e_dbus_callback_new(E_DBus_Callback_Func cb_func, E_DBus_Unmarshal_Func unmarsha
   return cb;
 }
 
-/**
- * @internal
- * @brief Free a callback structure
- * @param callback the callback to free
- */
 EAPI void
 e_dbus_callback_free(E_DBus_Callback *callback)
 {

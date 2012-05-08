@@ -2,6 +2,7 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -51,25 +52,38 @@ struct E_DBus_Timeout_Data
 
 static Eina_Bool e_dbus_idler(void *data);
 
+static void
+e_dbus_fd_handler_del(E_DBus_Handler_Data *hd)
+{
+  if (!hd->fd_handler) return;
+
+  DBG("handler disabled");
+  hd->cd->fd_handlers = eina_list_remove(hd->cd->fd_handlers, hd->fd_handler);
+  ecore_main_fd_handler_del(hd->fd_handler);
+  hd->fd_handler = NULL;
+}
+
 static Eina_Bool
 e_dbus_fd_handler(void *data, Ecore_Fd_Handler *fd_handler)
 {
   E_DBus_Handler_Data *hd;
   unsigned int condition = 0;
 
-  DBG("fd handler (%ld)!", (long int)fd_handler);
+  DBG("fd handler (%p)!", fd_handler);
 
   hd = data;
 
-  if (!hd->enabled) {
-    DBG("handler disabled");
-    if (hd->fd_handler) ecore_main_fd_handler_del(hd->fd_handler);
-    hd->fd_handler = NULL;
-    return ECORE_CALLBACK_CANCEL;
-  }
+  if (!hd->enabled)
+    {
+       e_dbus_fd_handler_del(hd);
+       return ECORE_CALLBACK_CANCEL;
+    }
   if (ecore_main_fd_handler_active_get(fd_handler, ECORE_FD_READ)) condition |= DBUS_WATCH_READABLE;
   if (ecore_main_fd_handler_active_get(fd_handler, ECORE_FD_WRITE)) condition |= DBUS_WATCH_WRITABLE;
   if (ecore_main_fd_handler_active_get(fd_handler, ECORE_FD_ERROR)) condition |= DBUS_WATCH_ERROR;
+  DBG("fdh || READ: %d, WRITE: %d",
+      (condition & DBUS_WATCH_READABLE) == DBUS_WATCH_READABLE,
+      (condition & DBUS_WATCH_WRITABLE) == DBUS_WATCH_WRITABLE);
 
   if (condition & DBUS_WATCH_ERROR) DBG("DBUS watch error");
   dbus_watch_handle(hd->watch, condition);
@@ -83,16 +97,21 @@ e_dbus_fd_handler_add(E_DBus_Handler_Data *hd)
 {
   unsigned int dflags;
   Ecore_Fd_Handler_Flags eflags;
+  Eina_List *l;
+  Ecore_Fd_Handler *fdh;
 
   if (hd->fd_handler) return;
-  DBG("fd handler add (%d)", hd->fd);
-
   dflags = dbus_watch_get_flags(hd->watch);
   eflags = ECORE_FD_ERROR;
   if (dflags & DBUS_WATCH_READABLE) eflags |= ECORE_FD_READ;
   if (dflags & DBUS_WATCH_WRITABLE) eflags |= ECORE_FD_WRITE;
 
+  EINA_LIST_FOREACH(hd->cd->fd_handlers, l, fdh)
+    {
+       if (ecore_main_fd_handler_fd_get(fdh) == hd->fd) return;
+    }
 
+  DBG("fd handler add (%d)", hd->fd);
   hd->fd_handler = ecore_main_fd_handler_add(hd->fd,
                                              eflags,
                                              e_dbus_fd_handler,
@@ -185,7 +204,7 @@ e_dbus_connection_free(void *data)
 
   if (cd->conn_name) free(cd->conn_name);
 
-  if (cd->idler) ecore_idler_del(cd->idler);
+  if (cd->idler) ecore_idle_enterer_del(cd->idler);
 
   free(cd);
 }
@@ -199,8 +218,22 @@ cb_main_wakeup(void *data)
 
   cd = data;
 
-  if (!cd->idler) cd->idler = ecore_idler_add(e_dbus_idler, cd);
+  if (!cd->idler) cd->idler = ecore_idle_enterer_add(e_dbus_idler, cd);
   else DBG("already idling");
+}
+
+static void
+e_dbus_loop_wakeup(void)
+{
+  static int dummy_event = 0;
+
+  /* post a dummy event to get the mainloop back to normal - this is
+   * needed because idlers are very special things that won't re-evaluate
+   * timers and other stuff while idelrs run - idle_exiters and enterers
+   * can do this safely, but not idlers. idelrs were meant to be used
+   * very sparingly for very special cases */
+  if (dummy_event == 0) dummy_event = ecore_event_type_new();
+  ecore_event_add(dummy_event, NULL, NULL, NULL);
 }
 
 static void
@@ -211,21 +244,13 @@ cb_dispatch_status(DBusConnection *conn __UNUSED__, DBusDispatchStatus new_statu
   DBG("dispatch status: %d!", new_status);
   cd = data;
 
-  if (new_status == DBUS_DISPATCH_DATA_REMAINS && !cd->idler) cd->idler = ecore_idler_add(e_dbus_idler, cd);
+  if (new_status == DBUS_DISPATCH_DATA_REMAINS && !cd->idler) cd->idler = ecore_idle_enterer_add(e_dbus_idler, cd);
 
   else if (new_status != DBUS_DISPATCH_DATA_REMAINS && cd->idler) 
   {
-    static int dummy_event = 0;
-
-    ecore_idler_del(cd->idler);
+    ecore_idle_enterer_del(cd->idler);
     cd->idler = NULL;
-    /* post a dummy event to get the mainloop back to normal - this is
-     * needed because idlers are very special things that won't re-evaluate
-     * timers and other stuff while idelrs run - idle_exiters and enterers
-     * can do this safely, but not idlers. idelrs were meant to be used
-     * very sparingly for very special cases */
-    if (dummy_event == 0) dummy_event = ecore_event_type_new();
-    ecore_event_add(dummy_event, NULL, NULL, NULL);
+    e_dbus_loop_wakeup();
   }
 }
 
@@ -337,13 +362,7 @@ cb_watch_del(DBusWatch *watch, void *data __UNUSED__)
 
   DBG("cb_watch_del");
   hd = (E_DBus_Handler_Data *)dbus_watch_get_data(watch);
-
-  if (hd->fd_handler) 
-  {
-    hd->cd->fd_handlers = eina_list_remove(hd->cd->fd_handlers, hd->fd_handler);
-    ecore_main_fd_handler_del(hd->fd_handler);
-    hd->fd_handler = NULL;
-  }
+  e_dbus_fd_handler_del(hd);
 }
 
 static void
@@ -358,7 +377,9 @@ cb_watch_toggle(DBusWatch *watch, void *data __UNUSED__)
 
   hd->enabled = dbus_watch_get_enabled(watch);
 
+  INFO("watch %p is %sabled", hd, hd->enabled ? "en" : "dis");
   if (hd->enabled) e_dbus_fd_handler_add(hd);
+  else e_dbus_fd_handler_del(hd);
 }
 
 static void
@@ -437,13 +458,10 @@ e_dbus_idler(void *data)
       e_dbus_connection_close(cd);
     } while (--close_connection);
   }
+  e_dbus_loop_wakeup();
   return ECORE_CALLBACK_RENEW;
 }
 
-/**
- * Retrieve a connection to the bus and integrate it with the ecore main loop.
- * @param type the type of bus to connect to, e.g. DBUS_BUS_SYSTEM or DBUS_BUS_SESSION
- */
 EAPI E_DBus_Connection *
 e_dbus_bus_get(DBusBusType type)
 {
@@ -490,11 +508,6 @@ e_dbus_bus_get(DBusBusType type)
   return econn;
 }
 
-/**
- * Integrate a DBus connection with the ecore main loop
- *
- * @param conn - a dbus connection
- */
 EAPI E_DBus_Connection *
 e_dbus_connection_setup(DBusConnection *conn)
 {
@@ -532,10 +545,6 @@ e_dbus_connection_setup(DBusConnection *conn)
 }
 
 
-/**
- * Close out a connection retrieved with e_dbus_bus_get()
- * @param conn the connection to close
- */
 EAPI void
 e_dbus_connection_close(E_DBus_Connection *conn)
 {
@@ -567,7 +576,7 @@ e_dbus_connection_close(E_DBus_Connection *conn)
   /* Idler functin must be cancelled when dbus connection is  unreferenced */
   if (conn->idler)
     {
-      ecore_idler_del(conn->idler);
+      ecore_idle_enterer_del(conn->idler);
       conn->idler = NULL;
     }
 
@@ -589,18 +598,11 @@ e_dbus_connection_dbus_connection_get(E_DBus_Connection *conn)
   return conn->conn;
 }
 
-/**
- * @brief Initialize e_dbus
- */
 EAPI int
 e_dbus_init(void)
 {
   if (++_edbus_init_count != 1)
     return _edbus_init_count;
-  
-  /**
-   * eina initialization 
-   */
   
   if (!eina_init())
     {
@@ -631,9 +633,6 @@ e_dbus_init(void)
   return _edbus_init_count;
 }
 
-/**
- * Shutdown e_dbus.
- */
 EAPI int
 e_dbus_shutdown(void)
 {

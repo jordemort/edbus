@@ -2,11 +2,14 @@
 #include "config.h"
 #endif
 
-#include "E_Connman.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+
+#define E_CONNMAN_I_KNOW_THIS_API_IS_SUBJECT_TO_CHANGE 1
+#include "connman0_7x/E_Connman.h"
 
 static void
 _method_success_check(void *data, __UNUSED__ DBusMessage *msg, DBusError *error)
@@ -905,31 +908,11 @@ _on_cmd_service_get_type(__UNUSED__ char *cmd, char *args)
 }
 
 static Eina_Bool
-_on_cmd_service_get_mode(__UNUSED__ char *cmd, char *args)
-{
-   const char *mode, *path;
-   E_Connman_Element *e;
-
-   if (!args)
-     {
-	fputs("ERROR: missing the service path\n", stderr);
-	return ECORE_CALLBACK_RENEW;
-     }
-   _tok(args);
-   path = args;
-
-   e = e_connman_service_get(path);
-   if (e_connman_service_mode_get(e, &mode))
-     printf(":::Service %s Mode = \"%s\"\n", path, mode);
-   else
-     fputs("ERROR: can't get service mode\n", stderr);
-   return ECORE_CALLBACK_RENEW;
-}
-
-static Eina_Bool
 _on_cmd_service_get_security(__UNUSED__ char *cmd, char *args)
 {
-   const char *security, *path;
+   unsigned int count;
+   const char **security;
+   const char *path;
    E_Connman_Element *e;
 
    if (!args)
@@ -941,8 +924,13 @@ _on_cmd_service_get_security(__UNUSED__ char *cmd, char *args)
    path = args;
 
    e = e_connman_service_get(path);
-   if (e_connman_service_security_get(e, &security))
-     printf(":::Service %s Security = \"%s\"\n", path, security);
+   if (e_connman_service_security_get(e, &count, &security))
+     {
+        unsigned int i;
+        for (i = 0; i < count; i++)
+          printf("\"%s\", ", security[i]);
+        putchar('\n');
+     }
    else
      fputs("ERROR: can't get service security\n", stderr);
    return ECORE_CALLBACK_RENEW;
@@ -1144,125 +1132,6 @@ _on_cmd_service_set_auto_connect(__UNUSED__ char *cmd, char *args)
      printf(":::Service %s auto connect set to %d\n", path, auto_connect);
    else
      fputs("ERROR: can't set service auto connect\n", stderr);
-   return ECORE_CALLBACK_RENEW;
-}
-
-static Eina_Bool
-_on_cmd_service_get_setup_required(__UNUSED__ char *cmd, char *args)
-{
-   const char *path;
-   Eina_Bool setup_required;
-   E_Connman_Element *e;
-
-   if (!args)
-     {
-	fputs("ERROR: missing the service path\n", stderr);
-	return ECORE_CALLBACK_RENEW;
-     }
-   _tok(args);
-   path = args;
-
-   e = e_connman_service_get(path);
-   if (e_connman_service_setup_required_get(e, &setup_required))
-     printf(":::Service %s Setup Required = %hhu\n", path, setup_required);
-   else
-     fputs("ERROR: can't get service setup required\n", stderr);
-   return ECORE_CALLBACK_RENEW;
-}
-
-static Eina_Bool
-_on_cmd_service_get_apn(__UNUSED__ char *cmd, char *args)
-{
-   const char *apn, *path;
-   E_Connman_Element *e;
-
-   if (!args)
-     {
-	fputs("ERROR: missing the service path\n", stderr);
-	return ECORE_CALLBACK_RENEW;
-     }
-   _tok(args);
-   path = args;
-
-   e = e_connman_service_get(path);
-   if (e_connman_service_apn_get(e, &apn))
-     printf(":::Service %s APN = \"%s\"\n", path, apn);
-   else
-     fputs("ERROR: can't get service APN\n", stderr);
-   return ECORE_CALLBACK_RENEW;
-}
-
-static Eina_Bool
-_on_cmd_service_set_apn(__UNUSED__ char *cmd, char *args)
-{
-   char *apn, *path;
-   E_Connman_Element *e;
-
-   if (!args)
-     {
-	fputs("ERROR: missing the service path\n", stderr);
-	return ECORE_CALLBACK_RENEW;
-     }
-   path = args;
-   apn = _tok(args);
-
-   if (!apn)
-     {
-	fputs("ERROR: missing the apn value\n", stderr);
-	return ECORE_CALLBACK_RENEW;
-     }
-   _tok(apn);
-
-   e = e_connman_service_get(path);
-   if (e_connman_service_apn_set
-       (e, apn, _method_success_check, "service_set_apn"))
-     printf(":::Service %s APN set to \"%s\"\n", path, apn);
-   else
-     fputs("ERROR: can't set service APN\n", stderr);
-   return ECORE_CALLBACK_RENEW;
-}
-
-static Eina_Bool
-_on_cmd_service_get_mcc(__UNUSED__ char *cmd, char *args)
-{
-   const char *mcc, *path;
-   E_Connman_Element *e;
-
-   if (!args)
-     {
-	fputs("ERROR: missing the service path\n", stderr);
-	return ECORE_CALLBACK_RENEW;
-     }
-   _tok(args);
-   path = args;
-
-   e = e_connman_service_get(path);
-   if (e_connman_service_mcc_get(e, &mcc))
-     printf(":::Service %s MCC = \"%s\"\n", path, mcc);
-   else
-     fputs("ERROR: can't get service MCC\n", stderr);
-   return ECORE_CALLBACK_RENEW;
-}
-
-static Eina_Bool
-_on_cmd_service_get_mnc(__UNUSED__ char *cmd, char *args)
-{
-   const char *mnc, *path;
-   E_Connman_Element *e;
-
-   if (!args)
-     {
-	fputs("ERROR: missing the service path\n", stderr);
-	return ECORE_CALLBACK_RENEW;
-     }
-   _tok(args);
-   path = args;
-
-   e = e_connman_service_get(path);
-   if (e_connman_service_mnc_get(e, &mnc))
-     printf(":::Service %s MNC = \"%s\"\n", path, mnc);
-   else
-     fputs("ERROR: can't get service MNC\n", stderr);
    return ECORE_CALLBACK_RENEW;
 }
 
@@ -1603,29 +1472,6 @@ _on_cmd_service_get_ethernet_mtu(__UNUSED__ char *cmd, char *args)
 }
 
 static Eina_Bool
-_on_cmd_service_get_ethernet_netmask(__UNUSED__ char *cmd, char *args)
-{
-   const char *ethernet_netmask, *path;
-   E_Connman_Element *e;
-
-   if (!args)
-     {
-	fputs("ERROR: missing the service path\n", stderr);
-	return ECORE_CALLBACK_RENEW;
-     }
-   _tok(args);
-   path = args;
-
-   e = e_connman_service_get(path);
-   if (e_connman_service_ethernet_netmask_get(e, &ethernet_netmask))
-     printf(":::Service %s Ethernet Netmask = \"%s\"\n",
-	    path, ethernet_netmask);
-   else
-     fputs("ERROR: can't get service ethernet netmask\n", stderr);
-   return ECORE_CALLBACK_RENEW;
-}
-
-static Eina_Bool
 _on_cmd_technology_get_state(__UNUSED__ char *cmd, char *args)
 {
    const char *state, *path;
@@ -1737,7 +1583,6 @@ _on_input(__UNUSED__ void *data, Ecore_Fd_Handler *fd_handler)
      {"service_get_error", _on_cmd_service_get_error},
      {"service_get_name", _on_cmd_service_get_name},
      {"service_get_type", _on_cmd_service_get_type},
-     {"service_get_mode", _on_cmd_service_get_mode},
      {"service_get_security", _on_cmd_service_get_security},
      {"service_get_passphrase", _on_cmd_service_get_passphrase},
      {"service_set_passphrase", _on_cmd_service_set_passphrase},
@@ -1747,11 +1592,6 @@ _on_input(__UNUSED__ void *data, Ecore_Fd_Handler *fd_handler)
      {"service_get_immutable", _on_cmd_service_get_immutable},
      {"service_get_auto_connect", _on_cmd_service_get_auto_connect},
      {"service_set_auto_connect", _on_cmd_service_set_auto_connect},
-     {"service_get_setup_required", _on_cmd_service_get_setup_required},
-     {"service_get_apn", _on_cmd_service_get_apn},
-     {"service_set_apn", _on_cmd_service_set_apn},
-     {"service_get_mcc", _on_cmd_service_get_mcc},
-     {"service_get_mnc", _on_cmd_service_get_mnc},
      {"service_get_roaming", _on_cmd_service_get_roaming},
      {"service_get_ipv4_method", _on_cmd_service_get_ipv4_method},
      {"service_get_ipv4_address", _on_cmd_service_get_ipv4_address},
@@ -1766,7 +1606,6 @@ _on_input(__UNUSED__ void *data, Ecore_Fd_Handler *fd_handler)
      {"service_get_ethernet_method", _on_cmd_service_get_ethernet_method},
      {"service_get_ethernet_address", _on_cmd_service_get_ethernet_address},
      {"service_get_ethernet_mtu", _on_cmd_service_get_ethernet_mtu},
-     {"service_get_ethernet_netmask", _on_cmd_service_get_ethernet_netmask},
      {"technology_get_state", _on_cmd_technology_get_state},
      {"technology_get_type", _on_cmd_technology_get_type},
      {"technology_get_name", _on_cmd_technology_get_name},

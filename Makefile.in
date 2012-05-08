@@ -38,12 +38,12 @@ subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/e_dbus.spec.in $(srcdir)/ebluez.pc.in \
-	$(srcdir)/econnman.pc.in $(srcdir)/edbus.pc.in \
+	$(srcdir)/econnman-0.7x.pc.in $(srcdir)/edbus.pc.in \
 	$(srcdir)/ehal.pc.in $(srcdir)/enotify.pc.in \
 	$(srcdir)/eofono.pc.in $(srcdir)/eukit.pc.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh ltmain.sh \
-	missing
+	$(top_srcdir)/configure ABOUT-NLS AUTHORS COPYING ChangeLog \
+	INSTALL NEWS compile config.guess config.sub depcomp \
+	install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_attribute.m4 \
 	$(top_srcdir)/m4/efl_binary.m4 \
@@ -58,7 +58,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = e_dbus.spec ebluez.pc econnman.pc edbus.pc \
+CONFIG_CLEAN_FILES = e_dbus.spec ebluez.pc econnman-0.7x.pc edbus.pc \
 	ehal.pc enotify.pc eofono.pc eukit.pc
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_GEN = $(am__v_GEN_$(V))
@@ -159,6 +159,8 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DBUS_VERSION_CFLAGS = @DBUS_VERSION_CFLAGS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -172,9 +174,9 @@ EDBUS_BLUEZ_TEST_CFLAGS = @EDBUS_BLUEZ_TEST_CFLAGS@
 EDBUS_BLUEZ_TEST_LIBS = @EDBUS_BLUEZ_TEST_LIBS@
 EDBUS_BLUEZ_TEST_PRG = @EDBUS_BLUEZ_TEST_PRG@
 EDBUS_CFLAGS = @EDBUS_CFLAGS@
-EDBUS_CONNMAN_TEST_CFLAGS = @EDBUS_CONNMAN_TEST_CFLAGS@
-EDBUS_CONNMAN_TEST_LIBS = @EDBUS_CONNMAN_TEST_LIBS@
-EDBUS_CONNMAN_TEST_PRG = @EDBUS_CONNMAN_TEST_PRG@
+EDBUS_CONNMAN0_7X_TEST_CFLAGS = @EDBUS_CONNMAN0_7X_TEST_CFLAGS@
+EDBUS_CONNMAN0_7X_TEST_LIBS = @EDBUS_CONNMAN0_7X_TEST_LIBS@
+EDBUS_CONNMAN0_7X_TEST_PRG = @EDBUS_CONNMAN0_7X_TEST_PRG@
 EDBUS_LIBS = @EDBUS_LIBS@
 EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS = @EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS@
 EDBUS_NOTIFICATION_DAEMON_TEST_LIBS = @EDBUS_NOTIFICATION_DAEMON_TEST_LIBS@
@@ -234,6 +236,8 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -261,6 +265,8 @@ build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
+dbus_cflags = @dbus_cflags@
+dbus_libs = @dbus_libs@
 docdir = @docdir@
 dvidir = @dvidir@
 efl_doxygen = @efl_doxygen@
@@ -292,7 +298,7 @@ psdir = @psdir@
 release_info = @release_info@
 requirement_dbus = @requirement_dbus@
 requirement_ebluez = @requirement_ebluez@
-requirement_econnman = @requirement_econnman@
+requirement_econnman0_7x = @requirement_econnman0_7x@
 requirement_edbus = @requirement_edbus@
 requirement_ehal = @requirement_ehal@
 requirement_enotify = @requirement_enotify@
@@ -333,7 +339,7 @@ m4/ltversion.m4
 pkgconfigdir = $(libdir)/pkgconfig
 @BUILD_EHAL_TRUE@EHAL_PC = ehal.pc
 @BUILD_ENOTIFY_TRUE@ENOTIFY_PC = enotify.pc
-@BUILD_ECONNMAN_TRUE@ECONNMAN_PC = econnman.pc
+@BUILD_ECONNMAN0_7X_TRUE@ECONNMAN_PC = econnman-0.7x.pc
 @BUILD_EBLUEZ_TRUE@EBLUEZ_PC = ebluez.pc
 @BUILD_EOFONO_TRUE@EOFONO_PC = eofono.pc
 @BUILD_EUKIT_TRUE@EUKIT_PC = eukit.pc
@@ -345,7 +351,7 @@ README \
 $(pkgconfig_DATA) \
 autogen.sh \
 ebluez.pc.in \
-econnman.pc.in \
+econnman-0.7x.pc.in \
 edbus.pc.in \
 ehal.pc.in \
 enotify.pc.in \
@@ -417,7 +423,7 @@ e_dbus.spec: $(top_builddir)/config.status $(srcdir)/e_dbus.spec.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 ebluez.pc: $(top_builddir)/config.status $(srcdir)/ebluez.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-econnman.pc: $(top_builddir)/config.status $(srcdir)/econnman.pc.in
+econnman-0.7x.pc: $(top_builddir)/config.status $(srcdir)/econnman-0.7x.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 edbus.pc: $(top_builddir)/config.status $(srcdir)/edbus.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@

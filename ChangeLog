@@ -1,4 +1,59 @@
 2011-01-29  Carsten Haitzler (The Rasterman)
 
         1.0.0 release
+
+2011-02-25  Cedric BAIL
+
+	* Fix build with DSO.
+
+2011-03-19  Mike Blumenkrantz
+
+        * Fix crash in e-notify-send when invalid DBUS_SESSION_BUS_ADDRESS is specified
+
+2011-04-27  Carsten Haitzler (The Rasterman)
+
+        * Fix bug when app has no idle time (always busy), idlers
+        can't run to process edbus dispatches. Move this to an idle
+        enterer that wil be run.
+
+2011-07-26  Libor Zoubek <lzoubek@jezzovo.net>
+
+        * Add support for notification protocol 1.2 into e_dbus by
+        adding spec version string support.
+
+2011-10-27  Mike Blumenkrantz
+
+        * Added e_notification_action_id_get and e_notification_action_name_get
+
+2011-11-03  Mike Blumenkrantz
+
+        * Added more methods for manipulating notification hints
+
+2011-11-06  Mike Blumenkrantz
+
+        * Add e_notification_image_init for filling in values from an Evas_Object
+
+2011-11-11  Carsten Haitzler (The Rasterman)
+
+        * Fix DSO linking to edbus to include libdbus linking and includes
+
+2011-11-27  Mike Blumenkrantz
+
+        * Fix case where fd handler could be added twice for dbus fd
         
+2011-12-02  Carsten Haitzler (The Rasterman)
+
+        * 1.1.0 release
+
+2011-12-02  Mike Blumenkrantz
+
+        * Fixed use of dbus_message_iter_open_container in enotify to prevent crashing when sending an image
+
+2011-12-10  Mike Blumenkrantz
+
+        * Fixed use of eina_log in enotify-daemon
+
+2012-01-17 Dave Andreoli
+
+        * Fixed use of the 'object path' type in ukit
+

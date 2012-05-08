@@ -3,6 +3,7 @@
 #endif
 
 #include <string.h>
+#include <stdlib.h>
 
 #include "e_dbus_private.h"
 
@@ -21,7 +22,7 @@ struct E_DBus_Signal_Handler
 
 static void cb_signal_dispatcher(E_DBus_Connection *conn, DBusMessage *msg);
 
-/**
+/*
  * Free a signal handler
  * @param sh the signal handler to free
  */
@@ -116,17 +117,6 @@ _match_append(char *buf, int size, int *used, const char *keyword, int keyword_s
    return 1;
 }
 
-/**
- * Add a signal handler
- *
- * @param conn the dbus connection
- * @param sender name of the signal's sender
- * @param path the object path of the signal's sender
- * @param interface the signal's interface
- * @param member the signal's name
- * @param cb_signal a callback to call when the signal is received
- * @param data custom data to pass in to the callback
- */
 EAPI E_DBus_Signal_Handler *
 e_dbus_signal_handler_add(E_DBus_Connection *conn, const char *sender, const char *path, const char *interface, const char *member, E_DBus_Signal_Cb cb_signal, void *data)
 {
@@ -221,51 +211,47 @@ e_dbus_signal_handler_add(E_DBus_Connection *conn, const char *sender, const cha
 
 static int e_dbus_handler_deletions = 0;
 
-/**
- * Delete a signal handler
- *
- * @param conn the dbus connection
- * @param sh the handler to delete
- */
 EAPI void
 e_dbus_signal_handler_del(E_DBus_Connection *conn, E_DBus_Signal_Handler *sh)
 {
-  char match[DBUS_MAXIMUM_MATCH_RULE_LENGTH];
-  int len, sender_len, path_len, interface_len, member_len;
+   char match[DBUS_MAXIMUM_MATCH_RULE_LENGTH];
+   int len, sender_len, path_len, interface_len, member_len;
+
+   if (!sh) return ;
 
    if (sh->get_name_owner_pending)
      {
         dbus_pending_call_cancel(sh->get_name_owner_pending);
         sh->get_name_owner_pending = NULL;
      }
-  sh->delete_me = 1;
-  if (e_dbus_idler_active)
-  {
-    e_dbus_handler_deletions = 1;
-    return;
-  }
+   sh->delete_me = 1;
+   if (e_dbus_idler_active)
+     {
+        e_dbus_handler_deletions = 1;
+        return;
+     }
 
-  strcpy(match, "type='signal'");
-  len = sizeof("type='signal'") - 1;
+   strcpy(match, "type='signal'");
+   len = sizeof("type='signal'") - 1;
 
 #define ADD_MATCH_PIECE(PIECE)						\
-  do {									\
-     PIECE ## _len = sh->PIECE ? strlen(sh->PIECE) : 0;			\
-     if (!_match_append(match, sizeof(match), &len, #PIECE, sizeof(#PIECE) - 1, sh->PIECE, PIECE ## _len)) \
-       return;								\
-  } while (0)
+   do {									\
+      PIECE ## _len = sh->PIECE ? strlen(sh->PIECE) : 0;                \
+      if (!_match_append(match, sizeof(match), &len, #PIECE, sizeof(#PIECE) - 1, sh->PIECE, PIECE ## _len)) \
+        return;								\
+   } while (0)
 
-  ADD_MATCH_PIECE(sender);
-  ADD_MATCH_PIECE(path);
-  ADD_MATCH_PIECE(interface);
-  ADD_MATCH_PIECE(member);
+   ADD_MATCH_PIECE(sender);
+   ADD_MATCH_PIECE(path);
+   ADD_MATCH_PIECE(interface);
+   ADD_MATCH_PIECE(member);
 #undef ADD_MATCH_PIECE
 
-  dbus_bus_remove_match(conn->conn, match, NULL);
+   dbus_bus_remove_match(conn->conn, match, NULL);
 
-  if (!conn->signal_handlers) return;
-  conn->signal_handlers = eina_list_remove(conn->signal_handlers, sh);
-  e_dbus_signal_handler_free(sh);
+   if (!conn->signal_handlers) return;
+   conn->signal_handlers = eina_list_remove(conn->signal_handlers, sh);
+   e_dbus_signal_handler_free(sh);
 }
 
 static void

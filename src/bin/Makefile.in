@@ -15,6 +15,7 @@
 
 @SET_MAKE@
 
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -40,14 +41,14 @@ bin_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
 @BUILD_EDBUS_TEST_TRUE@am__append_1 = e_dbus_test
 @BUILD_EDBUS_TEST_CLIENT_TRUE@am__append_2 = e_dbus_test_client
 @BUILD_EDBUS_BLUEZ_TEST_TRUE@am__append_3 = e_dbus_bluez_test
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@am__append_4 = e_dbus_connman_test
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@am__append_4 = e_dbus_connman0_7x_test
 @BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@am__append_5 = e_dbus_notification_daemon
 @BUILD_EDBUS_NOTIFY_SEND_TRUE@am__append_6 = e-notify-send
 @BUILD_EDBUS_NOTIFY_TEST_TRUE@am__append_7 = e_dbus_notify
 @BUILD_EDBUS_OFONO_TEST_TRUE@am__append_8 = e_dbus_ofono_test
 @BUILD_EDBUS_UKIT_TEST_TRUE@am__append_9 = e_dbus_ukit_test
 noinst_PROGRAMS = $(am__EXEEXT_10)
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@am__append_10 = e_dbus_connman_test_api
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@am__append_10 = e_dbus_connman0_7x_test_api
 subdir = src/bin
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -69,16 +70,15 @@ CONFIG_CLEAN_VPATH_FILES =
 @BUILD_EDBUS_TEST_CLIENT_TRUE@	e_dbus_test_client$(EXEEXT)
 @BUILD_EDBUS_BLUEZ_TEST_TRUE@am__EXEEXT_3 =  \
 @BUILD_EDBUS_BLUEZ_TEST_TRUE@	e_dbus_bluez_test$(EXEEXT)
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@am__EXEEXT_4 =  \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@	e_dbus_connman_test$(EXEEXT)
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@am__EXEEXT_4 = e_dbus_connman0_7x_test$(EXEEXT)
 @BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@am__EXEEXT_5 = e_dbus_notification_daemon$(EXEEXT)
 @BUILD_EDBUS_NOTIFY_SEND_TRUE@am__EXEEXT_6 = e-notify-send$(EXEEXT)
 @BUILD_EDBUS_NOTIFY_TEST_TRUE@am__EXEEXT_7 = e_dbus_notify$(EXEEXT)
 @BUILD_EDBUS_OFONO_TEST_TRUE@am__EXEEXT_8 =  \
 @BUILD_EDBUS_OFONO_TEST_TRUE@	e_dbus_ofono_test$(EXEEXT)
 @BUILD_EDBUS_UKIT_TEST_TRUE@am__EXEEXT_9 = e_dbus_ukit_test$(EXEEXT)
-am__installdirs = "$(DESTDIR)$(bindir)"
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@am__EXEEXT_10 = e_dbus_connman_test_api$(EXEEXT)
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(logodir)"
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@am__EXEEXT_10 = e_dbus_connman0_7x_test_api$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am__e_notify_send_SOURCES_DIST = notify-send.c
 @BUILD_EDBUS_NOTIFY_SEND_TRUE@am_e_notify_send_OBJECTS = e_notify_send-notify-send.$(OBJEXT)
@@ -94,17 +94,19 @@ am__e_dbus_bluez_test_SOURCES_DIST = e_dbus_bluez_test.c
 e_dbus_bluez_test_OBJECTS = $(am_e_dbus_bluez_test_OBJECTS)
 @BUILD_EDBUS_BLUEZ_TEST_TRUE@e_dbus_bluez_test_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la \
 @BUILD_EDBUS_BLUEZ_TEST_TRUE@	$(top_builddir)/src/lib/bluez/libebluez.la
-am__e_dbus_connman_test_SOURCES_DIST = e_dbus_connman_test.c
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@am_e_dbus_connman_test_OBJECTS = e_dbus_connman_test-e_dbus_connman_test.$(OBJEXT)
-e_dbus_connman_test_OBJECTS = $(am_e_dbus_connman_test_OBJECTS)
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@	$(top_builddir)/src/lib/connman/libeconnman.la
-am__e_dbus_connman_test_api_SOURCES_DIST = e_dbus_connman_test_api.c
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@am_e_dbus_connman_test_api_OBJECTS = e_dbus_connman_test_api-e_dbus_connman_test_api.$(OBJEXT)
-e_dbus_connman_test_api_OBJECTS =  \
-	$(am_e_dbus_connman_test_api_OBJECTS)
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_api_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@	$(top_builddir)/src/lib/connman/libeconnman.la
+am__e_dbus_connman0_7x_test_SOURCES_DIST = e_dbus_connman0_7x_test.c
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@am_e_dbus_connman0_7x_test_OBJECTS = e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.$(OBJEXT)
+e_dbus_connman0_7x_test_OBJECTS =  \
+	$(am_e_dbus_connman0_7x_test_OBJECTS)
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@e_dbus_connman0_7x_test_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@	$(top_builddir)/src/lib/connman0_7x/libeconnman0_7x.la
+am__e_dbus_connman0_7x_test_api_SOURCES_DIST =  \
+	e_dbus_connman0_7x_test_api.c
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@am_e_dbus_connman0_7x_test_api_OBJECTS = e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.$(OBJEXT)
+e_dbus_connman0_7x_test_api_OBJECTS =  \
+	$(am_e_dbus_connman0_7x_test_api_OBJECTS)
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@e_dbus_connman0_7x_test_api_DEPENDENCIES = $(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@	$(top_builddir)/src/lib/connman0_7x/libeconnman0_7x.la
 am__e_dbus_notification_daemon_SOURCES_DIST = notification_daemon.c
 @BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@am_e_dbus_notification_daemon_OBJECTS = e_dbus_notification_daemon-notification_daemon.$(OBJEXT)
 e_dbus_notification_daemon_OBJECTS =  \
@@ -165,21 +167,43 @@ AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
 SOURCES = $(e_notify_send_SOURCES) $(e_dbus_bluez_test_SOURCES) \
-	$(e_dbus_connman_test_SOURCES) \
-	$(e_dbus_connman_test_api_SOURCES) \
+	$(e_dbus_connman0_7x_test_SOURCES) \
+	$(e_dbus_connman0_7x_test_api_SOURCES) \
 	$(e_dbus_notification_daemon_SOURCES) $(e_dbus_notify_SOURCES) \
 	$(e_dbus_ofono_test_SOURCES) $(e_dbus_test_SOURCES) \
 	$(e_dbus_test_client_SOURCES) $(e_dbus_ukit_test_SOURCES)
 DIST_SOURCES = $(am__e_notify_send_SOURCES_DIST) \
 	$(am__e_dbus_bluez_test_SOURCES_DIST) \
-	$(am__e_dbus_connman_test_SOURCES_DIST) \
-	$(am__e_dbus_connman_test_api_SOURCES_DIST) \
+	$(am__e_dbus_connman0_7x_test_SOURCES_DIST) \
+	$(am__e_dbus_connman0_7x_test_api_SOURCES_DIST) \
 	$(am__e_dbus_notification_daemon_SOURCES_DIST) \
 	$(am__e_dbus_notify_SOURCES_DIST) \
 	$(am__e_dbus_ofono_test_SOURCES_DIST) \
 	$(am__e_dbus_test_SOURCES_DIST) \
 	$(am__e_dbus_test_client_SOURCES_DIST) \
 	$(am__e_dbus_ukit_test_SOURCES_DIST)
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
+am__install_max = 40
+am__nobase_strip_setup = \
+  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
+am__nobase_strip = \
+  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
+am__nobase_list = $(am__nobase_strip_setup); \
+  for p in $$list; do echo "$$p $$p"; done | \
+  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
+  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
+    if (++n[$$2] == $(am__install_max)) \
+      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
+    END { for (dir in files) print dir, files[dir] }'
+am__base_list = \
+  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
+  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
+DATA = $(logo_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -199,6 +223,8 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DBUS_VERSION_CFLAGS = @DBUS_VERSION_CFLAGS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -212,9 +238,9 @@ EDBUS_BLUEZ_TEST_CFLAGS = @EDBUS_BLUEZ_TEST_CFLAGS@
 EDBUS_BLUEZ_TEST_LIBS = @EDBUS_BLUEZ_TEST_LIBS@
 EDBUS_BLUEZ_TEST_PRG = @EDBUS_BLUEZ_TEST_PRG@
 EDBUS_CFLAGS = @EDBUS_CFLAGS@
-EDBUS_CONNMAN_TEST_CFLAGS = @EDBUS_CONNMAN_TEST_CFLAGS@
-EDBUS_CONNMAN_TEST_LIBS = @EDBUS_CONNMAN_TEST_LIBS@
-EDBUS_CONNMAN_TEST_PRG = @EDBUS_CONNMAN_TEST_PRG@
+EDBUS_CONNMAN0_7X_TEST_CFLAGS = @EDBUS_CONNMAN0_7X_TEST_CFLAGS@
+EDBUS_CONNMAN0_7X_TEST_LIBS = @EDBUS_CONNMAN0_7X_TEST_LIBS@
+EDBUS_CONNMAN0_7X_TEST_PRG = @EDBUS_CONNMAN0_7X_TEST_PRG@
 EDBUS_LIBS = @EDBUS_LIBS@
 EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS = @EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS@
 EDBUS_NOTIFICATION_DAEMON_TEST_LIBS = @EDBUS_NOTIFICATION_DAEMON_TEST_LIBS@
@@ -274,6 +300,8 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -301,6 +329,8 @@ build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
+dbus_cflags = @dbus_cflags@
+dbus_libs = @dbus_libs@
 docdir = @docdir@
 dvidir = @dvidir@
 efl_doxygen = @efl_doxygen@
@@ -332,7 +362,7 @@ psdir = @psdir@
 release_info = @release_info@
 requirement_dbus = @requirement_dbus@
 requirement_ebluez = @requirement_ebluez@
-requirement_econnman = @requirement_econnman@
+requirement_econnman0_7x = @requirement_econnman0_7x@
 requirement_edbus = @requirement_edbus@
 requirement_ehal = @requirement_ehal@
 requirement_enotify = @requirement_enotify@
@@ -348,15 +378,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 version_info = @version_info@
 MAINTAINERCLEANFILES = Makefile.in
-EDBUS_CPPFLAGS = \
--I$(top_srcdir)/src/lib/dbus \
--I$(top_srcdir)/src/lib/notification \
--I$(top_srcdir)/src/lib/connman \
--I$(top_srcdir)/src/lib/bluez \
--I$(top_srcdir)/src/lib/ofono \
--I$(top_srcdir)/src/lib/ukit \
-@EDBUS_CFLAGS@
+AM_CFLAGS = \
+-DPACKAGE_DATA_DIR=\"$(datadir)/$(PACKAGE)\"
 
+EDBUS_CPPFLAGS = @EDBUS_CFLAGS@
 @BUILD_EDBUS_TEST_TRUE@e_dbus_test_SOURCES = test.c
 @BUILD_EDBUS_TEST_TRUE@e_dbus_test_CPPFLAGS = \
 @BUILD_EDBUS_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
@@ -386,27 +411,27 @@ EDBUS_CPPFLAGS = \
 @BUILD_EDBUS_BLUEZ_TEST_TRUE@$(top_builddir)/src/lib/bluez/libebluez.la \
 @BUILD_EDBUS_BLUEZ_TEST_TRUE@@EDBUS_BLUEZ_TEST_LIBS@
 
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_SOURCES = e_dbus_connman_test.c
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_CPPFLAGS = \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@-I$(top_srcdir)/src/lib/connman \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@@EDBUS_CONNMAN_TEST_CFLAGS@
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@e_dbus_connman0_7x_test_SOURCES = e_dbus_connman0_7x_test.c
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@e_dbus_connman0_7x_test_CPPFLAGS = \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@-I$(top_srcdir)/src/lib \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@@EDBUS_CONNMAN0_7X_TEST_CFLAGS@
 
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_LDADD = \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@$(top_builddir)/src/lib/connman/libeconnman.la \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@@EDBUS_CONNMAN_TEST_LIBS@
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@e_dbus_connman0_7x_test_LDADD = \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@$(top_builddir)/src/lib/connman0_7x/libeconnman0_7x.la \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@@EDBUS_CONNMAN0_7X_TEST_LIBS@
 
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_api_SOURCES = e_dbus_connman_test_api.c
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_api_CPPFLAGS = \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@-I$(top_srcdir)/src/lib/connman \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@@EDBUS_CONNMAN_TEST_CFLAGS@
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@e_dbus_connman0_7x_test_api_SOURCES = e_dbus_connman0_7x_test_api.c
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@e_dbus_connman0_7x_test_api_CPPFLAGS = \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@-I$(top_srcdir)/src/lib \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@@EDBUS_CONNMAN0_7X_TEST_CFLAGS@
 
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@e_dbus_connman_test_api_LDADD = \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@$(top_builddir)/src/lib/connman/libeconnman.la \
-@BUILD_EDBUS_CONNMAN_TEST_TRUE@@EDBUS_CONNMAN_TEST_LIBS@
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@e_dbus_connman0_7x_test_api_LDADD = \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@$(top_builddir)/src/lib/connman0_7x/libeconnman0_7x.la \
+@BUILD_EDBUS_CONNMAN0_7X_TEST_TRUE@@EDBUS_CONNMAN0_7X_TEST_LIBS@
 
 ENOTIFY_LIBS = $(top_builddir)/src/lib/notification/libenotify.la
 @BUILD_EDBUS_NOTIFICATION_DAEMON_TEST_TRUE@e_dbus_notification_daemon_SOURCES = notification_daemon.c
@@ -431,6 +456,9 @@ ENOTIFY_LIBS = $(top_builddir)/src/lib/notification/libenotify.la
 @BUILD_EDBUS_NOTIFY_SEND_TRUE@$(top_builddir)/src/lib/dbus/libedbus.la \
 @BUILD_EDBUS_NOTIFY_SEND_TRUE@@EDBUS_NOTIFY_SEND_LIBS@
 
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@EXTRA_DIST = logo.png
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@logodir = $(datadir)/e_dbus
+@BUILD_EDBUS_NOTIFY_TEST_TRUE@logo_DATA = logo.png
 @BUILD_EDBUS_NOTIFY_TEST_TRUE@e_dbus_notify_SOURCES = notify.c
 @BUILD_EDBUS_NOTIFY_TEST_TRUE@e_dbus_notify_CPPFLAGS = \
 @BUILD_EDBUS_NOTIFY_TEST_TRUE@-I$(top_srcdir)/src/lib/dbus \
@@ -556,12 +584,12 @@ e-notify-send$(EXEEXT): $(e_notify_send_OBJECTS) $(e_notify_send_DEPENDENCIES)
 e_dbus_bluez_test$(EXEEXT): $(e_dbus_bluez_test_OBJECTS) $(e_dbus_bluez_test_DEPENDENCIES) 
 	@rm -f e_dbus_bluez_test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(e_dbus_bluez_test_OBJECTS) $(e_dbus_bluez_test_LDADD) $(LIBS)
-e_dbus_connman_test$(EXEEXT): $(e_dbus_connman_test_OBJECTS) $(e_dbus_connman_test_DEPENDENCIES) 
-	@rm -f e_dbus_connman_test$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(e_dbus_connman_test_OBJECTS) $(e_dbus_connman_test_LDADD) $(LIBS)
-e_dbus_connman_test_api$(EXEEXT): $(e_dbus_connman_test_api_OBJECTS) $(e_dbus_connman_test_api_DEPENDENCIES) 
-	@rm -f e_dbus_connman_test_api$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(e_dbus_connman_test_api_OBJECTS) $(e_dbus_connman_test_api_LDADD) $(LIBS)
+e_dbus_connman0_7x_test$(EXEEXT): $(e_dbus_connman0_7x_test_OBJECTS) $(e_dbus_connman0_7x_test_DEPENDENCIES) 
+	@rm -f e_dbus_connman0_7x_test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(e_dbus_connman0_7x_test_OBJECTS) $(e_dbus_connman0_7x_test_LDADD) $(LIBS)
+e_dbus_connman0_7x_test_api$(EXEEXT): $(e_dbus_connman0_7x_test_api_OBJECTS) $(e_dbus_connman0_7x_test_api_DEPENDENCIES) 
+	@rm -f e_dbus_connman0_7x_test_api$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(e_dbus_connman0_7x_test_api_OBJECTS) $(e_dbus_connman0_7x_test_api_LDADD) $(LIBS)
 e_dbus_notification_daemon$(EXEEXT): $(e_dbus_notification_daemon_OBJECTS) $(e_dbus_notification_daemon_DEPENDENCIES) 
 	@rm -f e_dbus_notification_daemon$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(e_dbus_notification_daemon_OBJECTS) $(e_dbus_notification_daemon_LDADD) $(LIBS)
@@ -588,8 +616,8 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_dbus_bluez_test-e_dbus_bluez_test.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_dbus_connman_test-e_dbus_connman_test.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_dbus_connman_test_api-e_dbus_connman_test_api.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_dbus_notification_daemon-notification_daemon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_dbus_notify-notify.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/e_dbus_ofono_test-e_dbus_ofono_test.Po@am__quote@
@@ -654,37 +682,37 @@ e_dbus_bluez_test-e_dbus_bluez_test.obj: e_dbus_bluez_test.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_bluez_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o e_dbus_bluez_test-e_dbus_bluez_test.obj `if test -f 'e_dbus_bluez_test.c'; then $(CYGPATH_W) 'e_dbus_bluez_test.c'; else $(CYGPATH_W) '$(srcdir)/e_dbus_bluez_test.c'; fi`
 
-e_dbus_connman_test-e_dbus_connman_test.o: e_dbus_connman_test.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_dbus_connman_test-e_dbus_connman_test.o -MD -MP -MF $(DEPDIR)/e_dbus_connman_test-e_dbus_connman_test.Tpo -c -o e_dbus_connman_test-e_dbus_connman_test.o `test -f 'e_dbus_connman_test.c' || echo '$(srcdir)/'`e_dbus_connman_test.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/e_dbus_connman_test-e_dbus_connman_test.Tpo $(DEPDIR)/e_dbus_connman_test-e_dbus_connman_test.Po
+e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.o: e_dbus_connman0_7x_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman0_7x_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.o -MD -MP -MF $(DEPDIR)/e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.Tpo -c -o e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.o `test -f 'e_dbus_connman0_7x_test.c' || echo '$(srcdir)/'`e_dbus_connman0_7x_test.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.Tpo $(DEPDIR)/e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.Po
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='e_dbus_connman_test.c' object='e_dbus_connman_test-e_dbus_connman_test.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='e_dbus_connman0_7x_test.c' object='e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o e_dbus_connman_test-e_dbus_connman_test.o `test -f 'e_dbus_connman_test.c' || echo '$(srcdir)/'`e_dbus_connman_test.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman0_7x_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.o `test -f 'e_dbus_connman0_7x_test.c' || echo '$(srcdir)/'`e_dbus_connman0_7x_test.c
 
-e_dbus_connman_test-e_dbus_connman_test.obj: e_dbus_connman_test.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_dbus_connman_test-e_dbus_connman_test.obj -MD -MP -MF $(DEPDIR)/e_dbus_connman_test-e_dbus_connman_test.Tpo -c -o e_dbus_connman_test-e_dbus_connman_test.obj `if test -f 'e_dbus_connman_test.c'; then $(CYGPATH_W) 'e_dbus_connman_test.c'; else $(CYGPATH_W) '$(srcdir)/e_dbus_connman_test.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/e_dbus_connman_test-e_dbus_connman_test.Tpo $(DEPDIR)/e_dbus_connman_test-e_dbus_connman_test.Po
+e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.obj: e_dbus_connman0_7x_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman0_7x_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.obj -MD -MP -MF $(DEPDIR)/e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.Tpo -c -o e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.obj `if test -f 'e_dbus_connman0_7x_test.c'; then $(CYGPATH_W) 'e_dbus_connman0_7x_test.c'; else $(CYGPATH_W) '$(srcdir)/e_dbus_connman0_7x_test.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.Tpo $(DEPDIR)/e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.Po
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='e_dbus_connman_test.c' object='e_dbus_connman_test-e_dbus_connman_test.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='e_dbus_connman0_7x_test.c' object='e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o e_dbus_connman_test-e_dbus_connman_test.obj `if test -f 'e_dbus_connman_test.c'; then $(CYGPATH_W) 'e_dbus_connman_test.c'; else $(CYGPATH_W) '$(srcdir)/e_dbus_connman_test.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman0_7x_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o e_dbus_connman0_7x_test-e_dbus_connman0_7x_test.obj `if test -f 'e_dbus_connman0_7x_test.c'; then $(CYGPATH_W) 'e_dbus_connman0_7x_test.c'; else $(CYGPATH_W) '$(srcdir)/e_dbus_connman0_7x_test.c'; fi`
 
-e_dbus_connman_test_api-e_dbus_connman_test_api.o: e_dbus_connman_test_api.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman_test_api_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_dbus_connman_test_api-e_dbus_connman_test_api.o -MD -MP -MF $(DEPDIR)/e_dbus_connman_test_api-e_dbus_connman_test_api.Tpo -c -o e_dbus_connman_test_api-e_dbus_connman_test_api.o `test -f 'e_dbus_connman_test_api.c' || echo '$(srcdir)/'`e_dbus_connman_test_api.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/e_dbus_connman_test_api-e_dbus_connman_test_api.Tpo $(DEPDIR)/e_dbus_connman_test_api-e_dbus_connman_test_api.Po
+e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.o: e_dbus_connman0_7x_test_api.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman0_7x_test_api_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.o -MD -MP -MF $(DEPDIR)/e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.Tpo -c -o e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.o `test -f 'e_dbus_connman0_7x_test_api.c' || echo '$(srcdir)/'`e_dbus_connman0_7x_test_api.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.Tpo $(DEPDIR)/e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.Po
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='e_dbus_connman_test_api.c' object='e_dbus_connman_test_api-e_dbus_connman_test_api.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='e_dbus_connman0_7x_test_api.c' object='e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman_test_api_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o e_dbus_connman_test_api-e_dbus_connman_test_api.o `test -f 'e_dbus_connman_test_api.c' || echo '$(srcdir)/'`e_dbus_connman_test_api.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman0_7x_test_api_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.o `test -f 'e_dbus_connman0_7x_test_api.c' || echo '$(srcdir)/'`e_dbus_connman0_7x_test_api.c
 
-e_dbus_connman_test_api-e_dbus_connman_test_api.obj: e_dbus_connman_test_api.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman_test_api_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_dbus_connman_test_api-e_dbus_connman_test_api.obj -MD -MP -MF $(DEPDIR)/e_dbus_connman_test_api-e_dbus_connman_test_api.Tpo -c -o e_dbus_connman_test_api-e_dbus_connman_test_api.obj `if test -f 'e_dbus_connman_test_api.c'; then $(CYGPATH_W) 'e_dbus_connman_test_api.c'; else $(CYGPATH_W) '$(srcdir)/e_dbus_connman_test_api.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/e_dbus_connman_test_api-e_dbus_connman_test_api.Tpo $(DEPDIR)/e_dbus_connman_test_api-e_dbus_connman_test_api.Po
+e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.obj: e_dbus_connman0_7x_test_api.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman0_7x_test_api_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.obj -MD -MP -MF $(DEPDIR)/e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.Tpo -c -o e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.obj `if test -f 'e_dbus_connman0_7x_test_api.c'; then $(CYGPATH_W) 'e_dbus_connman0_7x_test_api.c'; else $(CYGPATH_W) '$(srcdir)/e_dbus_connman0_7x_test_api.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.Tpo $(DEPDIR)/e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.Po
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='e_dbus_connman_test_api.c' object='e_dbus_connman_test_api-e_dbus_connman_test_api.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='e_dbus_connman0_7x_test_api.c' object='e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman_test_api_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o e_dbus_connman_test_api-e_dbus_connman_test_api.obj `if test -f 'e_dbus_connman_test_api.c'; then $(CYGPATH_W) 'e_dbus_connman_test_api.c'; else $(CYGPATH_W) '$(srcdir)/e_dbus_connman_test_api.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_connman0_7x_test_api_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o e_dbus_connman0_7x_test_api-e_dbus_connman0_7x_test_api.obj `if test -f 'e_dbus_connman0_7x_test_api.c'; then $(CYGPATH_W) 'e_dbus_connman0_7x_test_api.c'; else $(CYGPATH_W) '$(srcdir)/e_dbus_connman0_7x_test_api.c'; fi`
 
 e_dbus_notification_daemon-notification_daemon.o: notification_daemon.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(e_dbus_notification_daemon_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT e_dbus_notification_daemon-notification_daemon.o -MD -MP -MF $(DEPDIR)/e_dbus_notification_daemon-notification_daemon.Tpo -c -o e_dbus_notification_daemon-notification_daemon.o `test -f 'notification_daemon.c' || echo '$(srcdir)/'`notification_daemon.c
@@ -787,6 +815,26 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-logoDATA: $(logo_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(logodir)" || $(MKDIR_P) "$(DESTDIR)$(logodir)"
+	@list='$(logo_DATA)'; test -n "$(logodir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(logodir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(logodir)" || exit $$?; \
+	done
+
+uninstall-logoDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(logo_DATA)'; test -n "$(logodir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(logodir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(logodir)" && rm -f $$files
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -872,9 +920,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(PROGRAMS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(logodir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -926,7 +974,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-logoDATA
 
 install-dvi: install-dvi-am
 
@@ -972,7 +1020,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS
+uninstall-am: uninstall-binPROGRAMS uninstall-logoDATA
 
 .MAKE: install-am install-strip
 
@@ -983,12 +1031,13 @@ uninstall-am: uninstall-binPROGRAMS
 	html-am info info-am install install-am install-binPROGRAMS \
 	install-data install-data-am install-dvi install-dvi-am \
 	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-binPROGRAMS
+	install-info install-info-am install-logoDATA install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-logoDATA
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

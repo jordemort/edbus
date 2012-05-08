@@ -34,7 +34,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = doc
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(srcdir)/Doxyfile.in $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_attribute.m4 \
 	$(top_srcdir)/m4/efl_binary.m4 \
@@ -47,7 +48,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = Doxyfile
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
@@ -74,6 +75,8 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DBUS_VERSION_CFLAGS = @DBUS_VERSION_CFLAGS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -87,9 +90,9 @@ EDBUS_BLUEZ_TEST_CFLAGS = @EDBUS_BLUEZ_TEST_CFLAGS@
 EDBUS_BLUEZ_TEST_LIBS = @EDBUS_BLUEZ_TEST_LIBS@
 EDBUS_BLUEZ_TEST_PRG = @EDBUS_BLUEZ_TEST_PRG@
 EDBUS_CFLAGS = @EDBUS_CFLAGS@
-EDBUS_CONNMAN_TEST_CFLAGS = @EDBUS_CONNMAN_TEST_CFLAGS@
-EDBUS_CONNMAN_TEST_LIBS = @EDBUS_CONNMAN_TEST_LIBS@
-EDBUS_CONNMAN_TEST_PRG = @EDBUS_CONNMAN_TEST_PRG@
+EDBUS_CONNMAN0_7X_TEST_CFLAGS = @EDBUS_CONNMAN0_7X_TEST_CFLAGS@
+EDBUS_CONNMAN0_7X_TEST_LIBS = @EDBUS_CONNMAN0_7X_TEST_LIBS@
+EDBUS_CONNMAN0_7X_TEST_PRG = @EDBUS_CONNMAN0_7X_TEST_PRG@
 EDBUS_LIBS = @EDBUS_LIBS@
 EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS = @EDBUS_NOTIFICATION_DAEMON_TEST_CFLAGS@
 EDBUS_NOTIFICATION_DAEMON_TEST_LIBS = @EDBUS_NOTIFICATION_DAEMON_TEST_LIBS@
@@ -149,6 +152,8 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -176,6 +181,8 @@ build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
+dbus_cflags = @dbus_cflags@
+dbus_libs = @dbus_libs@
 docdir = @docdir@
 dvidir = @dvidir@
 efl_doxygen = @efl_doxygen@
@@ -207,7 +214,7 @@ psdir = @psdir@
 release_info = @release_info@
 requirement_dbus = @requirement_dbus@
 requirement_ebluez = @requirement_ebluez@
-requirement_econnman = @requirement_econnman@
+requirement_econnman0_7x = @requirement_econnman0_7x@
 requirement_edbus = @requirement_edbus@
 requirement_ehal = @requirement_ehal@
 requirement_enotify = @requirement_enotify@
@@ -224,7 +231,7 @@ top_srcdir = @top_srcdir@
 version_info = @version_info@
 MAINTAINERCLEANFILES = Makefile.in
 PACKAGE_DOCNAME = $(PACKAGE_TARNAME)-$(PACKAGE_VERSION)-doc
-EXTRA_DIST = Doxyfile $(wildcard images/*.*) e.css head.html foot.html
+EXTRA_DIST = Doxyfile.in $(wildcard images/*.*) e.css head.html foot.html
 all: all-am
 
 .SUFFIXES:
@@ -258,6 +265,8 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+Doxyfile: $(top_builddir)/config.status $(srcdir)/Doxyfile.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -416,18 +425,18 @@ uninstall-am:
 .PHONY: doc
 
 @EFL_BUILD_DOC_TRUE@doc-clean:
-@EFL_BUILD_DOC_TRUE@	rm -rf html/ latex/ $(PACKAGE_DOCNAME).tar*
+@EFL_BUILD_DOC_TRUE@	rm -rf html/ latex/ $(top_builddir)/$(PACKAGE_DOCNAME).tar*
 
 @EFL_BUILD_DOC_TRUE@doc: all
 @EFL_BUILD_DOC_TRUE@	$(efl_doxygen)
-@EFL_BUILD_DOC_TRUE@	cp images/* html/
+@EFL_BUILD_DOC_TRUE@	cp $(srcdir)/images/* html/
 @EFL_BUILD_DOC_TRUE@	rm -rf $(PACKAGE_DOCNAME).tar*
 @EFL_BUILD_DOC_TRUE@	mkdir -p $(PACKAGE_DOCNAME)/doc
 @EFL_BUILD_DOC_TRUE@	cp -R html/ latex/ $(PACKAGE_DOCNAME)/doc
 @EFL_BUILD_DOC_TRUE@	tar cf $(PACKAGE_DOCNAME).tar $(PACKAGE_DOCNAME)/
 @EFL_BUILD_DOC_TRUE@	bzip2 -9 $(PACKAGE_DOCNAME).tar
 @EFL_BUILD_DOC_TRUE@	rm -rf $(PACKAGE_DOCNAME)/
-@EFL_BUILD_DOC_TRUE@	mv $(PACKAGE_DOCNAME).tar.bz2 $(top_srcdir)
+@EFL_BUILD_DOC_TRUE@	mv $(PACKAGE_DOCNAME).tar.bz2 $(top_builddir)
 
 @EFL_BUILD_DOC_TRUE@clean-local: doc-clean
 

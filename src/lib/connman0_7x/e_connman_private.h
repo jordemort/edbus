@@ -24,7 +24,15 @@ void *    alloca (size_t);
 #include <Eina.h>
 #include <eina_safety_checks.h>
 
+#define E_CONNMAN_I_KNOW_THIS_API_IS_SUBJECT_TO_CHANGE 1
 #include "E_Connman.h"
+
+typedef struct _E_Connman_Array E_Connman_Array;
+struct _E_Connman_Array
+{
+   int         type;
+   Eina_Array *array;
+};
 
 static const char manager_path[] = "/";
 
@@ -34,12 +42,12 @@ extern const char *e_connman_iface_service;
 extern const char *e_connman_iface_connection;
 extern const char *e_connman_iface_technology;
 
-extern const char *e_connman_prop_available;
-extern const char *e_connman_prop_connections;
-extern const char *e_connman_prop_default;
 extern const char *e_connman_prop_ipv4;
 extern const char *e_connman_prop_ipv4_configuration;
 extern const char *e_connman_prop_ethernet;
+extern const char *e_connman_prop_interface;
+extern const char *e_connman_prop_speed;
+extern const char *e_connman_prop_duplex;
 extern const char *e_connman_prop_method;
 extern const char *e_connman_prop_address;
 extern const char *e_connman_prop_gateway;
@@ -47,33 +55,35 @@ extern const char *e_connman_prop_netmask;
 extern const char *e_connman_prop_mtu;
 extern const char *e_connman_prop_name;
 extern const char *e_connman_prop_offline_mode;
-extern const char *e_connman_prop_policy;
-extern const char *e_connman_prop_priority;
 extern const char *e_connman_prop_profiles;
 extern const char *e_connman_prop_profile_active;
 extern const char *e_connman_prop_services;
 extern const char *e_connman_prop_technologies;
-extern const char *e_connman_prop_remember;
 extern const char *e_connman_prop_state;
 extern const char *e_connman_prop_strength;
 extern const char *e_connman_prop_type;
 extern const char *e_connman_prop_error;
-extern const char *e_connman_prop_mode;
 extern const char *e_connman_prop_security;
 extern const char *e_connman_prop_passphrase;
 extern const char *e_connman_prop_passphrase_required;
 extern const char *e_connman_prop_favorite;
 extern const char *e_connman_prop_immutable;
 extern const char *e_connman_prop_auto_connect;
-extern const char *e_connman_prop_setup_required;
-extern const char *e_connman_prop_apn;
-extern const char *e_connman_prop_mcc;
-extern const char *e_connman_prop_mnc;
 extern const char *e_connman_prop_roaming;
 extern const char *e_connman_prop_technology_default;
 extern const char *e_connman_prop_technologies_available;
 extern const char *e_connman_prop_technologies_enabled;
 extern const char *e_connman_prop_technologies_connected;
+extern const char *e_connman_prop_login_required;
+extern const char *e_connman_prop_nameservers;
+extern const char *e_connman_prop_nameservers_configuration;
+extern const char *e_connman_prop_domains;
+extern const char *e_connman_prop_domains_configuration;
+extern const char *e_connman_prop_proxy;
+extern const char *e_connman_prop_proxy_configuration;
+extern const char *e_connman_prop_url;
+extern const char *e_connman_prop_servers;
+extern const char *e_connman_prop_excludes;
 
 extern int _e_dbus_connman_log_dom;
 
@@ -96,10 +106,22 @@ _dbus_callback_check_and_init(DBusMessage *msg, DBusMessageIter *itr, DBusError 
 {
    if (!msg)
      {
+        if (err && (err->name[0] == 'C'))
+          return EINA_FALSE;
         if (err)
-           ERR("an error was reported by server: "
-               "name=\"%s\", message=\"%s\"",
-               err->name, err->message);
+          {
+             /* dont keep reporting the same err again and again */
+             static char perr[256] = {0};
+             
+             if (!(!strncmp(perr, err->name, sizeof(perr) - 1)))
+               {
+                  ERR("an error was reported by server: "
+                      "name=\"%s\", message=\"%s\"",
+                      err->name, err->message);
+                  strncpy(perr, err->name, sizeof(perr) - 1);
+                  perr[sizeof(perr) - 1] = 0;
+               }
+          }
         else
            ERR("callback without message arguments!");
 

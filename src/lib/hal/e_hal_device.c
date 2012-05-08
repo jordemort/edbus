@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include <E_Hal.h>
 #include "e_hal_private.h"
 
@@ -269,18 +271,23 @@ e_hal_device_volume_mount(E_DBus_Connection *conn, const char *udi, const char *
   dbus_message_iter_init_append(msg, &iter);
   dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &mount_point);
   dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &fstype);
-  dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING_AS_STRING, &subiter);
-
-  if (options)
+  if (dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING_AS_STRING, &subiter))
   {
-    const char *opt;
-
-    EINA_LIST_FOREACH(options, l, opt)
+    if (options)
     {
-      dbus_message_iter_append_basic(&subiter, DBUS_TYPE_STRING, &opt);
+      const char *opt;
+       
+      EINA_LIST_FOREACH(options, l, opt)
+      {
+        dbus_message_iter_append_basic(&subiter, DBUS_TYPE_STRING, &opt);
+      }
     }
+    dbus_message_iter_close_container(&iter, &subiter);
   }
-  dbus_message_iter_close_container(&iter, &subiter) ;
+  else
+  {
+    ERR("dbus_message_iter_open_container() failed");
+  }
 
   ret = e_dbus_method_call_send(conn, msg, NULL, cb_func, NULL, -1, data);
   dbus_message_unref(msg);
@@ -309,17 +316,23 @@ e_hal_device_volume_unmount(E_DBus_Connection *conn, const char *udi, Eina_List 
   msg = e_hal_device_volume_call_new(udi, "Unmount");
 
   dbus_message_iter_init_append(msg, &iter);
-  dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING_AS_STRING, &subiter);
-  if (options)
+  if (dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING_AS_STRING, &subiter))
   {
-    const char *opt;
-
-    EINA_LIST_FOREACH(options, l, opt)
+    if (options)
     {
-      dbus_message_iter_append_basic(&subiter, DBUS_TYPE_STRING, &opt);
+      const char *opt;
+       
+      EINA_LIST_FOREACH(options, l, opt)
+      {
+        dbus_message_iter_append_basic(&subiter, DBUS_TYPE_STRING, &opt);
+      }
     }
+    dbus_message_iter_close_container(&iter, &subiter);
   }
-  dbus_message_iter_close_container(&iter, &subiter) ;
+  else
+  {
+    ERR("dbus_message_iter_open_container() failed");
+  }
 
   ret = e_dbus_method_call_send(conn, msg, NULL, cb_func, NULL, -1, data);
   dbus_message_unref(msg);
@@ -346,17 +359,23 @@ e_hal_device_volume_eject(E_DBus_Connection *conn, const char *udi, Eina_List *o
   msg = e_hal_device_volume_call_new(udi, "Eject");
 
   dbus_message_iter_init_append(msg, &iter);
-  dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING_AS_STRING, &subiter);
-  if (options)
+  if (dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING_AS_STRING, &subiter))
   {
-    const char *opt;
-
-    EINA_LIST_FOREACH(options, l, opt)
+    if (options)
     {
-      dbus_message_iter_append_basic(&subiter, DBUS_TYPE_STRING, &opt);
+      const char *opt;
+       
+      EINA_LIST_FOREACH(options, l, opt)
+      {
+        dbus_message_iter_append_basic(&subiter, DBUS_TYPE_STRING, &opt);
+      }
     }
+    dbus_message_iter_close_container(&iter, &subiter);
   }
-  dbus_message_iter_close_container(&iter, &subiter) ;
+  else
+  {
+    ERR("dbus_message_iter_open_container() failed");
+  }
 
   ret = e_dbus_method_call_send(conn, msg, NULL, cb_func, NULL, -1, data);
   dbus_message_unref(msg);
