@@ -1,3 +1,9 @@
+edbus (1.2.0-1) UNRELEASED; urgency=low
+
+  * New upstream release
+
+ -- Albin Tonnerre <lutin@debian.org>  Tue, 08 May 2012 18:34:03 +0200
+
 edbus (1.0.0-1) unstable; urgency=low
 
   * Upstream release 1.0.0
