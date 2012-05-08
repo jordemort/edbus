@@ -1,5 +1,5 @@
 debian/tmp/usr/lib/libebluez.so.*
-debian/tmp/usr/lib/libeconnman.so.*
+debian/tmp/usr/lib/libeconnman0_7x.so.*
 debian/tmp/usr/lib/libedbus.so.*
 debian/tmp/usr/lib/libehal.so.*
 debian/tmp/usr/lib/libenotify.so.*
