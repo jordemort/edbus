@@ -1,8 +1,10 @@
-edbus (1.2.0-1) UNRELEASED; urgency=low
+edbus (1.2.0-1) unstable; urgency=low
 
   * New upstream release
+  * follow upstream renaming: econnman -> econnman0_7x
+  * debian/rules: drop simple-patchsys; the package carries no patches anyway
 
- -- Albin Tonnerre <lutin@debian.org>  Tue, 08 May 2012 18:34:03 +0200
+ -- Albin Tonnerre <lutin@debian.org>  Sun, 13 May 2012 16:58:09 +0200
 
 edbus (1.0.0-1) unstable; urgency=low
 
