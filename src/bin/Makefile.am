@@ -15,6 +15,11 @@ if BUILD_EDBUS_TEST_CLIENT
 bin_PROGRAMS += e_dbus_test_client
 endif
 
+if BUILD_EDBUS_ASYNC_TEST
+bin_PROGRAMS += e_dbus_async_server_test
+bin_PROGRAMS += e_dbus_async_client_test
+endif
+
 if BUILD_EDBUS_BLUEZ_TEST
 bin_PROGRAMS += e_dbus_bluez_test
 endif
@@ -43,6 +48,10 @@ if BUILD_EDBUS_UKIT_TEST
 bin_PROGRAMS += e_dbus_ukit_test
 endif
 
+if BUILD_EDBUS_PERFORMANCE_TEST
+bin_PROGRAMS += e_dbus_performance
+endif
+
 noinst_PROGRAMS =
 
 if BUILD_EDBUS_CONNMAN0_7X_TEST
@@ -67,6 +76,24 @@ e_dbus_test_client_CPPFLAGS = \
 e_dbus_test_client_LDADD = \
 $(top_builddir)/src/lib/dbus/libedbus.la \
 @EDBUS_TEST_CLIENT_LIBS@
+endif
+
+if BUILD_EDBUS_ASYNC_TEST
+e_dbus_async_server_test_SOURCES = async_server_test.c
+e_dbus_async_server_test_CPPFLAGS = \
+-I$(top_srcdir)/src/lib/dbus \
+@EDBUS_ASYNC_TEST_CFLAGS@
+e_dbus_async_server_test_LDADD = \
+$(top_builddir)/src/lib/dbus/libedbus.la \
+@EDBUS_ASYNC_TEST_LIBS@
+
+e_dbus_async_client_test_SOURCES = async_client_test.c
+e_dbus_async_client_test_CPPFLAGS = \
+-I$(top_srcdir)/src/lib/dbus \
+@EDBUS_ASYNC_TEST_CFLAGS@
+e_dbus_async_client_test_LDADD = \
+$(top_builddir)/src/lib/dbus/libedbus.la \
+@EDBUS_ASYNC_TEST_LIBS@
 endif
 
 if BUILD_EDBUS_BLUEZ_TEST
@@ -167,3 +194,14 @@ $(top_builddir)/src/lib/dbus/libedbus.la \
 $(top_builddir)/src/lib/ukit/libeukit.la \
 @EDBUS_UKIT_TEST_LIBS@
 endif
+
+if BUILD_EDBUS_PERFORMANCE_TEST
+e_dbus_performance_SOURCES = performance.c
+e_dbus_performance_CFLAGS = \
+-I$(top_srcdir)/src/lib/dbus \
+@EDBUS_PERFORMANCE_TEST_CFLAGS@
+e_dbus_performance_LDADD = \
+$(top_builddir)/src/lib/dbus/libedbus.la \
+@EDBUS_PERFORMANCE_TEST_LIBS@
+endif
+

@@ -1,11 +1,13 @@
+PACKAGE_TARNAME=@PACKAGE_TARNAME@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
+docdir=@docdir@
 
 Name: edbus
 Description: DBus convenience library
 @pkgconfig_requires_private@: @requirement_edbus@
 Version: @VERSION@
-Libs: -L${libdir} -ledbus @dbus_libs@
-Cflags: -I${includedir}/e_dbus-@VMAJ@ @dbus_cflags@ 
+Libs: -L${libdir} -ledbus @DBUS_LIBS@
+Cflags: -I${includedir}/e_dbus-@VMAJ@

@@ -1,4 +1,50 @@
-E_dbus 1.2.0
+E_dbus 1.7.7
+
+Changes since E_dbus 1.7.6:
+---------------------------
+
+No changes, just updating to keep in sync with last release.
+
+
+Changes since E_dbus 1.7.5:
+---------------------------
+
+Fixes:
+
+   * Fix missing returns.
+
+Changes since E_dbus 1.7.4:
+---------------------------
+
+   * API consistency fix from Jérémy Zurcher
+
+Changes since E_dbus 1.7.3:
+---------------------------
+
+   * Add XML output to doc
+   * Add installation rule for doc
+
+Changes since E_dbus 1.7.2:
+---------------------------
+
+No changes, just updating to keep in sync with last release.
+
+Changes since E_dbus 1.7.1:
+---------------------------
+No changes, just updating to keep in sync with last release.
+
+Changes since E_dbus 1.2.0:
+---------------------------
+
+Improvements:
+
+   * More null checks for API's
+
+Fixes:
+
+   * Properties handling
+   * Interface attach to not attach if already there
+   * Missing DBus.Properties attach
 
 Changes since E_dbus 1.1.0:
 ---------------------------

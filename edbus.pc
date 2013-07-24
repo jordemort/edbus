@@ -1,11 +1,13 @@
-prefix=/usr/local
+PACKAGE_TARNAME=e_dbus
+prefix=/home/antognolli/efl/1.7/git-release/local
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
+docdir=${prefix}/share/doc/${PACKAGE_TARNAME}
 
 Name: edbus
 Description: DBus convenience library
-Requires.private: ecore >= 1.2.0 eina >= 1.2.0 dbus-1 >= 0.62
-Version: 1.2.0
-Libs: -L${libdir} -ledbus -L/usr/lib/i386-linux-gnu -ldbus-1 -lpthread -lrt  
-Cflags: -I${includedir}/e_dbus-1 -I/usr/include/dbus-1.0 -I/usr/lib/i386-linux-gnu/dbus-1.0/include   
+Requires.private: ecore >= 1.7.7 eina >= 1.7.7 dbus-1 >= 0.62
+Version: 1.7.7
+Libs: -L${libdir} -ledbus -L/lib64 -ldbus-1 -lpthread -lrt  
+Cflags: -I${includedir}/e_dbus-1

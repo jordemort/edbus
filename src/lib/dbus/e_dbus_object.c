@@ -115,16 +115,22 @@ cb_properties_get(E_DBus_Object *obj, DBusMessage *msg)
   DBusError err;
   int type;
   void *value;
-  char *property;
+  char *property, *interface;
 
   dbus_error_init(&err);
-  dbus_message_get_args(msg, &err, DBUS_TYPE_STRING, &property, DBUS_TYPE_INVALID);
+  dbus_message_get_args(msg, &err, DBUS_TYPE_STRING, &interface, DBUS_TYPE_STRING,
+                        &property, DBUS_TYPE_INVALID);
 
   if (dbus_error_is_set(&err))
   {
     return dbus_message_new_error(msg, err.name, err.message);
   }
 
+  /*
+   * FIXME: there's no way to pass interface the interface here - this shall be
+   * fixed by another callback function, since fixing it here would break the
+   * API.
+   */
   obj->cb_property_get(obj, property, &type, &value);
   if (type == DBUS_TYPE_INVALID)
   {
@@ -134,7 +140,7 @@ cb_properties_get(E_DBus_Object *obj, DBusMessage *msg)
   if (dbus_type_is_basic(type))
   {
     reply = dbus_message_new_method_return(msg);
-    dbus_message_iter_init_append(msg, &iter);
+    dbus_message_iter_init_append(reply, &iter);
     if (dbus_message_iter_open_container(&iter, DBUS_TYPE_VARIANT, e_dbus_basic_type_as_string(type), &sub))
     {
       dbus_message_iter_append_basic(&sub, type, &value);
@@ -158,15 +164,24 @@ cb_properties_set(E_DBus_Object *obj, DBusMessage *msg)
   DBusMessageIter iter, sub;
   int type;
   void *value;
-  char *property;
+  char *property, *interface;
 
   dbus_message_iter_init(msg, &iter);
+  dbus_message_iter_get_basic(&iter, &interface);
+  dbus_message_iter_next(&iter);
   dbus_message_iter_get_basic(&iter, &property);
+  dbus_message_iter_next(&iter);
   dbus_message_iter_recurse(&iter, &sub);
   type = dbus_message_iter_get_arg_type(&sub);
   if (dbus_type_is_basic(type))
   {
     dbus_message_iter_get_basic(&sub, &value);
+
+    /*
+     * FIXME: there's no way to pass interface the interface here - this shall
+     * be fixed by another callback function, since fixing it here would break
+     * the API.
+     */
     if (obj->cb_property_set(obj, property, type, value))
     {
       return dbus_message_new_method_return(msg);
@@ -198,8 +213,8 @@ e_dbus_object_init(void)
   }
 
   e_dbus_interface_method_add(introspectable_interface, "Introspect", "", "s", cb_introspect);
-  e_dbus_interface_method_add(properties_interface, "Get", "s", "v", cb_properties_get);
-  e_dbus_interface_method_add(properties_interface, "Set", "sv", "", cb_properties_set);
+  e_dbus_interface_method_add(properties_interface, "Get", "ss", "v", cb_properties_get);
+  e_dbus_interface_method_add(properties_interface, "Set", "ssv", "", cb_properties_set);
   return 1;
 }
 
@@ -264,44 +279,66 @@ e_dbus_object_free(E_DBus_Object *obj)
 EAPI void *
 e_dbus_object_data_get(E_DBus_Object *obj)
 {
+  EINA_SAFETY_ON_NULL_RETURN_VAL(obj, NULL);
   return obj->data;
 }
 
 EAPI E_DBus_Connection *
 e_dbus_object_conn_get(E_DBus_Object *obj)
 {
+  EINA_SAFETY_ON_NULL_RETURN_VAL(obj, NULL);
   return obj->conn;
 }
 
 EAPI const char *
 e_dbus_object_path_get(E_DBus_Object *obj)
 {
+  EINA_SAFETY_ON_NULL_RETURN_VAL(obj, NULL);
   return obj->path;
 }
 
 EAPI const Eina_List *
 e_dbus_object_interfaces_get(E_DBus_Object *obj)
 {
+  EINA_SAFETY_ON_NULL_RETURN_VAL(obj, NULL);
   return obj->interfaces;
 }
 
 EAPI void
 e_dbus_object_property_get_cb_set(E_DBus_Object *obj, E_DBus_Object_Property_Get_Cb func)
 {
+  EINA_SAFETY_ON_NULL_RETURN(obj);
+  if (obj->cb_property_get == NULL && obj->cb_property_set == NULL)
+    e_dbus_object_interface_attach(obj, properties_interface);
   obj->cb_property_get = func;
 }
 
 EAPI void
 e_dbus_object_property_set_cb_set(E_DBus_Object *obj, E_DBus_Object_Property_Set_Cb func)
 {
+  EINA_SAFETY_ON_NULL_RETURN(obj);
+  if (obj->cb_property_get == NULL && obj->cb_property_set == NULL)
+    e_dbus_object_interface_attach(obj, properties_interface);
   obj->cb_property_set = func;
 }
 
 EAPI void
 e_dbus_object_interface_attach(E_DBus_Object *obj, E_DBus_Interface *iface)
 {
+  E_DBus_Interface *iface_added;
+  Eina_List *l;
   EINA_SAFETY_ON_NULL_RETURN(obj);
   EINA_SAFETY_ON_NULL_RETURN(iface);
+
+  EINA_LIST_FOREACH(obj->interfaces, l, iface_added)
+    {
+       if (strcmp(iface->name, iface_added->name) == 0)
+         {
+            ERR("This object(%s) already have this interface name(%s) attached",
+                obj->path, iface->name);
+            return;
+         }
+    }
 
   e_dbus_interface_ref(iface);
   obj->interfaces = eina_list_append(obj->interfaces, iface);
@@ -314,6 +351,8 @@ e_dbus_object_interface_detach(E_DBus_Object *obj, E_DBus_Interface *iface)
 {
   E_DBus_Interface *found;
 
+  EINA_SAFETY_ON_NULL_RETURN(obj);
+  EINA_SAFETY_ON_NULL_RETURN(iface);
   DBG("e_dbus_object_interface_detach (%s, %s) ", obj->path, iface->name);
   found = eina_list_data_find(obj->interfaces, iface);
   if (!found) return;
@@ -326,6 +365,7 @@ e_dbus_object_interface_detach(E_DBus_Object *obj, E_DBus_Interface *iface)
 EAPI void
 e_dbus_interface_ref(E_DBus_Interface *iface)
 {
+  EINA_SAFETY_ON_NULL_RETURN(iface);
   iface->refcount++;
   DBG("e_dbus_interface_ref (%s) = %d", iface->name, iface->refcount);
 }
@@ -333,6 +373,7 @@ e_dbus_interface_ref(E_DBus_Interface *iface)
 EAPI void
 e_dbus_interface_unref(E_DBus_Interface *iface)
 {
+  EINA_SAFETY_ON_NULL_RETURN(iface);
   DBG("e_dbus_interface_unref (%s) = %d", iface->name, iface->refcount - 1);
   if (--(iface->refcount) == 0)
     e_dbus_interface_free(iface);
@@ -358,6 +399,7 @@ e_dbus_interface_method_add(E_DBus_Interface *iface, const char *member, const c
 {
   E_DBus_Method *m;
 
+  EINA_SAFETY_ON_NULL_RETURN_VAL(iface, 0);
   m = e_dbus_method_new(member, signature, reply_signature, func);
   DBG("E-dbus: Add method %s: %p", member, m);
   if (!m) return 0;
@@ -371,6 +413,7 @@ e_dbus_interface_signal_add(E_DBus_Interface *iface, const char *name, const cha
 {
   E_DBus_Signal *s;
 
+  EINA_SAFETY_ON_NULL_RETURN_VAL(iface, 0);
   s = e_dbus_signal_new(name, signature);
   DBG("E-dbus: Add signal %s: %p", name, s);
   if (!s) return 0;

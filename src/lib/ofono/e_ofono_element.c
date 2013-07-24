@@ -1455,6 +1455,12 @@ _e_ofono_element_get_properties_callback(void *user_data, DBusMessage *msg, DBus
       _e_ofono_element_listeners_call(element);
 }
 
+Eina_Bool
+e_ofono_element_sync_properties_full(E_Ofono_Element *element, E_DBus_Method_Return_Cb cb, const void *data)
+{
+   return e_ofono_element_properties_sync_full(element, cb, data);
+}
+
 /**
  * Sync element properties with server.
  *
@@ -1468,7 +1474,7 @@ _e_ofono_element_get_properties_callback(void *user_data, DBusMessage *msg, DBus
  * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
  */
 Eina_Bool
-e_ofono_element_sync_properties_full(E_Ofono_Element *element, E_DBus_Method_Return_Cb cb, const void *data)
+e_ofono_element_properties_sync_full(E_Ofono_Element *element, E_DBus_Method_Return_Cb cb, const void *data)
 {
    const char name[] = "GetProperties";
 
@@ -1494,7 +1500,7 @@ Eina_Bool
 e_ofono_element_properties_sync(E_Ofono_Element *element)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(element, EINA_FALSE);
-   return e_ofono_element_sync_properties_full(element, NULL, NULL);
+   return e_ofono_element_properties_sync_full(element, NULL, NULL);
 }
 
 /**
@@ -1811,6 +1817,12 @@ e_ofono_element_property_type_get(const E_Ofono_Element *element, const char *na
 
 void
 e_ofono_element_list_properties(const E_Ofono_Element *element, Eina_Bool (*cb)(void *data, const E_Ofono_Element *element, const char *name, int type, const void *value), const void *data)
+{
+   e_ofono_element_properties_list(element, cb, data);
+}
+
+void
+e_ofono_element_properties_list(const E_Ofono_Element *element, Eina_Bool (*cb)(void *data, const E_Ofono_Element *element, const char *name, int type, const void *value), const void *data)
 {
    const E_Ofono_Element_Property *p;
 

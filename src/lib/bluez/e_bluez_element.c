@@ -1764,6 +1764,12 @@ e_bluez_element_property_type_get(const E_Bluez_Element *element, const char *na
 void
 e_bluez_element_list_properties(const E_Bluez_Element *element, Eina_Bool (*cb)(void *data, const E_Bluez_Element *element, const char *name, int type, const void *value), const void *data)
 {
+   e_bluez_element_properties_list(element, cb, data);
+}
+
+void
+e_bluez_element_properties_list(const E_Bluez_Element *element, Eina_Bool (*cb)(void *data, const E_Bluez_Element *element, const char *name, int type, const void *value), const void *data)
+{
    const E_Bluez_Element_Property *p;
 
    EINA_SAFETY_ON_NULL_RETURN(element);
