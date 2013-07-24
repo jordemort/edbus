@@ -1,3 +1,9 @@
+edbus (1.7.7-1) experimental; urgency=low
+
+  * Imported Upstream version 1.7.7
+
+ -- Jordan Webb <jordan.webb@gmail.com>  Wed, 24 Jul 2013 04:38:56 +0000
+
 edbus (1.2.0-1) unstable; urgency=low
 
   * New upstream release
