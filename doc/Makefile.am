@@ -1,20 +1,21 @@
-MAINTAINERCLEANFILES = Makefile.in
+MAINTAINERCLEANFILES = Makefile.in e_dbus_doxy_warnings.txt
 
-.PHONY: doc
+.PHONY: doc install-doc
 
 PACKAGE_DOCNAME = $(PACKAGE_TARNAME)-$(PACKAGE_VERSION)-doc
 
 if EFL_BUILD_DOC
 
 doc-clean:
-	rm -rf html/ latex/ $(top_builddir)/$(PACKAGE_DOCNAME).tar*
+	rm -rf html/ latex/ man/ xml/ $(top_builddir)/$(PACKAGE_DOCNAME).tar*
 
-doc: all
+doc-build: all
 	$(efl_doxygen)
-	cp $(srcdir)/images/* html/
+
+doc: doc-build
 	rm -rf $(PACKAGE_DOCNAME).tar*
 	mkdir -p $(PACKAGE_DOCNAME)/doc
-	cp -R html/ latex/ $(PACKAGE_DOCNAME)/doc
+	cp -R html/ latex/ xml/ $(PACKAGE_DOCNAME)/doc
 	tar cf $(PACKAGE_DOCNAME).tar $(PACKAGE_DOCNAME)/
 	bzip2 -9 $(PACKAGE_DOCNAME).tar
 	rm -rf $(PACKAGE_DOCNAME)/
@@ -22,10 +23,19 @@ doc: all
 
 clean-local: doc-clean
 
+install-doc: doc-build
+	install -d $(docdir)
+	cp -R html latex man xml $(docdir)
+
+uninstall-local:
+	rm -rf $(docdir)/html $(docdir)/latex $(docdir)/man $(docdir)/xml
+
 else
 
 doc:
 	@echo "Documentation not built. Run ./configure --help"
+
+install-doc: doc
 
 endif
 

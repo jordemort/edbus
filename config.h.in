@@ -23,6 +23,9 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* Set to 1 if Evil package is installed */
+#undef HAVE_EVIL
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -109,6 +112,9 @@
 
 /* Macro declaring a function argument to be unused */
 #undef __UNUSED__
+
+/* Define to `unsigned int' if <sys/types.h> does not define. */
+#undef size_t
 
 
 #endif /* EFL_CONFIG_H__ */

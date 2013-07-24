@@ -71,10 +71,14 @@ m4/efl_binary.m4 \
 m4/efl_compiler_flag.m4 \
 m4/efl_doxygen.m4
 
-.PHONY: doc
+.PHONY: doc install-doc
 
 # Documentation
 
 doc:
 	@echo "entering doc/"
 	make -C doc doc
+
+install-doc:
+	@echo "entering doc/"
+	make -C doc install-doc

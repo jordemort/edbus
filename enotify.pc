@@ -1,11 +1,11 @@
-prefix=/usr/local
+prefix=/home/antognolli/efl/1.7/git-release/local
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
 Name: enotify
 Description: Notification convenience library
-Requires.private: evas >= 1.2.0 edbus >= 1.2.0
-Version: 1.2.0
+Requires.private: evas >= 1.7.7 edbus >= 1.7.7
+Version: 1.7.7
 Libs: -L${libdir} -lenotify
 Cflags: -I${includedir}/e_dbus-1
